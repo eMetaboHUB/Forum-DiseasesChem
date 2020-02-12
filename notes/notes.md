@@ -29,3 +29,45 @@ Pour les stats un peu plus descriptives, regarder la partie *Discussion* de l'ar
    	- Il y a beaucoup moins de liens CID - PMID issues des *Depositor-provided* que ceux issus des annot meSH, **MAIS**, il y a beaucoup de CID annotés avec une association vers un PMID à partir des *Depositor-provided* Cela s'explique par le fait seul des composés assez connus et étudiés sont annotés dans les MeSH. En effet, les associations générés par les MeSH peuvent ignorer la spécificité, l'identité, du produit chimique pour annoter des termes MeSh qui représentent plutôt des "familles chimiques", à moins que le terme MeSH soit suffisament connu pour être une feuille a par entière du thésaurus MeSH. Ainsi des associations *Depositor-provided* ne souffre pas de ce problème et peuvent permettre d'annoter beaucoup plus de molécules.	  
 	- Par contre les faut indiquer que PubChem ne fournie aucun contrôle supplémentaire sur les association fournies par les providers et que la qualité de ces annotations dépend uniquement des contrôles fait par les providers.	       
   
+* * *
+
+Alors, on sait que l'on peut récupérer les associations CID - SID - PMID - MeSH à partir du RDF de PubChem. Je pense qu'une première étape pour faciliter le travail ultérieur serait de créer directement dans le RDF les associations CID - PMID, par le même pricnipe que les associations au SID, Compound:CIDxxx cito:isDiscussedBy reference:PIMDyyy
+
+Mais comme on a pu le constater, les associations avec la litterature que l'on peut récupérer avec le RDF sont celle qui sont *Depositor provided* c a d à partir de IBM, la CTD etc ... E
+En fait, les associations sont initialement inidiqué à l'échelle des substances et pour le composé l'ensemble des références bibliogrpahiques sont mergées. Le seul inconvénient c'est que ces associations ne constituent pas toutes les associations à la litterature possible. Dans certains cas on observera beaucoup plus d'association *Depositor provided* que NLM Curated, ex de l'acteone avec respectivement 14580 items 7642. Mais des fois c'est l'inverse, par exemple pour le Galactose ou autre où on a beaucoup plus d'associations avec LNM curated. 
+
+Ce que fait PubChem en fait lorsqu'il fait les NLM Curated, c'est donc qui cherche les publications pour lesquelles un MeSH correspondant à la molécule a été annoté, c'est en gros le principe de metabToMeSH. En fait, il renvoie vers une requête PubMed en utilisant comme query "meSh term"[type de MeSH]. Par exemple pour "Kdo2-lipid A" la requête va être "Kdo2-lipid A"[NM], qui est l'abbréviation de Suypplementary concept et pour le Galactose, on a "Galactose"[Mesh Terms:noexp] où c'est un 'Mesh Terms' et on demmande de ne pas étendre la requête a ces termes enfant (:noexp)
+
+Ainsi ce qu'il nous faiut c'est le nom du terme meSh et le type de terme MeSH pour pouvoir lancé la requête avec l'outil E-utils E-search qui me renvoie direct une liste de PMID.
+Je sais que : depuis le REST PubChem VIEW, on peut récupérer une vue en JSON de la page associé à un compound et dans la catégorie "Names and Identifiers" -> "Synonyms" -> "MeSH Entry Terms" en suivant la référence on peut retrouver l'identifiant UID du MeSH associé (ex : 68005690). L'identifié UID c'est l'identifiant unique dans la base de données NCBI pour représenter les MeSH. Mais pour pouvoir correctement aire des recherche autour du terme MeSH j'ai l'impression qu'il me faut le MeSH unique id (ex: C004521). Grâce a ce MeSH unique ID, on peut récupérer toutes les infos dont on a besoin sur le MeSH dans le RDF associé, son nom, son type etc ... Et ainsi on pourra construire efficacement la requête.
+Donc de sur :
+	- Il me faut le RDF MeSH pour avoir les noms et les types associées.
+	- Il me faut le meSH unique ID. A savoir si en télécharger le bulk de PubChem, cet identifiant ne serait pas direct annoté, ou au moins le uid car par requête ça risque d'être trèèès long... Donc peut être aussi enviager de télécharger tout MeSH pour faire facilement les liens uid - MeSH unique ID. 
+
+
+
+il y a d'autre moyens de chercher à regarder les associations entre molécule et PMID en utilisant les autres, en utilsant d'autres méthodes E-utils mais elles ne sont pas très efficace... J'ai testé : 
+ELink (https://dataguide.nlm.nih.gov/eutilities/utilities.html#einfo). D'après la doc c'est : 
+ELink (elink.fcgi) est un utilitaire très flexible et puissant qui prend une liste d'identifiants uniques (UID) d'une base de données et renvoie, pour chacun des UID listés :
+
+    une liste d'UID pour des enregistrements similaires, liés ou autrement connectés dans la même base de données,
+    une liste d'UID pour les enregistrements liés dans une autre base de données Entrez, ou
+    une liste d'URL et d'attributs LinkOut pour les ressources connexes non-Entrez.
+
+En raison de la puissance et de la souplesse de cet utilitaire, et parce qu'il implique des liens entre bases de données (et entre bases de données et ressources externes), il peut être difficile d'utiliser certaines de ses fonctionnalités les plus avancées. Il est conseillé aux nouveaux utilisateurs de faire preuve de patience.
+A partir d'un uid on peut donc lancer une requête Elink, en paramétrant les base de données *From* et *To*, on eput faire : 
+https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html
+	- *pccompound_pubmed*: PubChem Compound to PubMed -> Très peu de résultats
+	- *pccompound_pubmed_mesh* : Related PubMed via MeSH -> Peu de résultats aussi
+Le mieux semble être 
+	- mesh to pubmed avec *mesh_pubmed_major* : mais les résultats s'arrêtes aux publi de 2010 ... on loupe 10 ans de publi LOL MDR !
+
+Dans tout les cas je pense que le mieux et le plus robuste est de faire exactement ce que fait PubChem !:) En reconstruisant la bonne requêe avec le nom du terme MeSH et son type
+
+**Ce que je me dis :**
+Si on a récupérer le RDF de meSH pour faire ce travail, il sera interressant de le raccorder direct au RDf de pubChem.
+Si dans une étape ultérieure, on a crée des liens CID - PMID (Compound:CIDxxx cito:isDiscussedBy reference:PIMDyyy), je pense qu'il serait très utile pour que les **nouveaux** liens que l'on a pu créer avec les requêtes PubMed à la manière *NLM Curated*, de construire également des triplets pour enrichir notre RDF Compound:CIDxxx cito:isDiscussedBy reference:NewPMIDFromQueryPubMed
+Et encore plus : de créer des éléments correspondant à ces PMID dans le RDF store référence c'est a dire que comme pour ce qui a été fait avec les *Depositor provided*. Donc on créer les incomming et les outgoing links, avec les prdicat *date*, *bibliographicCitation*, *http://purl.org/spar/fabio/hasSubjectTerm*, enfin exactement comme pour les PMID déjà ref (ex: https://pubchem.ncbi.nlm.nih.gov/rest/rdf/reference/PMID10395478.html)
+
+Et on aurait un super RDF !! :)
+
