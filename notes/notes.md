@@ -71,3 +71,13 @@ Et encore plus : de créer des éléments correspondant à ces PMID dans le RDF 
 
 Et on aurait un super RDF !! :)
 
+
+* * * 
+J'ai regardé je pense qu'on pourra direct liée le RDF MeSh au RDF de PubChem
+
+Pour les éléments MeSH si on regarde comme dans l'es exemple de https://hhs.github.io/meshrdf/sparql-and-uri-requests, on peut direct accder a la classe du MeSh 
+car exemple on a <http://id.nlm.nih.gov/mesh/C506188> a <http://id.nlm.nih.gov/mesh/vocab#SCR_Chemical> ;
+        ou encore avec un terme MeSh simple : 
+        <http://id.nlm.nih.gov/mesh/D000900> a <http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor> ;
+
+
