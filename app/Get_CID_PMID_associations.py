@@ -16,10 +16,15 @@ response = query_builder.elink({"dbfrom": "pccompound", "db": "pubmed", "id": "6
 # parsing XML
 root = ET.fromstring(response)
 # For each CID - PMIS association source: "pccompound_pubmed", "pccompound_pubmed_mesh", "pccompound_pubmed_publisher"
+pmids_by_source = {}
+# Exploring sets
 for pmid_set in root.findall("./LinkSet/LinkSetDb"):
-    source = pmid_set.find("./LinkName").text
-    pmid_list = [set.text for set in pmid_set.findall("./Link/Id")]
-    print(len(pmid_list))
-    
+    # Each source is assigned as a Key value and PMID list as values
+    pmids_by_source[(pmid_set.find("./LinkName").text)] = [set.text for set in pmid_set.findall("./Link/Id")]
 
+# print(pmids_by_source.values())
+pmid_union = set().union(*(pmids_by_source.values()))
+print(len(pmid_union))
+print(pmid_union)
 
+# TODO: get Intersect done -> Need to well build source params
