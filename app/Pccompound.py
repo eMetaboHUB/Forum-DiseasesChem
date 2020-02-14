@@ -9,7 +9,9 @@ class Pccompound:
         self.pmid_list = [Pmid(pmids[i], pmids_sources[i]) for i in range(len(pmids))]
     
     def get_pmids(self):
+        """Return a list of all pmids associated in the Pccompound object"""
         return([Pmid.get_pmid(pmid) for pmid in self.pmid_list])
     
     def get_cid(self):
+        """Return the PubChem Compound Identifier"""
         return(self.cid)

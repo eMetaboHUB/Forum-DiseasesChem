@@ -9,4 +9,5 @@ class Pmid:
     
     # Getters
     def get_pmid(self):
+        """Return the Pubmed Identifier"""
         return(self.pmid)

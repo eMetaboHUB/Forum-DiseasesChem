@@ -5,16 +5,17 @@ import sys
 import xml.etree.ElementTree as ET
 class Ensemble_pccompound:
     """This class represent an ensembl of Pccompound objects, it's composed of:
-    - a list of cid
-    - a size attribute
-    - a corresponding list of Pccompound objects
+    - a list of Pccompound objects
+    - a list of cid for which NCBI request to get PMID association failed
     """
     def __init__(self):
         self.pccompound_list = list()        
-        self.size = 0
         self.append_failure = list()
     
     def append_pccompound(self, cid, query_builder):
+        """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
+        - cid: a PubChem Compound Identifier 
+        - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key"""
         pmids_by_source = {}
         # Get CID associated PMID. using try we test if request fail or not. If request fail, it's added to append_failure list
         try:
@@ -43,6 +44,9 @@ class Ensemble_pccompound:
         self.pccompound_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
     
     def export_cids_pmids_triples_ttl(self, output_file):
+        """This function export a Ensemble_pccompound is a triples RDF way (format .ttl). For each CID, all association with PMID are indexed with the cito:isDiscussedBy predicat.
+        - output_file: a path to the output file
+        """
         # Preparing file and writing prefix
         f = open(output_file, "w")
         f.write("@prefix cito:\t<http://purl.org/spar/cito/> .\n@prefix compound:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .\n@prefix reference:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .\n")
