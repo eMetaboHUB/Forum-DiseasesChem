@@ -1,6 +1,7 @@
 from Pccompound import Pccompound
 import eutils
 import numpy
+import sys
 import xml.etree.ElementTree as ET
 class Ensemble_pccompound:
     """This class represent an ensembl of Pccompound objects, it's composed of:
@@ -15,8 +16,14 @@ class Ensemble_pccompound:
     
     def append_pccompound(self, cid, query_builder):
         pmids_by_source = {}
-        # Get CID associated PMID
-        response = query_builder.elink({"dbfrom": "pccompound", "db": "pubmed", "id": cid})
+        # Get CID associated PMID. using try we test if request fail or not. If request fail, it's added to append_failure list
+        try:
+            response = query_builder.elink({"dbfrom": "pccompound", "db": "pubmed", "id": cid})
+        except eutils.EutilsError as fail_request:
+            print("Request on Eutils for compound %s has failed during process, with error name: %s \n -- Compound cid is added to append_failure list" % (cid, fail_request))
+            self.append_failure.append(cid)
+            return None
+        
         root = ET.fromstring(response)
         # Exploring sets
         for pmid_set in root.findall("./LinkSet/LinkSetDb"):
