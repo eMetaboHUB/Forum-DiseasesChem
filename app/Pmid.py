@@ -4,5 +4,9 @@ class Pmid:
     - a list of sources for the CID - PMID association
     """
     def __init__(self, pmid, source):
-        self.cid = pmid
+        self.pmid = pmid
         self.source = source
+    
+    # Getters
+    def get_pmid(self):
+        return(self.pmid)

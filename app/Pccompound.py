@@ -8,6 +8,8 @@ class Pccompound:
         self.cid = cid
         self.pmid_list = [Pmid(pmids[i], pmids_sources[i]) for i in range(len(pmids))]
     
-    # Getters
+    def get_pmids(self):
+        return([Pmid.get_pmid(pmid) for pmid in self.pmid_list])
+    
     def get_cid(self):
         return(self.cid)

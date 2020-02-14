@@ -35,6 +35,10 @@ for source in pmids_by_source.keys():
     a = np.array(np.isin(pmids_union, pmids_by_source[source])).nonzero()
     [sources[index].append(source) for index in a[0].tolist()]
 
+
+
+
 cids_pmids_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
 
 new_Ensemble_pccompound = Ensemble_pccompound(cids_pmids_list)
+new_Ensemble_pccompound.export_cids_pmids_triples_ttl("test.txt")
