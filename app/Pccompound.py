@@ -4,6 +4,6 @@ class Pccompound:
     - son identifiant CID
     - une liste de PMID associés
     """
-    def __init__(self, cid, n_pmid):
+    def __init__(self, cid, pmids, pmids_sources):
         self.cid = cid
-        self.pmid_list = [Pmid("", "") for i in range(n_pmid)]
+        self.pmid_list = [Pmid(pmids[i], pmids_sources[i]) for i in range(len(pmids))]
