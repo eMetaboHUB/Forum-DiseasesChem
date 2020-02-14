@@ -3,12 +3,15 @@
 import eutils
 import numpy
 import xml.etree.ElementTree as ET
+from Ensemble_pccompound import Ensemble_pccompound
 from Pccompound import Pccompound
 from Pmid import Pmid
 
 np = numpy
 apiKey = "0ddb3479f5079f21272578dc6e040278a508"
 cid  = "6036"
+# Intialize the result list :
+cids_pmids_list = list()
 # Building request
 query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
@@ -32,4 +35,6 @@ for source in pmids_by_source.keys():
     a = np.array(np.isin(pmids_union, pmids_by_source[source])).nonzero()
     [sources[index].append(source) for index in a[0].tolist()]
 
-new_Pccompound = Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources)
+cids_pmids_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
+
+new_Ensemble_pccompound = Ensemble_pccompound(cids_pmids_list)
