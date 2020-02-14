@@ -14,5 +14,8 @@ query_builder = eutils.QueryService(cache = False,
 
 new_Ensemble_pccompound = Ensemble_pccompound()
 new_Ensemble_pccompound.append_pccompound("25203768", query_builder)
+new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
 new_Ensemble_pccompound.export_cids_pmids_triples_ttl("test2.txt")
+
+new_Ensemble_pccompound.export_cid_pmid_endpoint("test_endpoint.txt")

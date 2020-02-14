@@ -11,3 +11,6 @@ class Pmid:
     def get_pmid(self):
         """Return the Pubmed Identifier"""
         return(self.pmid)
+    def get_source(self):
+        """Return sources of CID - Pubmed association"""
+        return(self.source)

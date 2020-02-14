@@ -40,11 +40,11 @@ class Ensemble_pccompound:
         # For each PMID ressource in the union set, determine which are the orginals sources of the association.
         for source in pmids_by_source.keys():
             a = numpy.array(numpy.isin(pmids_union, pmids_by_source[source])).nonzero()
-            [sources[index].append(source) for index in a[0].tolist()]
+            [sources[index].append(("\"" + source + "\"")) for index in a[0].tolist()]
         self.pccompound_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
-    
+        
     def export_cids_pmids_triples_ttl(self, output_file):
-        """This function export a Ensemble_pccompound is a triples RDF way (format .ttl). For each CID, all association with PMID are indexed with the cito:isDiscussedBy predicat.
+        """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each CID, all association with PMID are indexed with the cito:isDiscussedBy predicat.
         - output_file: a path to the output file
         """
         # Preparing file and writing prefix
@@ -54,4 +54,18 @@ class Ensemble_pccompound:
             pmid_export = " ,\n\t\t".join(["reference:PMID"+pmid for pmid in pcc.get_pmids()]) + " .\n"
             pmid_export = "compound:CID" + pcc.get_cid() + "\tcito:isDiscussedBy\t" + pmid_export
             f.write(pmid_export)
+        f.close
+        
+    def export_cid_pmid_endpoint(self, output_file):
+        """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each combination of CID & PMID sources are annotated
+        - output_file: a path to the output file
+        """
+        f = open(output_file, "w")
+        f.write("@prefix endpoint:	<http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/> .\n@prefix cito:\t<http://purl.org/spar/cito/> .\n@prefix obo:\t<http://purl.obolibrary.org/obo/> .\n@prefix compound:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .\n@prefix reference:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .\n@prefix dcterms:\t<http://purl.org/dc/terms/> .\n")
+        for pcc in self.pccompound_list:
+            pmids = pcc.get_pmids()
+            subject_list = [("CID" + pcc.get_cid() + "_" + "PMID" + pmid) for pmid in pcc.get_pmids()]
+            contributors = [",".join(pmid.get_source()) for pmid in pcc.pmid_list]
+            complete_triples = [("endpoint:" + subject_list[index] + "\tobo:IAO_0000136\tcompound:CID" + pcc.get_cid() + " ;\n\t\tcito:citesAsDataSource\treference:PMID" + pmids[index] + " ;\n\t\tdcterms:contributor\t" + contributors[index] + " .\n") for index in range(len(pcc.pmid_list))]
+            f.write("".join(complete_triples))
         f.close
