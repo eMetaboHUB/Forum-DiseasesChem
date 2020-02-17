@@ -3,7 +3,7 @@
 * 10/02/2020 : 
   Inspiration de Metab2MeSH (**Metab2MeSH: annotating compounds with medical subject headings** doi:10.1093/bioinformatics/bts156) de 2012.
   Dans leur papier, la méthodo utilisée pour faire le lien entre métabolites et termes MeSH passe par un matching des substances. A partir de PubChem, pour chaque composé, ils extraient la liste des synonymes assoociés à ce composé, qu'ils matchent ensuite par rapport à la liste des PubMed subtances. La liste Pubmed substances est construite en extrayant l'index "substances" associée à chaque abstract des article PubMed présent de la base NLM PubMed. Ils disposent donc d'une liste de substances PubMed pour lesquelles ils sont un ensemble d'article associés 
-  En matchant les synonymes, ils créent ainsi des liens entre les PubChem Compound et les PubMed Substances. Ainsi, chaque PubMed Substances ayant une liste de publications associées, ils ont pour chaque composées pubmed, en fonction du matching des synonymes associées par rapport aux substances PubMed un liste d'article. A partir des articles ils extraient les meSH associés aux catégories : Diseases, Anatomy, Chemicals and Drugs, Phenomena and Processes, Organisms, Psychiatry and Psychology, Anthropology, Education, Sociology and Social Phenomena, Technology, Industry, and Agriculture. ensuite, ils font des tests d'enrichissement pour tester la signficativité de chaque associées PubChem Compounds <-> MeSH term.
+  En matchant les synonymes, ils créent ainsi des liens entre les PubChem Compound et les PubMed Substances. Ainsi, chaque PubMed Substances ayant une liste de publications associées, ils ont pour chaque composées pubmed, en fonction du matching des synonymes associées par rapport aux substances PubMed un liste d'article. A partir des articles ils extraient les meSH associés aux catégories : Diseases, Anatomy, Chemicals and Drugs, Phenomena and Processes, Organisms, Psychiatry and Psychology, Anthropology, Education, Sociology and Social Phenomena, Technology, Industry, and Agriculture. ensuite, ils font des tests d'enrichissement pour tester la signficativité de chaque associées PubChem Compounds -> MeSH term.
 
   Mais en 2016 est sorti un article de la base PubChem (**Literature information in PubChem: associations between PubChem records and scientific articles** DOI 10.1186/s13321-016-0142-6) :
 
@@ -76,8 +76,51 @@ Et on aurait un super RDF !! :)
 J'ai regardé je pense qu'on pourra direct liée le RDF MeSh au RDF de PubChem
 
 Pour les éléments MeSH si on regarde comme dans l'es exemple de https://hhs.github.io/meshrdf/sparql-and-uri-requests, on peut direct accder a la classe du MeSh 
-car exemple on a <http://id.nlm.nih.gov/mesh/C506188> a <http://id.nlm.nih.gov/mesh/vocab#SCR_Chemical> ;
+car exemple on a http://id.nlm.nih.gov/mesh/C506188> a http://id.nlm.nih.gov/mesh/vocab#SCR_Chemical> ;
         ou encore avec un terme MeSh simple : 
-        <http://id.nlm.nih.gov/mesh/D000900> a <http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor> ;
+        http://id.nlm.nih.gov/mesh/D000900> a http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor> ;
 
 
+### PubChem RDF References: Comment sont organisé les éléments, comment une publication PubMed est représenté dans le RDF ?
+
+Exemple : 
+![alt text](ExamplesReferencesRDF.png "Exemple de représentation d'une publication PubMed dans le RDF de PubChem")
+
+Donc en gros, les parties principales, il y a : 
+
+- un PMID:  l'identifiant de la publication dans PubMed.
+- Citation Bibliographique : Auteur + Journal + date de parution dans le journal.
+- Date: date de publication de l'article.
+- Titre: Le titre de la publication
+- Les Concepts MeSH (Supplementary MeSH) ('http://purl.org/spar/cito/discusses') qui commencent par des identifiants M000. Attention ce sont des concepts MeSH, pas des descripteurs! En fait il sont annotés tels des concepts MeSH mais si l'on regarde quels termes ils représentent par rapport à la publication, ils s'agit **toujours** des Supplementary MeSH que sont *Substances*, *Diseases* et *Protocols*. Au lieu d'annoter le MeSH descriptor associé à cet élément, ils annote le Concept MeSH associé. Je rappelle que dans les Supplementary MeSH tels que *Substances*, etc ... ne se trouve pas que des *Supplementary Chemical Records (SCRs)*, c'est a dire des termes trop précis ou trop rare pour être un Descriptor MeSH, mais on y trouve aussi des MeSH Descriptor tout à fait classique. Donc il s'agit bien des Supplementary MeSH
+
+- Les Majors Topics MeSH termes ('http://purl.org/spar/fabio/hasPrimarySubjectTerm) : Les termes **Desciptors** indiqués comme major-topics de l'article
+- Les autres termes MeSH ('http://purl.org/spar/fabio/hasSubjectTerm') : Les termes MeSH **Desciptors** qui décrivent la publication
+- Type: le type de publication, ex "http://purl.org/spar/fabio/JournalArticle"
+
+Par rapport aux *Supplementary MeSH*, je pense que c'est une ressource essentielle qui faut absolument conservée. En revanche, je pense qu'il serait plus utile de les décrire avec leur Descriptor MeSH associé plutôt que le Concept, car ce sera plus facile de faire des traitement ensuite si tout est standardisé avec les Descriptors. Je pense donc que dans le cas où le terme est un SCR, il faudrait récupérer à l'aide du RDF MeSH sont *Descriptor MeSH* associé. Ça doit se faire !:)
+
+
+#### Donc comment retrouver ces informations dans le XML PubMed: 
+
+- Chaque élément *PubmedArticle* du XML est essentiellement représenté par le sous Élement Descripteur *MedlineCitation*. L'élément en lui même contient des infos sur qui a jouté la publi, son statu ("reviwed", etc ...)
+A partir de cet élément XML *MedlineCitation=* on peut accéder à l'élément PMID: *MedlineCitation PMID* qui indique le PMID associé à la publication avec la version qui y est associé. En effet, même si c'est très rare, une publi, peut avoir plusieurs PMID annoté. Ainsi, si il existe un PMID annoté avec une version > 1, cela indique qu'il existe deux versions de la publi, une version antérieure et une version actuelle, dans ce cas là il est préférable de toujours choisir la version la plus récente de la publication. 
+Attention, les attributs *DateCreated*, *DateRevised* et *DateCompleted* ne sont pas les dates associées directement à la publication du papier, mais celle où on a entré la publi dans la base, on a commencé a annotés et enfin ou on a finis d'annotés les termes MeSH pour l'indexer etc ..; 
+
+- Ensuite on a l'élément *Journal* : décrit les éléments relatifs au Journal et à la publication de l'article dans ce Journal, c'est ici que se trouve une partie des infos recherchées pour la "Citation Bibliographique" car on aura le nom, le Volum et la date de Parution dans le Journal. Ainsi par exemple pour une Publication  annoté du style : Biochem Med. 1975 Jun;13(2):117-26., il s'agit en fonction des attribut de *Journal* de : 
+*ISOAbbreviation*. *PubDate Year* *PubDate Month*; *JournalIssue Volume*(*JournalIssue Issue*)*Pagination MedlinePgn* 
+Attention *Pagination MedlinePgn* , ne sont plus des enfant de *Journal*, mais sont les éléments qui suivent.
+La liste des auteurs pour compléter le "Citation Bibliographique" se trouve dans les éléments *AuthorList Author*
+
+- Pour la Date: Pour la Date je pense qu'on peut prendre le *PubDate Year* *PubDate Month*, comme dans la Citation.
+
+- Pour le titre: Il est dans l'Élément XMl *ArticleTitle*
+
+- Les Supplementary MeSH: Les supplémentary MeSH sont stockés dans des Élément XML différents selon s'il s'agit de *Substances* ou de *Diseases* et *Protocols*. Ainsi, pour les *Substances* c'est dans *ChemicalList Chemical* chaque Élément XMl présente alors le MeSH unique ID assoicé : un *MeSH Descriptor* comme par D; ou un *MeSH SCR Chemical* (les Suppl records) qui comment par C. On a un parfait exemple ici :   https://www.nlm.nih.gov/bsd/licensee/elements_descriptions.html#supplmesh. Pour les autres (*Diseases* et *Protocoles*) c'est *SupplMeshList SupplMeshName*. Pareil ici se seront souvent des *MeSH SCR Diseases et Protocoles* qui commencent aussi par C.
+- il faut donc impérativement mettre une routine en place pour convertir si besoin un *MeSH SCR* vers un *Descriptor MeSH* en s'appuyant sur le RDF MeSH. **Ou alors peut être qu'en branchant directement le RDF MeSH à notre RDF, on aurait pas besoin ... il suffirait de construire les bonnes requpetes jsp ...**
+
+- Les Majors Topics MeSH: Dans le noeud *MeshHeadingList* chaque Élément XML *MeshHeading* représente un **Desciptor** MeSH avec son **Qualifier** MeSH si il y en a un. A partir de là, grâce aux attributs *UI*, on a le MeSH Unique Identidier et l'attribut *MajorTopicYN* (associé au Descripteur OU au qualifier dans le cas de couples *Descriptor/Qualifier*)  = "Y" ou "N" suivant s'il s'agit ou non d'un Major Topic
+
+- Les autres termes MeSH : Ce sont tout les éléments *MeshHeading* qui ne sont pas major :) 
+
+- le Type : *PublicationTypeList PublicationType*
