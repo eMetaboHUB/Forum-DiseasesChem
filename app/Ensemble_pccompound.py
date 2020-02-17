@@ -69,3 +69,8 @@ class Ensemble_pccompound:
             complete_triples = [("endpoint:" + subject_list[index] + "\tobo:IAO_0000136\tcompound:CID" + pcc.get_cid() + " ;\n\t\tcito:citesAsDataSource\treference:PMID" + pmids[index] + " ;\n\t\tdcterms:contributor\t" + contributors[index] + " .\n") for index in range(len(pcc.pmid_list))]
             f.write("".join(complete_triples))
         f.close
+        
+    def get_all_pmids(self):
+        """this function allows to extract the union of all pmids associated with Pccompounds objects in the Ensemble_pccompound objects"""
+        pmids_union = list(set().union(*([pcc.get_pmids() for pcc in self.pccompound_list])))
+        return pmids_union
