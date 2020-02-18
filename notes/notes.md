@@ -124,3 +124,11 @@ La liste des auteurs pour compléter le "Citation Bibliographique" se trouve dan
 - Les autres termes MeSH : Ce sont tout les éléments *MeshHeading* qui ne sont pas major :) 
 
 - le Type : *PublicationTypeList PublicationType*
+
+
+* * *
+Je pense que c'est pas une bonne idée de compléter les objets PMIDs avec les propriétés des MeSH annttéd dans PubMed, car un même PMID peut être retrouvé chez beaucoup de pcc et aussi ça ferai beaucoup trop grossir la taille du fichier ...
+Vue que je peut avoir l'union de **tout** les PMID associés à tout les éléments Pccompound de mon Ensemble_pccompound, je pense travailler à partir de cette liste.
+On crée un object Ensemble Citation qui est associé à **1** fichier de PubMed et pour lequel on aura récupérer que les citations qui correspondent à des PMID qui appartiennent à notre Union.
+Dès que l'on a lu tout les fichier ou que la liste est vide ou s'arrete.
+Le meix je pense serait de DL TOUT les fichier, mais surtout pas de les décomprésser, mais dès que l'on crée un nouvel Objet Ensemble_ci, on décompresse le fichier à la volé puis on le recompresse.
