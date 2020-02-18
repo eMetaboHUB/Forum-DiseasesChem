@@ -71,6 +71,8 @@ Et encore plus : de créer des éléments correspondant à ces PMID dans le RDF 
 
 Et on aurait un super RDF !! :)
 
+Alors au niveau des résultats, si on prend l'exemple du Galactose (CID:6036) on a 16963 PMID associés en utilisant notre requetage via E-utils et 16961 élément si on prend les infos de la page PubChem.
+Sur l'ensemble de ces éléments 16876 sont communs, ce qui fait > 99% donc c'est bon ! Les éléments qui manque ou diffère sont des publication très récentes ou bien pour beaucoup des associations qui sont *Publisher-provided* car je pense que les liens sont plus difficile à établir pour la requeêtes :/
 
 * * * 
 J'ai regardé je pense qu'on pourra direct liée le RDF MeSh au RDF de PubChem
