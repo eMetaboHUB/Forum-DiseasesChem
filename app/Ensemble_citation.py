@@ -1,4 +1,5 @@
 import gzip
+import numpy
 from pathlib import Path
 import xml.etree.ElementTree as ET
 class Ensemble_citation:
@@ -10,7 +11,28 @@ class Ensemble_citation:
         self.xml_citations = None
     
     def open_xml(self, input_file):
-        """Function used to open an pubmed.xml.gz file, and transformed it as an xml.etree.ElementTree object."""
+        """Function used to open an pubmed.xml.gz file, and transformed it as an xml.etree.ElementTree object.
+        - input_file: path to the Pubmed XML file"""
         f = gzip.open(input_file)
         self.input_file = Path(input_file).stem
         self.xml_citations = ET.parse(f)
+    
+    def extract_pmids(self, pmid_list):
+        """The goal of the function is to extract Pubmed_Citation XML Element that have corresponding PMIDs is the pmid_list, and after extraction, to remove extracted pmids from the pmid_list
+        - pmid_list: the list of pmids"""
+        # Get all pmids
+        xml_pmids = [pmid_citation.text for pmid_citation in self.xml_citations.findall("./PubmedArticle/MedlineCitation/PMID")]
+        # Test if there is some pmids is the XML file that are also in the pmid_list
+        pmid_intersect = list(set(xml_pmids) & set(pmid_list))
+        if len(pmid_intersect) == 0:
+            return None
+        # If there is some, get XML associated elements index in XML tree for intersect pmids
+        matching_index = numpy.array(numpy.isin(xml_pmids, pmid_intersect)).nonzero()
+        # Extract associated XML element
+        all_citations = self.xml_citations.findall("./PubmedArticle/MedlineCitation")
+        selected_xml_citations = [all_citations[index] for index in matching_index[0].tolist()]
+        # Remove catched elements from the pmid list : 
+        for viewed_pmid in pmid_intersect:
+            pmid_list.remove(viewed_pmid)
+        
+        return selected_xml_citations
