@@ -31,6 +31,9 @@ class Ensemble_citation:
         # Extract associated XML element
         all_citations = self.xml_citations.findall("./PubmedArticle/MedlineCitation")
         selected_xml_citations = [all_citations[index] for index in matching_index[0].tolist()]
+        # Check if all intersect pmids have an extracted XML element:
+        selected_xml_citations_pmids = [tt.find("./PMID").text for tt in selected_xml_citations]
+        print("Check if all intersect pmids have an extracted XML element : " + str(set(selected_xml_citations_pmids) == set(pmid_intersect)))
         # Remove catched elements from the pmid list : 
         for viewed_pmid in pmid_intersect:
             pmid_list.remove(viewed_pmid)
