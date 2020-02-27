@@ -71,6 +71,8 @@ Et encore plus : de créer des éléments correspondant à ces PMID dans le RDF 
 
 Et on aurait un super RDF !! :)
 
+Alors au niveau des résultats, si on prend l'exemple du Galactose (CID:6036) on a 16963 PMID associés en utilisant notre requetage via E-utils et 16961 élément si on prend les infos de la page PubChem.
+Sur l'ensemble de ces éléments 16876 sont communs, ce qui fait > 99% donc c'est bon ! Les éléments qui manque ou diffère sont des publication très récentes ou bien pour beaucoup des associations qui sont *Publisher-provided* car je pense que les liens sont plus difficile à établir pour la requeêtes :/
 
 * * * 
 J'ai regardé je pense qu'on pourra direct liée le RDF MeSh au RDF de PubChem
@@ -103,8 +105,9 @@ Par rapport aux *Supplementary MeSH*, je pense que c'est une ressource essentiel
 
 #### Donc comment retrouver ces informations dans le XML PubMed: 
 
-- Chaque élément *PubmedArticle* du XML est essentiellement représenté par le sous Élement Descripteur *MedlineCitation*. L'élément en lui même contient des infos sur qui a jouté la publi, son statu ("reviwed", etc ...)
-A partir de cet élément XML *MedlineCitation=* on peut accéder à l'élément PMID: *MedlineCitation PMID* qui indique le PMID associé à la publication avec la version qui y est associé. En effet, même si c'est très rare, une publi, peut avoir plusieurs PMID annoté. Ainsi, si il existe un PMID annoté avec une version > 1, cela indique qu'il existe deux versions de la publi, une version antérieure et une version actuelle, dans ce cas là il est préférable de toujours choisir la version la plus récente de la publication. 
+- Chaque élément *PubmedArticle* du XML est essentiellement représenté par le sous Élement Descripteur *MedlineCitation*. L'élément en lui même contient des infos sur qui a jouté la publi, son statu ("reviwed", etc ...) **MAIS en fait c'est pas suffisant !!** Car la date est dans *PubmedData* donc il faut prendre l'xmlElement *PubmedArticle* et ensuite la majorité des infos sont dans le sous-élément *MedlineCitation* amsi la date sera dans
+A partir de cet élément XML *MedlineCitation=* on peut accéder à l'élément PMID: *MedlineCitation PMID* qui indique le PMID associé à la publication avec la version qui y est associé. En effet, même si c'est très rare, une publi, peut avoir plusieurs PMID annoté. Ainsi, si il existe un PMID annoté avec une version > 1, cela indique qu'il existe deux versions de la publi, une version antérieure et une version actuelle. En fait, je crois qu'il y a toujours qu'un seul pmid annoté à l'élément pubmed_citation de toute façon... juste la version nous dit si c'est l'original ou quoi .. 
+
 Attention, les attributs *DateCreated*, *DateRevised* et *DateCompleted* ne sont pas les dates associées directement à la publication du papier, mais celle où on a entré la publi dans la base, on a commencé a annotés et enfin ou on a finis d'annotés les termes MeSH pour l'indexer etc ..; 
 
 - Ensuite on a l'élément *Journal* : décrit les éléments relatifs au Journal et à la publication de l'article dans ce Journal, c'est ici que se trouve une partie des infos recherchées pour la "Citation Bibliographique" car on aura le nom, le Volum et la date de Parution dans le Journal. Ainsi par exemple pour une Publication  annoté du style : Biochem Med. 1975 Jun;13(2):117-26., il s'agit en fonction des attribut de *Journal* de : 
@@ -112,7 +115,7 @@ Attention, les attributs *DateCreated*, *DateRevised* et *DateCompleted* ne sont
 Attention *Pagination MedlinePgn* , ne sont plus des enfant de *Journal*, mais sont les éléments qui suivent.
 La liste des auteurs pour compléter le "Citation Bibliographique" se trouve dans les éléments *AuthorList Author*
 
-- Pour la Date: Pour la Date je pense qu'on peut prendre le *PubDate Year* *PubDate Month*, comme dans la Citation.
+- Pour la Date: Pour la Date je pense qu'on peut prendre le *PubDate Year* *PubDate Month*, et rajouter *PubDate Day* comme dans la Citation.
 
 - Pour le titre: Il est dans l'Élément XMl *ArticleTitle*
 
@@ -124,3 +127,25 @@ La liste des auteurs pour compléter le "Citation Bibliographique" se trouve dan
 - Les autres termes MeSH : Ce sont tout les éléments *MeshHeading* qui ne sont pas major :) 
 
 - le Type : *PublicationTypeList PublicationType*
+
+
+* * *
+Je pense que c'est pas une bonne idée de compléter les objets PMIDs avec les propriétés des MeSH annttéd dans PubMed, car un même PMID peut être retrouvé chez beaucoup de pcc et aussi ça ferai beaucoup trop grossir la taille du fichier ...
+Vue que je peut avoir l'union de **tout** les PMID associés à tout les éléments Pccompound de mon Ensemble_pccompound, je pense travailler à partir de cette liste.
+On crée un object Ensemble Citation qui est associé à **1** fichier de PubMed et pour lequel on aura récupérer que les citations qui correspondent à des PMID qui appartiennent à notre Union.
+Dès que l'on a lu tout les fichier ou que la liste est vide ou s'arrete.
+Le meix je pense serait de DL TOUT les fichier, mais surtout pas de les décomprésser, mais dès que l'on crée un nouvel Objet Ensemble_ci, on décompresse le fichier à la volé puis on le recompresse.
+
+
+Pour HMDB: je pense que ce n'est pas le moment de l'intégrer, car en fait les liens Métabolite - Diseases sont ici fait à partir des MeSH associés associées ux publications parlant de ces maladies. mais dans le cas de HMDb, même si une publication est associé à cette association, rien ne dit que le MeSH de la maladie et du métabolite sera annoté. Donc ce n'est pas le même type de relation mise en jeux:
+	- **From meSH**: MeSH met. et MeSH disease annoté dans la publication
+	- **From HMDB**: le métabolite est annoté en concentration anormale dans cette maladie, et il y une référence de la publication. Il peut y avoir plusieurs abnormal concentration qui sont annotés entre ce métabolite et la maladie. 
+	- 
+  En gros je ne pense pas qu'il soit judicieux de prendre les PMID associés aux concentrations anormales annotées entre un métabolites et une maladies dans HMSB pour chercher à récupérer des MeSH ou quoi ... car l'association n'est pas faite avec des MeSH à la base mais "manuellement"
+
+  Peut être que quand on aura les liens direct Metabolites - PMID - Maladies, si HMSB apporte de nouveaux PMID impliqué dans l'association de ce métabolite avec cette maladie, alors là on pourra prendre l'union des PMID entre notre annotation et HMDB 
+
+
+  Bon bah je m'arrete là car il semble que PubChem est déjà fait tout mon travail finalement ...
+  Enfait certes les associations publications - CID ne sont référencé que par les depositors Provided mais même des publications associée par le biais des MeSH sont indéxées dans le RDF de PubCHEM Reference, seulement elles n(ont pas de outgoing links ...
+  Donc je stoppe là, je vais dl tout le ref de PubChem
