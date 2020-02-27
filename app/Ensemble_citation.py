@@ -1,7 +1,9 @@
 import gzip
 import numpy
 from pathlib import Path
+from Citation import Citation
 import xml.etree.ElementTree as ET
+
 class Ensemble_citation:
     """This class represent an ensembl of PubMed citations descripted in a XML format. This class is composed with :
     - input_file: a XML PubMed citation file as name *pubmed20n0001*
@@ -30,9 +32,9 @@ class Ensemble_citation:
         matching_index = numpy.array(numpy.isin(xml_pmids, pmid_intersect)).nonzero()
         # Extract associated XML element
         all_citations = self.xml_citations.findall("./PubmedArticle/MedlineCitation")
-        selected_xml_citations = [all_citations[index] for index in matching_index[0].tolist()]
+        selected_xml_citations = [Citation(all_citations[index]) for index in matching_index[0].tolist()]
         # Check if all intersect pmids have an extracted XML element:
-        selected_xml_citations_pmids = [tt.find("./PMID").text for tt in selected_xml_citations]
+        selected_xml_citations_pmids = [tt.get_pmid() for tt in selected_xml_citations]
         print("Check if all intersect pmids have an extracted XML element : " + str(set(selected_xml_citations_pmids) == set(pmid_intersect)))
         # Remove catched elements from the pmid list : 
         for viewed_pmid in pmid_intersect:

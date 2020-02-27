@@ -135,3 +135,12 @@ Vue que je peut avoir l'union de **tout** les PMID associés à tout les éléme
 On crée un object Ensemble Citation qui est associé à **1** fichier de PubMed et pour lequel on aura récupérer que les citations qui correspondent à des PMID qui appartiennent à notre Union.
 Dès que l'on a lu tout les fichier ou que la liste est vide ou s'arrete.
 Le meix je pense serait de DL TOUT les fichier, mais surtout pas de les décomprésser, mais dès que l'on crée un nouvel Objet Ensemble_ci, on décompresse le fichier à la volé puis on le recompresse.
+
+
+Pour HMDB: je pense que ce n'est pas le moment de l'intégrer, car en fait les liens Métabolite - Diseases sont ici fait à partir des MeSH associés associées ux publications parlant de ces maladies. mais dans le cas de HMDb, même si une publication est associé à cette association, rien ne dit que le MeSH de la maladie et du métabolite sera annoté. Donc ce n'est pas le même type de relation mise en jeux:
+	- **From meSH**: MeSH met. et MeSH disease annoté dans la publication
+	- **From HMDB**: le métabolite est annoté en concentration anormale dans cette maladie, et il y une référence de la publication. Il peut y avoir plusieurs abnormal concentration qui sont annotés entre ce métabolite et la maladie. 
+	- 
+  En gros je ne pense pas qu'il soit judicieux de prendre les PMID associés aux concentrations anormales annotées entre un métabolites et une maladies dans HMSB pour chercher à récupérer des MeSH ou quoi ... car l'association n'est pas faite avec des MeSH à la base mais "manuellement"
+
+  Peut être que quand on aura les liens direct Metabolites - PMID - Maladies, si HMSB apporte de nouveaux PMID impliqué dans l'association de ce métabolite avec cette maladie, alors là on pourra prendre l'union des PMID entre notre annotation et HMDB 

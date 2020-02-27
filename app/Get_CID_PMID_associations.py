@@ -6,11 +6,7 @@ from Ensemble_pccompound import Ensemble_pccompound
 from Ensemble_citation import Ensemble_citation
 
 # The Api_key can be found on the NCBI account.
-apiKey = "0ddb3479f5079f21272578dc6e040278a508"
-# Building requests
-query_builder = eutils.QueryService(cache = False,
-                                    default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
-                                    api_key = apiKey)
+
 
 # Now we must create a function that takes this union list are try to write all PubMed citation associatied elements
 
@@ -32,7 +28,11 @@ def fetch_mesh(pmids_list, pubmed_citation_folder):
         # Passing to next file
         index += 1
 
-
+apiKey = "0ddb3479f5079f21272578dc6e040278a508"
+# Building requests
+query_builder = eutils.QueryService(cache = False,
+                                    default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
+                                    api_key = apiKey)
 
 new_Ensemble_pccompound = Ensemble_pccompound()
 new_Ensemble_pccompound.append_pccompound("25203768", query_builder)
