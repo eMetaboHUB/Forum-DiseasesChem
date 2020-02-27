@@ -1,6 +1,9 @@
 # Importing packages
 # Using Package eutils 0.6.0
 import eutils
+import gzip
+import io
+from pathlib import Path
 import os
 from Ensemble_pccompound import Ensemble_pccompound
 from Ensemble_citation import Ensemble_citation
@@ -42,7 +45,7 @@ new_Ensemble_pccompound.export_cids_pmids_triples_ttl("test3.txt")
 
 new_Ensemble_pccompound.export_cid_pmid_endpoint("test_endpoint.txt")
 
-test = new_Ensemble_pccompound.get_all_pmids()
+all_pmids = new_Ensemble_pccompound.get_all_pmids()
 
 # fetch_mesh(test, "data/PubMed_MEDLINE/")
 # ensbl_cit_test = Ensemble_citation()
@@ -50,3 +53,41 @@ test = new_Ensemble_pccompound.get_all_pmids()
 # print(len(test))
 # a = ensbl_cit_test.extract_pmids(test)
 # print(len(test))
+
+
+
+# A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
+def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
+    """A function to parse the .ttl.gz PubChem Reference RDf files to only extract line for which PMIDs are associated to CID
+    - PubChem_ref_folfer: The folder where are all the PubChem Reference RDf files
+    - the list of all pmids from an Ensemble_pccompound object get_all_pmids() 
+    """
+    # Test if output directory exist:  
+    if not  os.path.exists(out_dir):
+        os.mkdir(out_dir)
+        print("Directory " + out_dir + " Created !")
+    else:
+        print("Directory " + out_dir + " already exists")
+    set_all_pmids = set(["reference:PMID" + pmid for pmid in all_pmids])
+    RDF_ref_files = os.listdir(PubChem_ref_folfer)
+    for f_input in RDF_ref_files:
+        print("Treating " + f_input + " ...")
+        # On parse le nom du fichier pour récupérer la racine
+        f_output_name = f_input.split(".ttl.gz")[0] + "_fitlered.ttl.gz"
+        f_output = gzip.open(out_dir + f_output_name, "wt")
+        f = gzip.open(PubChem_ref_folfer + f_input,'rt')
+        bool = False
+        for line in f:
+            columns = line.split(sep='\t')
+            if columns[0] != '':
+                if columns[0] in set_all_pmids:
+                    bool = True
+                else:
+                    bool = False
+            if bool:
+                f_output.write(line)
+            
+
+
+
+parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "filtered_tll/")
