@@ -68,22 +68,29 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
         print("Directory " + out_dir + " Created !")
     else:
         print("Directory " + out_dir + " already exists")
+    # Convert pmids list in a set, because the test 'in' will be more efficient
     set_all_pmids = set(["reference:PMID" + pmid for pmid in all_pmids])
     RDF_ref_files = os.listdir(PubChem_ref_folfer)
+    # On parcours tout les fichiers:
     for f_input in RDF_ref_files:
         print("Treating " + f_input + " ...")
-        # On parse le nom du fichier pour récupérer la racine
+        # On parse le nom du fichier pour récupérer la racine et on créée le fichier de sortie :
         f_output_name = f_input.split(".ttl.gz")[0] + "_fitlered.ttl.gz"
         f_output = gzip.open(out_dir + f_output_name, "wt")
         f = gzip.open(PubChem_ref_folfer + f_input,'rt')
+        # On initialise le boolean a Flase
         bool = False
+        # Pour chaque ligne, on parse
         for line in f:
             columns = line.split(sep='\t')
+            # Si la ligne désigne un triplet (et pas sa suite lorsque l'on a plusieurs objets en turtle )
             if columns[0] != '':
+                # Si le pmid appartient à notre liste, on passe bool à True de tel sorte que les ligne suivante soient ajouter au fichier tant qu'un triplet avec un pmid qui n'appartient pas à notre liste est rencontré
                 if columns[0] in set_all_pmids:
                     bool = True
                 else:
                     bool = False
+            # Si bool est True, on print la ligne
             if bool:
                 f_output.write(line)
             
