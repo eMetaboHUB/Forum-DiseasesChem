@@ -31,7 +31,7 @@ class Ensemble_citation:
         # If there is some, get XML associated elements index in XML tree for intersect pmids
         matching_index = numpy.array(numpy.isin(xml_pmids, pmid_intersect)).nonzero()
         # Extract associated XML element
-        all_citations = self.xml_citations.findall("./PubmedArticle/MedlineCitation")
+        all_citations = self.xml_citations.findall("./PubmedArticle")
         selected_xml_citations = [Citation(all_citations[index]) for index in matching_index[0].tolist()]
         # Check if all intersect pmids have an extracted XML element:
         selected_xml_citations_pmids = [tt.get_pmid() for tt in selected_xml_citations]
