@@ -151,3 +151,27 @@ Pour HMDB: je pense que ce n'est pas le moment de l'intégrer, car en fait les l
   Donc je stoppe là, je vais dl tout le ref de PubChem
 
   Au pire on completera le code pour récupérer les éléments manquant
+
+  * * *
+  
+  Bon pour faire notre OWL: 
+  - Pour le type de mes élément reference:PMID:
+    - D'après le fichier reference_type de PubChem, il y a 
+    - 12216202 fabio:JournalArticle .
+    - 1186795 fabio:ReviewArticle .
+      - Qui sont tous les deux des sous-classes de http://purl.org/spar/fabio/Article
+
+Donc en important le Vocabulaire de Fabio: On peut récupérer tout les article avec le Type Article:
+PREFIX cito:	<http://purl.org/spar/cito/>
+PREFIX compound:	<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX reference:	<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/>
+PREFIX fabio:	<http://purl.org/spar/fabio/>
+
+select ?x ?y where {
+  ?x a fabio:Article
+  ?x a ?y
+}
+
+
+  - Pour le type de mes élément compound:CID... ils n'ont pas vraiment de type particulier ...
+  - Ils sont rattacher au type associé de leur ChEBI, donc chaque molécule à un type différent en vrai. Mais du coup, si toute l'ontologie ChEBI est importer, on peut montrer qu'il sont tous de type "CHEBI:23367 molecular entity" qui est définit comme "Any constitutionally or isotopically distinct atom, molecule, ion, ion pair, radical, radical ion, complex, conformer etc., identifiable as a separately distinguishable entity."

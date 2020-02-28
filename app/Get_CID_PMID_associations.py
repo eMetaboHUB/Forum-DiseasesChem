@@ -37,13 +37,12 @@ query_builder = eutils.QueryService(cache = False,
                                     api_key = apiKey)
 
 new_Ensemble_pccompound = Ensemble_pccompound()
-new_Ensemble_pccompound.append_pccompound("25203768", query_builder)
-new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
-# new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
-new_Ensemble_pccompound.export_cids_pmids_triples_ttl("test3.txt")
+new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 
-new_Ensemble_pccompound.export_cid_pmid_endpoint("test_endpoint.txt")
+new_Ensemble_pccompound.export_cids_pmids_triples_ttl("cid_to_pmids.ttl")
+
+new_Ensemble_pccompound.export_cid_pmid_endpoint("cid_to_pmids_endpoint.ttl")
 
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
 
@@ -78,6 +77,11 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
         f_output_name = f_input.split(".ttl.gz")[0] + "_fitlered.ttl.gz"
         f_output = gzip.open(out_dir + f_output_name, "wt")
         f = gzip.open(PubChem_ref_folfer + f_input,'rt')
+        # Il va falloir récupérer les Headers: 
+        l_h  = f.readline()
+        while l_h.startswith('@', 0, 1):
+            f_output.write(l_h)
+            l_h = f.readline()
         # On initialise le boolean a Flase
         bool = False
         # Pour chaque ligne, on parse
