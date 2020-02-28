@@ -61,7 +61,7 @@ Thumbs.db
 *.graphml
 *.odp
 *.netstats
-
+*.ttl
 # Folders #
 # #########
 data/**

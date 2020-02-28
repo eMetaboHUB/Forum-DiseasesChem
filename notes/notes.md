@@ -175,3 +175,18 @@ select ?x ?y where {
 
   - Pour le type de mes élément compound:CID... ils n'ont pas vraiment de type particulier ...
   - Ils sont rattacher au type associé de leur ChEBI, donc chaque molécule à un type différent en vrai. Mais du coup, si toute l'ontologie ChEBI est importer, on peut montrer qu'il sont tous de type "CHEBI:23367 molecular entity" qui est définit comme "Any constitutionally or isotopically distinct atom, molecule, ion, ion pair, radical, radical ion, complex, conformer etc., identifiable as a separately distinguishable entity."
+
+Donc j'ai fait un parseur adapté a tout type de fichier turtle, maitenant on peut parser les fichiers PubChem_compound où on peut par exemple avoir le type et DONC le ChEBI associée. Ce parseur permet donc de récupérer les lignes pour lesquelles il s'agit d'un des cids que j'ai sélectionner depuis la liste totale. Ainsi, en incorporant également l'ontologie owl de ChEBI, on peut avoir avoir : 
+
+PREFIX cito:	<http://purl.org/spar/cito/>
+PREFIX compound:	<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX reference:	<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/>
+PREFIX fabio:	<http://purl.org/spar/fabio/>
+PREFIX obo:	<http://purl.obolibrary.org/obo/>
+
+select distinct ?x where {
+  ?x a CHEBI_23367
+  ?x cito:isDiscussedBy ?p
+}
+
+la liste de toutes les molecules. Et ainsi maintnenant les éléments sont bien typé !

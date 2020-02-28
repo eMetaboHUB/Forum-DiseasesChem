@@ -45,6 +45,7 @@ new_Ensemble_pccompound.export_cids_pmids_triples_ttl("cid_to_pmids.ttl")
 new_Ensemble_pccompound.export_cid_pmid_endpoint("cid_to_pmids_endpoint.ttl")
 
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
+all_cids = new_Ensemble_pccompound.get_all_cids()
 
 # fetch_mesh(test, "data/PubMed_MEDLINE/")
 # ensbl_cit_test = Ensemble_citation()
@@ -56,10 +57,10 @@ all_pmids = new_Ensemble_pccompound.get_all_pmids()
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
-def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
-    """A function to parse the .ttl.gz PubChem Reference RDf files to only extract line for which PMIDs are associated to CID
-    - PubChem_ref_folfer: The folder where are all the PubChem Reference RDf files
-    - the list of all pmids from an Ensemble_pccompound object get_all_pmids() 
+def parse_pubchem_RDF(PubChem_ref_folfer, all_ids, prefix, out_dir):
+    """A function to parse the .ttl.gz PubChem RDF files to only extract line for which id are associated to ids from list
+    - PubChem_ref_folfer: The folder where are all the PubChem  RDF files
+    - the list of all ids to fetch in files
     """
     # Test if output directory exist:  
     if not  os.path.exists(out_dir):
@@ -68,7 +69,7 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
     else:
         print("Directory " + out_dir + " already exists")
     # Convert pmids list in a set, because the test 'in' will be more efficient
-    set_all_pmids = set(["reference:PMID" + pmid for pmid in all_pmids])
+    set_all_ids = set([prefix + id for id in all_ids])
     RDF_ref_files = os.listdir(PubChem_ref_folfer)
     # On parcours tout les fichiers:
     for f_input in RDF_ref_files:
@@ -90,7 +91,7 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
             # Si la ligne désigne un triplet (et pas sa suite lorsque l'on a plusieurs objets en turtle )
             if columns[0] != '':
                 # Si le pmid appartient à notre liste, on passe bool à True de tel sorte que les ligne suivante soient ajouter au fichier tant qu'un triplet avec un pmid qui n'appartient pas à notre liste est rencontré
-                if columns[0] in set_all_pmids:
+                if columns[0] in set_all_ids:
                     bool = True
                 else:
                     bool = False
@@ -100,5 +101,9 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_pmids, out_dir):
             
 
 
+# On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
+parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "new_filtered_tll/")
 
-parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "filtered_tll/")
+# On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
+parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")
+
