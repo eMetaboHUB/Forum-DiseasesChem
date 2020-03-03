@@ -189,4 +189,27 @@ select distinct ?x where {
   ?x cito:isDiscussedBy ?p
 }
 
+Pour rappel, **obo c'est ChEBI**
+
 la liste de toutes les molecules. Et ainsi maintnenant les éléments sont bien typé !
+
+Après il semble qu'il est a aussi l'ontologue BioPax, où chaque composé est également du type bp:SmallMolecule
+
+
+Peut être que le miexu c'est de créer la propriété chainé et ensuite avec le SPARQL on fera les restriction sur les types pedant que l'on requetera les éléments !
+
+
+Dans les fichiers référence PubChem  pc_reference2chemical_disease_00000x j'ai remplacé l'attribution de *cito:discusses* par *fabio:hasSubjectTerm* car *fabio:hasSubjectTerm* est fait pour mettre en référence des MeSH, contrairement à *cito:discusses* qui n'est pas très adapté ici. Et en plus étant la propriété inverse de*cito:isDiscussedBy*, cela crée des mauvaise inférence lorsque je veux créer des liens entre Compound et MeSH term.
+
+J'ai pensé à intégrer la disease Ontologie pour détermin er plus efficacement les termes désignant des maladies et les autres, mais le problème c'est qu'ils n'ont pas fait l'effort de mettre des URI pour les cross-ref ... genre pour le MeSHJ c'est un String su coup ...
+
+Comment marche un peu le owl: Le tout est simplement de dire que voc:HasUndirectDescriptor est une propriété chainé sur fabio:hasSubjectTerm -> meshv:hasDescriptor et que en fait la désigne comme la même chose que fabio:hasSubjectTerm. Ainsi tout ce que est pointé par voc:HasUndirectDescriptor est par inférence aussi pointé par fabio:hasSubjectTerm. Ainsi les objects des triplets de fabio:hasSubjectTerm contiennent **tout** les TopicalDescriptors, qu'ils soient seuls ou qu'ils étaient en paires.
+
+
+
+Bon la owl est ok ! Maintenant ça fonctionne pour récupérer notre matrice (### QUERY SPARQL POUR FAIRE NOTRE MATRICE) le seul truc c'est que dans le rdf Store de PubChem, il n'y pas d'information de HasPrimarySubjectTerm... Elle est dispo sur la page mais pas dans les données que l'on peut télécharger ..
+Donc je pense qu'il va falloir recoder ce truc là ...
+Il faudrait simplement indique en plus dans e owl que 
+fabio:hasPrimarySubjectTerm owl:equivalentProperty fabio:hasSubjectTerm . (**avant le reste je pense**) comme ça on poura également liées les TopicalDescripteur associés à ces entrées aux autes.
+
+Et on aura peut être même pas besoin cart PrimarySubjectTerm est une sous-classe de Subject-Term
