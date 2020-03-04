@@ -114,7 +114,6 @@ def request_RESTful_PubChem(graph, predicate, offset, out_dir, request_failure_l
     """
     # On crée la structure de la requête
     request_base = "https://pubchem.ncbi.nlm.nih.gov/rest/rdf/query?graph=" + graph + "&pred=" + predicate + "&offset=" + offset + "&format=csv"
-    r = requests.get(request_base)
     try:
         # On lance la requête. Si le statut HTTP de la requête raise est > 200, cela déclenche une exception, on ajoute l'offset_concerné dans la table
         r = requests.get(request_base)
