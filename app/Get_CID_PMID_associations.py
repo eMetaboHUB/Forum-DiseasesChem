@@ -171,14 +171,14 @@ def REST_ful_bulk_download(graph, predicate, out_dir):
     print("Starting at offset " + str(offset))
     out = request_RESTful_PubChem(graph, predicate, str(offset), out_dir, request_failure_list)
     # On récupère le dernier élément de la liste en la tronquant, si c'est true, c'est que le fichier à 10002 lignes et qu'on attend encore certainement des résultats.
-    is_the_last = out.pop()
+    is_not_the_last = out.pop()
     # On envoie à la fonction qui va écrire tout àa en turtle. Il faudrait modifier ça si on veut changer de type (exemple récupérer le titre ou bien écrire en xml, etc ...)
     write_in_turtle_syntax(out_dir, graph, predicate, str(offset), out, 'reference:', 6, 'mesh:', 13)
-    while(is_the_last):
+    while(is_not_the_last):
         offset += 10000
         print("offset: " + str(offset))
         out = request_RESTful_PubChem(graph, predicate, str(offset), out_dir, request_failure_list)
-        is_the_last = out.pop()
+        is_not_the_last = out.pop()
         write_in_turtle_syntax(out_dir, graph, predicate, str(offset), out, 'reference:', 6, 'mesh:', 13)
     print("End !")
     return request_failure_list
