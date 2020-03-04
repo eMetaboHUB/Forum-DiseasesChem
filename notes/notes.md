@@ -207,9 +207,17 @@ Comment marche un peu le owl: Le tout est simplement de dire que voc:HasUndirect
 
 
 
-Bon la owl est ok ! Maintenant ça fonctionne pour récupérer notre matrice (### QUERY SPARQL POUR FAIRE NOTRE MATRICE) le seul truc c'est que dans le rdf Store de PubChem, il n'y pas d'information de HasPrimarySubjectTerm... Elle est dispo sur la page mais pas dans les données que l'on peut télécharger ..
-Donc je pense qu'il va falloir recoder ce truc là ...
-Il faudrait simplement indique en plus dans e owl que 
-fabio:hasPrimarySubjectTerm owl:equivalentProperty fabio:hasSubjectTerm . (**avant le reste je pense**) comme ça on poura également liées les TopicalDescripteur associés à ces entrées aux autes.
+Bon la owl est ok ! Maintenant ça fonctionne pour récupérer notre matrice (### QUERY SPARQL POUR FAIRE NOTRE MATRICE) le seul truc c'est que dans le rdf Store de PubChem, il n'y pas d'information de HasPrimarySubjectTerm... Elle est dispo sur la page mais pas dans les données que l'on peut télécharger .. J'ai envoyé un mail aà PubCheml pour savoir ce qu'il en était
 
-Et on aura peut être même pas besoin cart PrimarySubjectTerm est une sous-classe de Subject-Term
+* * *
+Les gens de PubChem m'ont répondu : 
+" Dear Maxime,
+
+Thanks for your comment! It is a known issue from our side, which we consider to correct it in our future plan. For now, I would suggest that you use our rest service to retrieve the data you want.  Detailed information is available in https://pubchemdocs.ncbi.nlm.nih.gov/rdf
+
+Thanks,
+Leon "
+En gros cette partie là du Service est indisponible sur le ftp de PubChem. En revanche ils suggèrent d'utiliser le PubChemRDF REST. Avec de REST, on peut faire des query qui permettent de récupérer certains couples Subjects-Predicate-Object en spécifiant les paramètres “graph” (or “domain”) and “predicate” (or “pred”). Il faut également gérer les offset. En effet, seulement 10000 résultats peuvent être renvoyé de manière simultanée, et pour obtenir les 10000 résultats suivant (soit e 10001 à 20000 par ex) il faut spécififier l'attribut offset. La doc est présent à https://pubchemdocs.ncbi.nlm.nih.gov/rdf$_5-2 **Query RESTful Interface**
+
+
+Il va falloir créer une fonction pour récupérer tout cela.

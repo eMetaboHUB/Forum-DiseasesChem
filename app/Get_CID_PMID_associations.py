@@ -2,6 +2,7 @@
 # Using Package eutils 0.6.0
 import eutils
 import gzip
+import requests
 import io
 from pathlib import Path
 import os
@@ -99,7 +100,56 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_ids, prefix, out_dir):
             if bool:
                 f_output.write(line)
             
+# Cette fonction à pour but de lancer une requête vers le REST de PubChem.
+def request_RESTful_PubChem(graph, predicate, format, offset, out_dir, request_failure_list):
+    """ - graph: The Subject of the triples
+        - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
+        - format: output formal (xml, json, csv)
+        - offset: the current offset to fetch
+        - out_dir: output directoty to write the file
+        - request_failure_list: In case os the request raise an Exception (HTTP status > 200) the associated offset will be added to the request_failure_list
+        If the number of printed lines in less than 10002 it indicates that we have reached the end because the maximal number of recors is 10000
+    """
+    # On crée la structure de la requête
+    request_base = "https://pubchem.ncbi.nlm.nih.gov/rest/rdf/query?graph=" + graph + "&pred=" + predicate + "&offset=" + offset + "&format=" + format
+    r = requests.get(request_base)
+    try:
+        # On lance la requête. Si le statut HTTP de la requête raise est > 200, cela déclenche une exception, on ajoute l'offset_concerné dans la table
+        r = requests.get(request_base)
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as fail_request:
+        print("There was an error during the request, with predicate = " + predicate + ", graph = " + graph + ", and offset = " + offset + "\n.The fail request Error was " + str(fail_request) + "\n")
+        print("The associated offset " + offset + " is added to the request_failure_list\n")
+        request_failure_list.append(offset)
+        return True
+    f_out = open( (out_dir + graph + "_" + predicate + "_" + offset + ".csv"), 'w')
+    f_out.write(r.text)
+    f_out.close()
+    # On retourne le nombre de ligne présente dans le fichier qui de base 10002 (1 ligne de header + 10000 resultats max + 1 ligne vide)
+    return (len(str.splitlines(r.text)) == 10002)
 
+
+def REST_ful_bulk_download(graph, predicate, format, out_dir):
+    # Test if output directory exist:  
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+        print("Directory " + out_dir + " Created !")
+    else:
+        print("Directory " + out_dir + " already exists")
+    # On initilialise la table request_failure_list:
+    request_failure_list = list()
+    offset = 0
+    print("Starting at offset " + str(offset))
+    out = request_RESTful_PubChem(graph, predicate, format, str(offset), out_dir, request_failure_list)
+    while(out):
+        offset += 10000
+        print("offset: " + str(offset))
+        out = request_RESTful_PubChem(graph, predicate, format, str(offset), out_dir, request_failure_list)
+    print("End !")
+    return request_failure_list
+
+        
+REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', format = 'csv', out_dir = 'data/PubChem_PrimarySubjectTermsTriples/')
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
