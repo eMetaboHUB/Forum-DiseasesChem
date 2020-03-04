@@ -192,3 +192,4 @@ parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PM
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")
 
+print("coucou")
