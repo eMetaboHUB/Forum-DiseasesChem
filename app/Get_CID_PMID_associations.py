@@ -184,7 +184,7 @@ def REST_ful_bulk_download(graph, predicate, out_dir):
     return request_failure_list
 
         
-REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_dir = 'data/PubChem_PrimarySubjectTermsTriples2/')
+REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_dir = 'data/PubChem_PrimarySubjectTermsTriples/')
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
