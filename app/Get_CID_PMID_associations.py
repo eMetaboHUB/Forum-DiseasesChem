@@ -4,6 +4,7 @@ import eutils
 import gzip
 import requests
 import io
+import time
 import re
 from pathlib import Path
 import os
@@ -102,12 +103,11 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_ids, prefix, out_dir):
                 f_output.write(line)
             
 # Cette fonction à pour but de lancer une requête vers le REST de PubChem et de récupérer le résultat en csv et de l'écire en turtle
-def request_RESTful_PubChem(graph, predicate, offset, out_dir, request_failure_list):
+def request_RESTful_PubChem(graph, predicate, offset, request_failure_list):
     """ This function send a request to PubChem RESTful serveur and get a response in a csv format and then return the lines in the results as a list, with the last element a boolean that indicated if this result is the last expected
         - graph: The Subject of the triples
         - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
         - offset: the current offset to fetch
-        - out_dir: output directoty to write the file
         - request_failure_list: In case os the request raise an Exception (HTTP status > 200) the associated offset will be added to the request_failure_list
         If the number of printed lines in less than 10002 it indicates that we have reached the end because the maximal number of recors is 10000
         Doc at https://pubchemdocs.ncbi.nlm.nih.gov/rdf$_5-2
@@ -154,7 +154,7 @@ def write_in_turtle_syntax(out_dir, graph, predicate, offset, lines, prefix_1, i
 
 
 
-def REST_ful_bulk_download(graph, predicate, out_dir):
+def REST_ful_bulk_download(graph, predicate, out_dir, start_offset):
     """ - graph: The Subject of the triples
         - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
         - out_dir: output directoty to write files
@@ -167,9 +167,9 @@ def REST_ful_bulk_download(graph, predicate, out_dir):
         print("Directory " + out_dir + " already exists")
     # On initilialise la table request_failure_list:
     request_failure_list = list()
-    offset = 0
+    offset = start_offset
     print("Starting at offset " + str(offset))
-    out = request_RESTful_PubChem(graph, predicate, str(offset), out_dir, request_failure_list)
+    out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
     # On récupère le dernier élément de la liste en la tronquant, si c'est true, c'est que le fichier à 10002 lignes et qu'on attend encore certainement des résultats.
     is_not_the_last = out.pop()
     # On envoie à la fonction qui va écrire tout àa en turtle. Il faudrait modifier ça si on veut changer de type (exemple récupérer le titre ou bien écrire en xml, etc ...)
@@ -177,14 +177,23 @@ def REST_ful_bulk_download(graph, predicate, out_dir):
     while(is_not_the_last):
         offset += 10000
         print("offset: " + str(offset))
-        out = request_RESTful_PubChem(graph, predicate, str(offset), out_dir, request_failure_list)
+        out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
         is_not_the_last = out.pop()
+        # If it appears that this results seems to be the last, we check three more time that we can not catch 10000 triples, if we can't, it's the last one
+        if not is_not_the_last:
+            print("Starting Check !")
+            i = 0
+            # We check three times, if is_not_the_last become True, we exist the loop and continue with the next offset or if we reach the last check (the third) and it's always the last, so it's the end 
+            while (not is_not_the_last) and i < 5:
+                out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
+                is_not_the_last = out.pop()
+                i +=1
         write_in_turtle_syntax(out_dir, graph, predicate, str(offset), out, 'reference:', 6, 'mesh:', 13)
     print("End !")
     return request_failure_list
 
         
-REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_dir = 'data/PubChem_PrimarySubjectTermsTriples/')
+requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_dir = 'data/PubChem_PrimarySubjectTermsTriples/', start_offset = 3430000)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
