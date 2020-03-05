@@ -101,7 +101,10 @@ As Exemple, to get all the triples describing the pubmed publications (such as *
 ```python
 parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
 ```
+* * *
+A issue was also found in the pc_reference2chemical_diseases.ttl files. This files provides associations between pmids and Supplementary Concept MeSH Records (SCRs) which are composed of two principals types Diseases and Chemicals. The predicated used in this associations was *cito:discusses* whcih is the reverse property of *cito:isDiscussedBy*. But, *cito:isDiscussedBy* was already used to annotated associations between cid and pmids, so to prevent errors with inferences, I choose to change all the *cito:discusses* predicates in this files with *fabio:hasSubjectTerm* which is explicitly defined to be used with MeSH terms.
 
+* * *
 Also, to parse PubChem RDF Compound files, we can use:
 ```python
 parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")
@@ -127,3 +130,43 @@ requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio
 ```
 With this function 52178606 of triples involving a pmid and a mesh with the predicate *fabio:hasPrimarySubjectTerm* was found.
 After this, all the files may be collapse as one, compress and send to the function ```parse_pubchem_RDF``` to only extract thoose for which we have an associated PubChem CID.
+```bash
+cat PubChem_PrimarySubjectTermsTriples/* > reference_fabioPrimarySubjectTerm.ttl
+sed -i '1s/^/@prefix fabio:\t<http:\/\/purl.org\/spar\/fabio\/> .\n@prefix reference:\t<http:\/\/rdf.ncbi.nlm.nih.gov\/pubchem\/reference\/> .\n@prefix mesh:\t<http:\/\/id.nlm.nih.gov\/mesh\/> .\n/' reference_fabioPrimarySubjectTerm.ttl
+gzip reference_fabioPrimarySubjectTerm.ttl
+```
+And then we can use the ```parse_pubchem_RDF``` to parse the file.
+
+* * *
+
+## Ontology using Corese:
+
+The differents RDF stores and RDFS/OWL Schema can be dowload in: 
+- MeSH
+  - RDF: ```ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt.gz```
+  - Schema: ```ftp://ftp.nlm.nih.gov/online/mesh/rdf/vocabulary_1.0.0.ttl```
+- ChEBI:
+  - Schema: ```ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl```
+- cito
+  - Schema: ```http://purl.org/spar/cito.ttl```
+- fabio:
+  - Schema: ```http://purl.org/spar/fabio.ttl```
+- Dublin Core:
+  - Schema: ```https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.nt```
+
+Then, a owl file was build to provide logical links between entity to infer association between PubChem CID and MeSH associated to a diseases. The file is in app/doc_voc_test.ttl (details in notes)
+
+After loading all this files and the produced files: cid_to_pmids.ttl, cid_to_pmids_endpoint.ttl, and all the files in pccompound_references_filtered/ and pccompound_filered/, we can use a query like :
+```
+select ?cid ?mesh (count(?pmid) as ?c) where {
+	?cid cito:isDiscussedBy ?pmid
+	?pmid fabio:hasSubjectTerm ?mesh
+	?mesh a voc:DiseaseLinkedMesH
+} group by (?mesh)
+``` to build the Compound Disease Matrix
+
+#TODO: Tester contre HMDB
+
+
+
+
