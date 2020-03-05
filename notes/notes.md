@@ -151,3 +151,73 @@ Pour HMDB: je pense que ce n'est pas le moment de l'intégrer, car en fait les l
   Donc je stoppe là, je vais dl tout le ref de PubChem
 
   Au pire on completera le code pour récupérer les éléments manquant
+
+  * * *
+  
+  Bon pour faire notre OWL: 
+  - Pour le type de mes élément reference:PMID:
+    - D'après le fichier reference_type de PubChem, il y a 
+    - 12216202 fabio:JournalArticle .
+    - 1186795 fabio:ReviewArticle .
+      - Qui sont tous les deux des sous-classes de http://purl.org/spar/fabio/Article
+
+Donc en important le Vocabulaire de Fabio: On peut récupérer tout les article avec le Type Article:
+PREFIX cito:	<http://purl.org/spar/cito/>
+PREFIX compound:	<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX reference:	<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/>
+PREFIX fabio:	<http://purl.org/spar/fabio/>
+
+select ?x ?y where {
+  ?x a fabio:Article
+  ?x a ?y
+}
+
+
+  - Pour le type de mes élément compound:CID... ils n'ont pas vraiment de type particulier ...
+  - Ils sont rattacher au type associé de leur ChEBI, donc chaque molécule à un type différent en vrai. Mais du coup, si toute l'ontologie ChEBI est importer, on peut montrer qu'il sont tous de type "CHEBI:23367 molecular entity" qui est définit comme "Any constitutionally or isotopically distinct atom, molecule, ion, ion pair, radical, radical ion, complex, conformer etc., identifiable as a separately distinguishable entity."
+
+Donc j'ai fait un parseur adapté a tout type de fichier turtle, maitenant on peut parser les fichiers PubChem_compound où on peut par exemple avoir le type et DONC le ChEBI associée. Ce parseur permet donc de récupérer les lignes pour lesquelles il s'agit d'un des cids que j'ai sélectionner depuis la liste totale. Ainsi, en incorporant également l'ontologie owl de ChEBI, on peut avoir avoir : 
+
+PREFIX cito:	<http://purl.org/spar/cito/>
+PREFIX compound:	<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX reference:	<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/>
+PREFIX fabio:	<http://purl.org/spar/fabio/>
+PREFIX obo:	<http://purl.obolibrary.org/obo/>
+
+select distinct ?x where {
+  ?x a CHEBI_23367
+  ?x cito:isDiscussedBy ?p
+}
+
+Pour rappel, **obo c'est ChEBI**
+
+la liste de toutes les molecules. Et ainsi maintnenant les éléments sont bien typé !
+
+Après il semble qu'il est a aussi l'ontologue BioPax, où chaque composé est également du type bp:SmallMolecule
+
+
+Peut être que le miexu c'est de créer la propriété chainé et ensuite avec le SPARQL on fera les restriction sur les types pedant que l'on requetera les éléments !
+
+
+Dans les fichiers référence PubChem  pc_reference2chemical_disease_00000x j'ai remplacé l'attribution de *cito:discusses* par *fabio:hasSubjectTerm* car *fabio:hasSubjectTerm* est fait pour mettre en référence des MeSH, contrairement à *cito:discusses* qui n'est pas très adapté ici. Et en plus étant la propriété inverse de*cito:isDiscussedBy*, cela crée des mauvaise inférence lorsque je veux créer des liens entre Compound et MeSH term.
+
+J'ai pensé à intégrer la disease Ontologie pour détermin er plus efficacement les termes désignant des maladies et les autres, mais le problème c'est qu'ils n'ont pas fait l'effort de mettre des URI pour les cross-ref ... genre pour le MeSHJ c'est un String su coup ...
+
+Comment marche un peu le owl: Le tout est simplement de dire que voc:HasUndirectDescriptor est une propriété chainé sur fabio:hasSubjectTerm -> meshv:hasDescriptor et que en fait la désigne comme la même chose que fabio:hasSubjectTerm. Ainsi tout ce que est pointé par voc:HasUndirectDescriptor est par inférence aussi pointé par fabio:hasSubjectTerm. Ainsi les objects des triplets de fabio:hasSubjectTerm contiennent **tout** les TopicalDescriptors, qu'ils soient seuls ou qu'ils étaient en paires.
+
+
+
+Bon la owl est ok ! Maintenant ça fonctionne pour récupérer notre matrice (### QUERY SPARQL POUR FAIRE NOTRE MATRICE) le seul truc c'est que dans le rdf Store de PubChem, il n'y pas d'information de HasPrimarySubjectTerm... Elle est dispo sur la page mais pas dans les données que l'on peut télécharger .. J'ai envoyé un mail aà PubCheml pour savoir ce qu'il en était
+
+* * *
+Les gens de PubChem m'ont répondu : 
+" Dear Maxime,
+
+Thanks for your comment! It is a known issue from our side, which we consider to correct it in our future plan. For now, I would suggest that you use our rest service to retrieve the data you want.  Detailed information is available in https://pubchemdocs.ncbi.nlm.nih.gov/rdf
+
+Thanks,
+Leon "
+En gros cette partie là du Service est indisponible sur le ftp de PubChem. En revanche ils suggèrent d'utiliser le PubChemRDF REST. Avec de REST, on peut faire des query qui permettent de récupérer certains couples Subjects-Predicate-Object en spécifiant les paramètres “graph” (or “domain”) and “predicate” (or “pred”). Il faut également gérer les offset. En effet, seulement 10000 résultats peuvent être renvoyé de manière simultanée, et pour obtenir les 10000 résultats suivant (soit e 10001 à 20000 par ex) il faut spécififier l'attribut offset. La doc est présent à https://pubchemdocs.ncbi.nlm.nih.gov/rdf$_5-2 **Query RESTful Interface**
+
+
+Il va falloir créer une fonction pour récupérer tout cela.

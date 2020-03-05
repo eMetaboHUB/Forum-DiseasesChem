@@ -30,6 +30,7 @@
 # OS generated files #
 ######################
 .DS_Store
+.vscode/**
 .DS_Store?
 ._*
 .Spotlight-V100
@@ -61,7 +62,7 @@ Thumbs.db
 *.graphml
 *.odp
 *.netstats
-
+*.ttl
 # Folders #
 # #########
 data/**
