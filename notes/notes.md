@@ -221,3 +221,39 @@ En gros cette partie là du Service est indisponible sur le ftp de PubChem. En r
 
 
 Il va falloir créer une fonction pour récupérer tout cela.
+
+Donc un petit résumé de comment fonctionne mon fichier OWL:
+ -La première problématique a traité et le fait de toujours pouvoir référer à un terme MeSH de type TopicalDescriptor, car c'est cette classe de Termes qui présente un "héritage" dans le structure du thésaurus MeSH. Cet héritage de concept est formalisé par la propriété broaderDescriptor qui indique des termes plus généraux pour décrire ce concept. Cependant, tout les meSH annotés ne sont pas des des TopicalDescriptor, on a aussi des Supplementary Concepts Records et des DescriptorQualifierPairs. Pour les Supplementary Concepts Records, étyant des concepts, on ne peux malheureusement pas les lier à des Topical Descriptor? En revanche pour les DescriptorQualifierPairs, grâce à leur propriété hasDescriptor, on peut déterminer le TopicalDescriptor associé à la partie Descriptor de la paire. Ainsi en déclarant :
+
+voc:HasUndirectDescriptor owl:propertyChainAxiom ( fabio:hasSubjectTerm meshv:hasDescriptor ) .
+voc:HasUndirectDescriptor owl:equivalentProperty fabio:hasSubjectTerm .
+
+On crée une propriété HasUndirectDescriptor qui est une chaine sur hasSubjectTerm et hasDescriptor permettant donc de lier un pmid a un descriptor dans le cas d'un DescriptorQualifierPairs. Ensuite on indique que cette propriété est la même chose que fabio:hasSubjectTerm de tel sorte qu'en recherchant les triplets avec cete propriété on récupère par inférence directe ceux qui ont HasUndirectDescriptor.
+
+Pour la suite on commence par rendre la propriété broaderDescriptor transitive 
+meshv:broaderDescriptor a owl:TransitiveProperty .
+
+Ensuite on crée la classe DiseaseMesh avec :
+voc:DiseaseMeSH a owl:Class ;
+    owl:oneOf
+        (mesh:D007239 mesh:D009369 mesh:D009140 mesh:D004066 mesh:D009057 mesh:D012140 mesh:D010038 mesh:D009422 mesh:D005128 mesh:D052801 mesh:D005261 mesh:D002318 mesh:D006425 mesh:D009358 mesh:D017437 mesh:D009750 mesh:D004700 mesh:D007154 mesh:D007280 mesh:D000820 mesh:D013568 mesh:D009784 mesh:D064419 mesh:D014947 ) .
+
+On la crée en déclarant tout les memebres de la classes qui représente les termes MeSH racine de la partie Disease de l'arbre meSH à savoir: Infections [C01], Neoplasms [C04], Musculoskeletal Diseases [C05], etc ... 
+
+Ensuite, on crée la classe DiseaseLinkedMesH en déclarant qu'il s'agit des termes MeSH pour lesquels au moins l'un des broderDescriptor (devenu transitif) est un des termes racine de la partie Disease de l'arbre MeSH et qui appartient donc à la classe DiseaseMeSH
+voc:DiseaseLinkedMesH rdf:type owl:Class ;
+        owl:equivalentClass [ rdf:type owl:Restriction ;
+            owl:onProperty meshv:broaderDescriptor ;
+            owl:someValuesFrom voc:DiseaseMeSH
+        ] .
+
+
+Le fait que des termes soient annotés avec hasPrimarySubjectTerm ne pose pas de problème car  étant une sous-propriété de hasSubjectTerm lorsque que l'on appelle hasSubjectTerm on récupère donc aussi ceux annotés avec hasPrimarySubjectTerm.
+
+Pour montrer que àa marche bien on a cette publcation où le seule terme MeSH maladie est un primary MeSH et DescriptorQualifierPair où ce descripteur est unique à cette paire, et en utilisant la requête suivante on arrive bien a retrouver le terme Descriptor de la paire qui le porte dans les PrimaryMeSH
+
+
+select ?pmid ?mesh where {
+	reference:PMID13147725 fabio:hasSubjectTerm ?mesh
+	?mesh a voc:DiseaseLinkedMesH
+}
