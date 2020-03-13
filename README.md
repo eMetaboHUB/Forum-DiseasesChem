@@ -162,7 +162,7 @@ select ?cid ?mesh (count(?pmid) as ?c) where {
 	?cid cito:isDiscussedBy ?pmid
 	?pmid fabio:hasSubjectTerm ?mesh
 	?mesh a voc:DiseaseLinkedMesH
-} group by (?mesh)
+} group by (?mesh) ORDER BY DESC(?c)
 ``` to build the Compound Disease Matrix
 
 #TODO: Tester contre HMDB
