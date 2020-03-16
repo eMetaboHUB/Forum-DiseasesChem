@@ -257,3 +257,5 @@ select ?pmid ?mesh where {
 	reference:PMID13147725 fabio:hasSubjectTerm ?mesh
 	?mesh a voc:DiseaseLinkedMesH
 }
+
+Olivier a suggérer que pour mieux gérer le versionning de nos RDF et aussipour correctement garder une trace de ce qui a été Importer/Modifier ou créée depuis le RDF de PubChem
