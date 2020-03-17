@@ -41,23 +41,11 @@ class Ensemble_pccompound:
         # For each PMID ressource in the union set, determine which are the orginals sources of the association.
         for source in pmids_by_source.keys():
             a = numpy.array(numpy.isin(pmids_union, pmids_by_source[source])).nonzero()
-            [sources[index].append(("\"" + source + "\"")) for index in a[0].tolist()]
+            [sources[index].append((source)) for index in a[0].tolist()]
         self.pccompound_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
-        
-    def export_cids_pmids_triples_ttl(self, output_file):
-        """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each CID, all association with PMID are indexed with the cito:isDiscussedBy predicat.
-        - output_file: a path to the output file
-        """
-        # Preparing file and writing prefix
-        f = open(output_file, "w")
-        f.write("@prefix cito:\t<http://purl.org/spar/cito/> .\n@prefix compound:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .\n@prefix reference:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .\n")
-        for pcc in self.pccompound_list:
-            pmid_export = " ,\n\t\t".join(["reference:PMID"+pmid for pmid in pcc.get_pmids()]) + " .\n"
-            pmid_export = "compound:CID" + pcc.get_cid() + "\tcito:isDiscussedBy\t" + pmid_export
-            f.write(pmid_export)
-        f.close
-        
+    
     def create_cids_pmids_graph(self, namespaces_dict):
+        """This function create a rdflib graph containing all the cid - pmid associations contains in the Ensemble_pccompound object"""
         ref = namespaces_dict["reference"]
         cpd = namespaces_dict["compound"]
         cito = namespaces_dict["cito"]
@@ -68,28 +56,43 @@ class Ensemble_pccompound:
         g.bind("cito", cito)
         # Add all triples to graph
         for pcc in self.pccompound_list:
-            cid = pcc.get_cid()
+            cid = 'CID' + pcc.get_cid()
             for pmid in pcc.get_pmids():
-                g.add((cpd['CID' + cid], cito.isDiscussedBy, ref['PMID' + pmid]))
+                g.add((cpd[cid], cito.isDiscussedBy, ref['PMID' + pmid]))
         return g
-
-    def export_cid_pmid_endpoint(self, output_file):
-        """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each combination of CID & PMID sources are annotated
-        - output_file: a path to the output file
-        """
-        f = open(output_file, "w")
-        f.write("@prefix endpoint:	<http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/> .\n@prefix cito:\t<http://purl.org/spar/cito/> .\n@prefix obo:\t<http://purl.obolibrary.org/obo/> .\n@prefix compound:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .\n@prefix reference:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .\n@prefix dcterms:\t<http://purl.org/dc/terms/> .\n")
+    
+    def create_cids_pmids_endpoint_graph(self, namespaces_dict):
+        ref = namespaces_dict["reference"]
+        cpd = namespaces_dict["compound"]
+        cito = namespaces_dict["cito"]
+        endp = namespaces_dict["endpoint"]
+        obo = namespaces_dict["obo"]
+        dcterms = namespaces_dict["dcterms"]
+        g = rdflib.Graph()
+        # On ajoute les namespace en séquence
+        g.bind("reference", ref)
+        g.bind("compound", cpd)
+        g.bind("cito", cito)
+        g.bind("endpoint", endp)
+        g.bind("obo", obo)
+        g.bind("dcterms", dcterms)
         for pcc in self.pccompound_list:
-            pmids = pcc.get_pmids()
-            subject_list = [("CID" + pcc.get_cid() + "_" + "PMID" + pmid) for pmid in pcc.get_pmids()]
-            contributors = [",".join(pmid.get_source()) for pmid in pcc.pmid_list]
-            complete_triples = [("endpoint:" + subject_list[index] + "\tobo:IAO_0000136\tcompound:CID" + pcc.get_cid() + " ;\n\t\tcito:citesAsDataSource\treference:PMID" + pmids[index] + " ;\n\t\tdcterms:contributor\t" + contributors[index] + " .\n") for index in range(len(pcc.pmid_list))]
-            f.write("".join(complete_triples))
-        f.close
+            cid = 'CID' + pcc.get_cid()
+            for p in pcc.pmid_list:
+                pmid = 'PMID' + p.get_pmid()
+                source = ",".join(p.get_source())
+                s = cid + "_" + pmid
+                # Add to graph
+                g.add((endp[s], obo.IAO_0000136, cpd[cid]))
+                g.add((endp[s], cito.citesAsDataSource, ref[pmid]))
+                g.add((endp[s], dcterms.contributor, rdflib.Literal(source)))
+        return g
+    
     def get_all_pmids(self):
         """this function allows to extract the union of all pmids associated with Pccompounds objects in the Ensemble_pccompound objects"""
         pmids_union = list(set().union(*([pcc.get_pmids() for pcc in self.pccompound_list])))
         return pmids_union
+    
     def get_all_cids(self):
         """this function allows to extract the union of all cids associated with Pccompounds objects in the Ensemble_pccompound objects"""
         cids = [pcc.get_cid() for pcc in self.pccompound_list]

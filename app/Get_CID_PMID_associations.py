@@ -34,11 +34,10 @@ new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
 new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 
 a = new_Ensemble_pccompound.create_cids_pmids_graph(namespaces)
-a.serialize(destination="test.ttl", format='turtle')
+a.serialize(destination="cid_to_pmids.ttl", format='turtle')
 
-new_Ensemble_pccompound.export_cids_pmids_triples_ttl("cid_to_pmids.ttl")
-
-new_Ensemble_pccompound.export_cid_pmid_endpoint("cid_to_pmids_endpoint.ttl")
+b = new_Ensemble_pccompound.create_cids_pmids_endpoint_graph(namespaces)
+b.serialize(destination="cid_to_pmids_endpoint.ttl", format='turtle')
 
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
 all_cids = new_Ensemble_pccompound.get_all_cids()
@@ -87,6 +86,7 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_ids, prefix, out_dir):
             # Si bool est True, on print la ligne
             if bool:
                 f_output.write(line)
+        f_output.close()
             
 # Cette fonction à pour but de lancer une requête vers le REST de PubChem et de récupérer le résultat en csv et de l'écire en turtle
 def request_RESTful_PubChem(graph, predicate, offset, request_failure_list):
