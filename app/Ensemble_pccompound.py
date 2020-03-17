@@ -1,5 +1,6 @@
 from Pccompound import Pccompound
 import eutils
+import rdflib
 import numpy
 import sys
 import xml.etree.ElementTree as ET
@@ -56,6 +57,22 @@ class Ensemble_pccompound:
             f.write(pmid_export)
         f.close
         
+    def create_cids_pmids_graph(self, namespaces_dict):
+        ref = namespaces_dict["reference"]
+        cpd = namespaces_dict["compound"]
+        cito = namespaces_dict["cito"]
+        g = rdflib.Graph()
+        # On ajoute les namespace en séquence ( c'est pas joli mais obligé de faire comme ça si on veut utilisé une syntaxe prefix ...)
+        g.bind("reference", ref)
+        g.bind("compound", cpd)
+        g.bind("cito", cito)
+        # Add all triples to graph
+        for pcc in self.pccompound_list:
+            cid = pcc.get_cid()
+            for pmid in pcc.get_pmids():
+                g.add((cpd['CID' + cid], cito.isDiscussedBy, ref['PMID' + pmid]))
+        return g
+
     def export_cid_pmid_endpoint(self, output_file):
         """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each combination of CID & PMID sources are annotated
         - output_file: a path to the output file
@@ -69,12 +86,10 @@ class Ensemble_pccompound:
             complete_triples = [("endpoint:" + subject_list[index] + "\tobo:IAO_0000136\tcompound:CID" + pcc.get_cid() + " ;\n\t\tcito:citesAsDataSource\treference:PMID" + pmids[index] + " ;\n\t\tdcterms:contributor\t" + contributors[index] + " .\n") for index in range(len(pcc.pmid_list))]
             f.write("".join(complete_triples))
         f.close
-        
     def get_all_pmids(self):
         """this function allows to extract the union of all pmids associated with Pccompounds objects in the Ensemble_pccompound objects"""
         pmids_union = list(set().union(*([pcc.get_pmids() for pcc in self.pccompound_list])))
         return pmids_union
-        
     def get_all_cids(self):
         """this function allows to extract the union of all cids associated with Pccompounds objects in the Ensemble_pccompound objects"""
         cids = [pcc.get_cid() for pcc in self.pccompound_list]
