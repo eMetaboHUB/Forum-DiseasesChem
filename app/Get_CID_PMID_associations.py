@@ -7,6 +7,7 @@ import requests
 import io
 import time
 import re
+from functions import create_empty_graph
 from pathlib import Path
 import os
 from Ensemble_pccompound import Ensemble_pccompound
@@ -20,7 +21,9 @@ namespaces = {
     "reference": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"),
     "endpoint":	rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/"),
     "obo": rdflib.Namespace("http://purl.obolibrary.org/obo/"),
-    "dcterms": rdflib.Namespace("http://purl.org/dc/terms/")
+    "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
+    "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
+    "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/")
 }
 
 apiKey = "0ddb3479f5079f21272578dc6e040278a508"
@@ -116,50 +119,31 @@ def request_RESTful_PubChem(graph, predicate, offset, request_failure_list):
     lines.append((len(lines) == 10002))
     return lines
 
-
-
-def write_in_turtle_syntax(out_dir, graph, predicate, offset, lines, prefix_1, index_1, prefix_2, index_2):
-    """ Function to write request results from PubChem RESTful in a turtle syntax
-        - out_dir: output directoty to write the file
-        - graph: The Subject of the triples
-        - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
-        - offset: the current offset to fetch
-        - lines: request results, parsed line by line
-        - prefix_1: prefix of the Subject of the triples
-        - index_1: index of the subject in the splited line
-        - prefix_2: prefix of the Object of the triples
-        - index_2: index of the Object in the splited line
-    """
-    f = open( (out_dir + graph + "_" + predicate + "_" + offset + ".ttl"), 'w')
-    # On lie par ligne pour formater en turtle: 
+def add_triples_from_csv(g, lines, namespaces_list, namespaces_dict, predicate):
+    p_ns = re.split(":", predicate)
     for l_index in range(1, len(lines) - 1):
-        parsed_l = re.split("[\"/,]", lines[l_index])
-        f.write(prefix_1 + parsed_l[index_1] + "\t" + predicate + "\t" + prefix_2 + parsed_l[index_2] + " .\n")
-    f.close()
+        parsed_l = re.split("[\",]", lines[l_index])
+        g.add((rdflib.URIRef(parsed_l[1]), namespaces[p_ns[0]][p_ns[1]], rdflib.URIRef(parsed_l[4])))
+    return(g)
 
 
-
-
-def REST_ful_bulk_download(graph, predicate, out_dir, start_offset):
+def REST_ful_bulk_download(graph, predicate, out_path, start_offset, namespaces_list, namespaces_dict):
     """ - graph: The Subject of the triples
         - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
         - out_dir: output directoty to write files
     """
-    # Test if output directory exist:  
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-        print("Directory " + out_dir + " Created !")
-    else:
-        print("Directory " + out_dir + " already exists")
     # On initilialise la table request_failure_list:
     request_failure_list = list()
     offset = start_offset
+    print("Create Graph")
+    g = create_empty_graph(namespaces_list, namespaces)
     print("Starting at offset " + str(offset))
     out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
     # On récupère le dernier élément de la liste en la tronquant, si c'est true, c'est que le fichier à 10002 lignes et qu'on attend encore certainement des résultats.
     is_not_the_last = out.pop()
-    # On envoie à la fonction qui va écrire tout àa en turtle. Il faudrait modifier ça si on veut changer de type (exemple récupérer le titre ou bien écrire en xml, etc ...)
-    write_in_turtle_syntax(out_dir, graph, predicate, str(offset), out, 'reference:', 6, 'mesh:', 13)
+    # On additionne au graph:
+    print("- Add to Graph -")
+    g = add_triples_from_csv(g, out, namespaces_list, namespaces, predicate)
     while(is_not_the_last):
         offset += 10000
         print("offset: " + str(offset))
@@ -174,12 +158,13 @@ def REST_ful_bulk_download(graph, predicate, out_dir, start_offset):
                 out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
                 is_not_the_last = out.pop()
                 i +=1
-        write_in_turtle_syntax(out_dir, graph, predicate, str(offset), out, 'reference:', 6, 'mesh:', 13)
+        print("- Add to Graph -")
+        g = add_triples_from_csv(g, out, namespaces_list, namespaces, predicate)
     print("End !")
+    g.serialize(destination=out_path, format='turtle')
     return request_failure_list
-
         
-requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_dir = 'data/PubChem_PrimarySubjectTermsTriples/', start_offset = 3430000)
+requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_path = 'data/PubChem_References/reference_fabioPrimarySubjectTerm.ttl', start_offset = 0, namespaces_list = ["reference", "fabio", "mesh"], namespaces_dict = namespaces)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
