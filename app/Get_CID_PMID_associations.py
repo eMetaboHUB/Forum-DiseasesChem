@@ -164,6 +164,7 @@ def REST_ful_bulk_download(graph, predicate, out_path, start_offset, namespaces_
     g.serialize(destination=out_path, format='turtle')
     os.system("gzip " + out_path)
     return request_failure_list
+
         
 def dowload_pubChem(dir, out_path):
     # os.system("wget -r -A ttl.gz -nH" + " -P " + out_path + " --cut-dirs=2 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
@@ -191,10 +192,7 @@ def dowload_pubChem(dir, out_path):
         ressource_graph.add((uri_graph, rdflib.URIRef("http://purl.org/dc/terms/isPartOf"), new_uri))
         ressource_graph.add((uri_graph, rdflib.URIRef("http://purl.org/dc/terms/source"), rdflib.Literal(graph_file)))
     # On écrit le graph le fichier
-    ressource_graph.serialize("test_ressource.ttl", format = 'turtle')
-
-
-
+    ressource_graph.serialize(out_path + dir + "/" + "ressource_info.ttl", format = 'turtle')
 
 
 dowload_pubChem("reference", "data/PubChem_References/")
