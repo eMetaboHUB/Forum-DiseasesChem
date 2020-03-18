@@ -1,6 +1,7 @@
 from Pccompound import Pccompound
 import eutils
 import rdflib
+from functions import create_empty_graph
 import numpy
 import sys
 import xml.etree.ElementTree as ET
@@ -46,36 +47,16 @@ class Ensemble_pccompound:
     
     def create_cids_pmids_graph(self, namespaces_dict):
         """This function create a rdflib graph containing all the cid - pmid associations contains in the Ensemble_pccompound object"""
-        ref = namespaces_dict["reference"]
-        cpd = namespaces_dict["compound"]
-        cito = namespaces_dict["cito"]
-        g = rdflib.Graph()
-        # On ajoute les namespace en séquence ( c'est pas joli mais obligé de faire comme ça si on veut utilisé une syntaxe prefix ...)
-        g.bind("reference", ref)
-        g.bind("compound", cpd)
-        g.bind("cito", cito)
+        g = create_empty_graph(["reference", "compound", "cito"], namespaces_dict)
         # Add all triples to graph
         for pcc in self.pccompound_list:
             cid = 'CID' + pcc.get_cid()
             for pmid in pcc.get_pmids():
-                g.add((cpd[cid], cito.isDiscussedBy, ref['PMID' + pmid]))
+                g.add((namespaces_dict["compound"][cid], namespaces_dict["cito"].isDiscussedBy, namespaces_dict["reference"]['PMID' + pmid]))
         return g
     
     def create_cids_pmids_endpoint_graph(self, namespaces_dict):
-        ref = namespaces_dict["reference"]
-        cpd = namespaces_dict["compound"]
-        cito = namespaces_dict["cito"]
-        endp = namespaces_dict["endpoint"]
-        obo = namespaces_dict["obo"]
-        dcterms = namespaces_dict["dcterms"]
-        g = rdflib.Graph()
-        # On ajoute les namespace en séquence
-        g.bind("reference", ref)
-        g.bind("compound", cpd)
-        g.bind("cito", cito)
-        g.bind("endpoint", endp)
-        g.bind("obo", obo)
-        g.bind("dcterms", dcterms)
+        g = create_empty_graph(["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespaces_dict)
         for pcc in self.pccompound_list:
             cid = 'CID' + pcc.get_cid()
             for p in pcc.pmid_list:
@@ -83,9 +64,9 @@ class Ensemble_pccompound:
                 source = ",".join(p.get_source())
                 s = cid + "_" + pmid
                 # Add to graph
-                g.add((endp[s], obo.IAO_0000136, cpd[cid]))
-                g.add((endp[s], cito.citesAsDataSource, ref[pmid]))
-                g.add((endp[s], dcterms.contributor, rdflib.Literal(source)))
+                g.add((namespaces_dict["endpoint"][s], namespaces_dict["obo"].IAO_0000136, namespaces_dict["compound"][cid]))
+                g.add((namespaces_dict["endpoint"][s], namespaces_dict["cito"].citesAsDataSource, namespaces_dict["reference"][pmid]))
+                g.add((namespaces_dict["endpoint"][s], namespaces_dict["dcterms"].contributor, rdflib.Literal(source)))
         return g
     
     def get_all_pmids(self):
