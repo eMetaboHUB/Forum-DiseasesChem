@@ -160,8 +160,11 @@ def REST_ful_bulk_download(graph, predicate, out_path, start_offset, namespaces_
                 i +=1
         print("- Add to Graph -")
         g = add_triples_from_csv(g, out, namespaces_list, namespaces, predicate)
+        if(offset == 500000):
+            is_not_the_last = False
     print("End !")
     g.serialize(destination=out_path, format='turtle')
+    os.system("gzip " + out_path)
     return request_failure_list
         
 requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_path = 'data/PubChem_References/reference_fabioPrimarySubjectTerm.ttl', start_offset = 0, namespaces_list = ["reference", "fabio", "mesh"], namespaces_dict = namespaces)
