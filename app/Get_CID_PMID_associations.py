@@ -160,13 +160,46 @@ def REST_ful_bulk_download(graph, predicate, out_path, start_offset, namespaces_
                 i +=1
         print("- Add to Graph -")
         g = add_triples_from_csv(g, out, namespaces_list, namespaces, predicate)
-        if(offset == 500000):
-            is_not_the_last = False
     print("End !")
     g.serialize(destination=out_path, format='turtle')
     os.system("gzip " + out_path)
     return request_failure_list
         
+def dowload_pubChem(dir, out_path):
+    # os.system("wget -r -A ttl.gz -nH" + " -P " + out_path + " --cut-dirs=2 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
+    # On télécharge aussi le fichier void
+    # os.system("wget -P " + out_path + dir + " ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl")
+    # On parse le vois contenant les metadata sur le répertoire téléchargé
+    g_metada = rdflib.Graph()
+    g_metada.parse(out_path + dir + "/void.ttl", format='turtle')
+    global_modif_date = g_metada.value(subject=rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#PubChemRDF"), predicate=rdflib.URIRef("http://purl.org/dc/terms/modified"), object=None)
+    # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
+    ressource_graph = rdflib.Graph()
+    ressource_graph.namespace_manager = g_metada.namespace_manager
+    # The main ressource is always http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#dir, data which was downloaded are added as a version of this ressource by adding the date to the URI
+    uri_ressource = rdflib.URIRef("http://database/ressources/PubChem/" + dir)
+    new_uri = rdflib.URIRef("http://database/ressources/PubChem/" + dir + "/" + str(global_modif_date))
+    ressource_graph.add((uri_ressource, rdflib.URIRef("http://purl.org/dc/terms/hasVersion"), new_uri))
+    # On annote la nouvelle version avec les informations du fichier void
+    for s,p,o in g_metada.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + dir), None, None)):
+        ressource_graph.add((new_uri, p, o))
+    ressource_graph.add((new_uri, rdflib.URIRef("http://purl.org/dc/terms/isVersionOf"), uri_ressource))
+    ressource_graph.add((new_uri, rdflib.URIRef("http://purl.org/dc/terms/modified"), global_modif_date))
+    for graph_file in os.listdir(out_path + dir):
+        # On va crée un URI complémentaire en ajoutant le nom du ichier pour les identifiers
+        uri_graph = rdflib.URIRef(str(new_uri) + "/" + re.split("\.", graph_file)[0])
+        ressource_graph.add((uri_graph, rdflib.URIRef("http://purl.org/dc/terms/isPartOf"), new_uri))
+        ressource_graph.add((uri_graph, rdflib.URIRef("http://purl.org/dc/terms/source"), rdflib.Literal(graph_file)))
+    # On écrit le graph le fichier
+    ressource_graph.serialize("test_ressource.ttl", format = 'turtle')
+
+
+
+
+
+dowload_pubChem("reference", "data/PubChem_References/")
+
+
 requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_path = 'data/PubChem_References/reference_fabioPrimarySubjectTerm.ttl', start_offset = 0, namespaces_list = ["reference", "fabio", "mesh"], namespaces_dict = namespaces)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
