@@ -9,7 +9,6 @@ from datetime import date
 import time
 import re
 from rdflib.namespace import XSD, DCTERMS
-from functions import create_empty_graph
 from pathlib import Path
 import os
 from Ensemble_pccompound import Ensemble_pccompound
@@ -44,32 +43,36 @@ new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 
 new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/")
 
-all_pmids = new_Ensemble_pccompound.get_all_pmids()
 all_cids = new_Ensemble_pccompound.get_all_cids()
 
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
-def parse_pubchem_RDF(PubChem_ref_folfer, all_ids, prefix, out_dir):
+def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, out_dir, filtered_ressource_name, input_ids_uri):
     """A function to parse the .ttl.gz PubChem RDF files to only extract line for which id are associated to ids from list
     - PubChem_ref_folfer: The folder where are all the PubChem  RDF files
     - the list of all ids to fetch in files
     """
-    # Test if output directory exist:  
-    if not  os.path.exists(out_dir):
-        os.mkdir(out_dir)
-        print("Directory " + out_dir + " Created !")
-    else:
-        print("Directory " + out_dir + " already exists")
+    ressource_filtered_version = Database_ressource_version(ressource = filtered_ressource_name, version_date = date.today().isoformat())
+    # On récupère le graph RDF qui décrit avec ses métadatas la ressource à filtrer
+    g_ressource = rdflib.Graph()
+    g_ressource.parse(input_ressource_file, format='turtle')
+    # Les différents fichiers sont les subjects annotés avec le isPartOf vers la ressource cible. 
+    for s,p,o in g_ressource.triples((None, DCTERMS['isPartOf'], None)):
+        file_name = g_ressource.value(subject = s, predicate = DCTERMS['source'], object=None)
+        file_out = file_name.split(".ttl.gz")[0] + "_fitlered.trig"
+        g_data = rdflib.Graph()
+        ressource_filtered_version.append_data_graph(file_out, [])
+
     # Convert pmids list in a set, because the test 'in' will be more efficient
     set_all_ids = set([prefix + id for id in all_ids])
-    RDF_ref_files = os.listdir(PubChem_ref_folfer)
+    RDF_ref_files = os.listdir(input_ressource_directory)
     # On parcours tout les fichiers:
     for f_input in RDF_ref_files:
         print("Treating " + f_input + " ...")
         # On parse le nom du fichier pour récupérer la racine et on créée le fichier de sortie :
-        f_output_name = f_input.split(".ttl.gz")[0] + "_fitlered.ttl.gz"
-        f_output = gzip.open(out_dir + f_output_name, "wt")
+        f_output_name = f_input.split(".ttl.gz")[0] + "_fitlered.trig"
+        f_output = open(out_dir + f_output_name, "wt")
         f = gzip.open(PubChem_ref_folfer + f_input,'rt')
         # Il va falloir récupérer les Headers: 
         l_h  = f.readline()
@@ -198,7 +201,7 @@ def dowload_pubChem(dir, out_path):
         os.makedirs(version_path)
     os.system("mv void.ttl " + out_path + dir + "/")
     # On récupère les données que l'on enregistre dans le directory créée
-    # os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=3 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
+    os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=3 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + dir, version_date = str(global_modif_date))
     ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
@@ -215,13 +218,19 @@ def dowload_pubChem(dir, out_path):
 dowload_pubChem("reference", "data/PubChem_References/")
 
 
-requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm.ttl',
+requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm.ttl.gz',
                                          start_offset = 0, out_dir = "data/PubChem_References/",
                                          ressource_name = "PrimarySubjectTerm", namespaces_list = ["reference", "fabio", "mesh"],
                                          namespaces_dict = namespaces)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
-parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
+parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference/2020-03-06/", 
+                  all_ids = new_Ensemble_pccompound.get_all_pmids(),
+                  prefix = "reference:PMID", 
+                  out_dir = "data/PubChem_References/",
+                  input_ressource_file = "data/PubChem_References/reference/ressource_info_2020-03-06.ttl",
+                  filtered_ressource_name = "referenceFiltered",
+                  input_ids_uri = new_Ensemble_pccompound.ressource_version.uri_version)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")
