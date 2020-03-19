@@ -42,11 +42,7 @@ new_Ensemble_pccompound = Ensemble_pccompound()
 new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
 new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 
-a = new_Ensemble_pccompound.create_cids_pmids_graph(namespaces)
-a.serialize(destination="cid_to_pmids.ttl", format='turtle')
-
-b = new_Ensemble_pccompound.create_cids_pmids_endpoint_graph(namespaces)
-b.serialize(destination="cid_to_pmids_endpoint.ttl", format='turtle')
+new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/")
 
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
 all_cids = new_Ensemble_pccompound.get_all_cids()

@@ -25,12 +25,14 @@ class Database_ressource_version:
         g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(self.version_date, datatype=XSD.date)))
         return g_v
     
-    def append_data_graph(self, file, namespace_list, namespace_dist):
+    def append_data_graph(self, file, namespace_list, namespace_dict):
         base_name = re.split("\.", file)[0]
         # On crée le graph avec l'URI et les namespaces associés
         g_d = rdflib.Graph(identifier=rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version_date + "/" + base_name))
+        # On ajoute un namespace correspondante à la version et à la ressource que l'on traite :
+        g_d.bind(self.ressource + "_" + self.version_date, rdflib.Namespace("http://database/ressources/" + self.ressource + "/" + self.version_date + "/"))
         for ns_name in namespace_list:
-            g_d.bind(ns_name, namespace_dist[ns_name])
+            g_d.bind(ns_name, namespace_dict[ns_name])
         
         self.version_graph.add((g_d.identifier, DCTERMS['isPartOf'], self.uri_version))
         self.version_graph.add((g_d.identifier, DCTERMS['source'], rdflib.Literal(file)))
@@ -41,8 +43,8 @@ class Database_ressource_version:
         # Add property
         self.version_graph.add((self.uri_version, predicate, object))
         
-    def add_version_namespaces(self, namespace_list, namespace_dist):
+    def add_version_namespaces(self, namespace_list, namespace_dict):
         # Test if namespace is aleady added
         for namespace in namespace_list:
             if namespace not in [ns[0] for ns in self.version_graph.namespace_manager.namespaces()]:
-                self.version_graph.bind(namespace, namespace_dist[namespace])
+                self.version_graph.bind(namespace, namespace_dict[namespace])
