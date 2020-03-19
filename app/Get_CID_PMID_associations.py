@@ -5,8 +5,10 @@ import gzip
 import rdflib
 import requests
 import io
+from datetime import date
 import time
 import re
+from rdflib.namespace import XSD, DCTERMS
 from functions import create_empty_graph
 from pathlib import Path
 import os
@@ -94,7 +96,8 @@ def parse_pubchem_RDF(PubChem_ref_folfer, all_ids, prefix, out_dir):
             if bool:
                 f_output.write(line)
         f_output.close()
-            
+
+
 # Cette fonction à pour but de lancer une requête vers le REST de PubChem et de récupérer le résultat en csv et de l'écire en turtle
 def request_RESTful_PubChem(graph, predicate, offset, request_failure_list):
     """ This function send a request to PubChem RESTful serveur and get a response in a csv format and then return the lines in the results as a list, with the last element a boolean that indicated if this result is the last expected
@@ -123,31 +126,33 @@ def request_RESTful_PubChem(graph, predicate, offset, request_failure_list):
     lines.append((len(lines) == 10002))
     return lines
 
-def add_triples_from_csv(g, lines, namespaces_list, namespaces_dict, predicate):
+
+def add_triples_from_csv(g, lines, namespaces_dict, predicate):
     p_ns = re.split(":", predicate)
     for l_index in range(1, len(lines) - 1):
         parsed_l = re.split("[\",]", lines[l_index])
-        g.add((rdflib.URIRef(parsed_l[1]), namespaces[p_ns[0]][p_ns[1]], rdflib.URIRef(parsed_l[4])))
-    return(g)
+        g.add((rdflib.URIRef(parsed_l[1]), namespaces_dict[p_ns[0]][p_ns[1]], rdflib.URIRef(parsed_l[4])))
 
 
-def REST_ful_bulk_download(graph, predicate, out_path, start_offset, namespaces_list, namespaces_dict):
-    """ - graph: The Subject of the triples
+def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, ressource_name, namespaces_list, namespaces_dict):
+    """ - graph: The Subject of the triples (c'est pété comme nom mais c'est comme ça qu'ils l'appellent ...)
         - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
-        - out_dir: output directoty to write files
+            - out_dir: output directoty to write files
     """
     # On initilialise la table request_failure_list:
     request_failure_list = list()
     offset = start_offset
-    print("Create Graph")
-    g = create_empty_graph(namespaces_list, namespaces)
+    base_name = re.split("\.", out_name)[0]
+    print("Create new ressource")
+    ressource_version = Database_ressource_version(ressource = "PubChem/" + ressource_name, version_date = date.today().isoformat())
+    ressource_version.append_data_graph(out_name, namespaces_list, namespaces_dict)
     print("Starting at offset " + str(offset))
     out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
     # On récupère le dernier élément de la liste en la tronquant, si c'est true, c'est que le fichier à 10002 lignes et qu'on attend encore certainement des résultats.
     is_not_the_last = out.pop()
     # On additionne au graph:
     print("- Add to Graph -")
-    g = add_triples_from_csv(g, out, namespaces_list, namespaces, predicate)
+    add_triples_from_csv(ressource_version.data_graph_dict[base_name], out, namespaces, predicate)
     while(is_not_the_last):
         offset += 10000
         print("offset: " + str(offset))
@@ -163,10 +168,24 @@ def REST_ful_bulk_download(graph, predicate, out_path, start_offset, namespaces_
                 is_not_the_last = out.pop()
                 i +=1
         print("- Add to Graph -")
-        g = add_triples_from_csv(g, out, namespaces_list, namespaces, predicate)
+        add_triples_from_csv(ressource_version.data_graph_dict[base_name], out, namespaces, predicate)
+        if(offset == 500000):
+            is_not_the_last = False
     print("End !")
-    g.serialize(destination=out_path, format='turtle')
-    os.system("gzip " + out_path)
+    # Compléter l'annotation de la ressource :
+    ressource_version.add_version_namespaces(["void"], namespaces_dict)
+    ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the pmid and the major MeSH associated to the publication"))
+    ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("PMID to Primary Subject Term RDF triples"))
+    ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(ressource_version.data_graph_dict[base_name]), datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in ressource_version.data_graph_dict[base_name].subjects()])), datatype=XSD.long ))
+    path_out = out_dir + ressource_name + "/" + ressource_version.version_date + "/"
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
+    # On écrits les fichiers dans les répertoires correspondants
+    ressource_version.data_graph_dict[base_name].serialize(destination=path_out + out_name, format='turtle')
+    ressource_version.version_graph.serialize(out_dir + ressource_name + "/" + "ressource_info_" + ressource_version.version_date + ".ttl", format = 'turtle')
+    
+    os.system("gzip " + path_out + out_name)
     return request_failure_list
 
         
@@ -192,7 +211,7 @@ def dowload_pubChem(dir, out_path):
         ressource_version.add_version_attribute(predicate = p, object = o) 
     for graph_file in os.listdir(version_path):
         # On va crée un URI complémentaire en ajoutant le nom du ichier pour les identifiers
-        ressource_version.append_data_graph(graph_file)
+        ressource_version.append_data_graph(graph_file, [], None)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(out_path + dir + "/" + "ressource_info_" + str(global_modif_date) + ".ttl", format = 'turtle')
 
@@ -200,7 +219,10 @@ def dowload_pubChem(dir, out_path):
 dowload_pubChem("reference", "data/PubChem_References/")
 
 
-requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_path = 'data/PubChem_References/reference_fabioPrimarySubjectTerm.ttl', start_offset = 0, namespaces_list = ["reference", "fabio", "mesh"], namespaces_dict = namespaces)
+requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm.ttl',
+                                         start_offset = 0, out_dir = "data/PubChem_References/",
+                                         ressource_name = "PrimarySubjectTerm", namespaces_list = ["reference", "fabio", "mesh"],
+                                         namespaces_dict = namespaces)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PMID", "pccompound_references_filtered/")
@@ -208,4 +230,3 @@ parse_pubchem_RDF("data/PubChem_References/reference/", all_pmids, "reference:PM
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")
 
-print("coucou5")
