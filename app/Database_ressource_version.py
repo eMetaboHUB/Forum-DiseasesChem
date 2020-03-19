@@ -29,11 +29,16 @@ class Database_ressource_version:
         base_name = re.split("\.", file)[0]
         g_d = rdflib.Graph(identifier=rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version_date + "/" + base_name))
         self.version_graph.add((g_d.identifier, DCTERMS['isPartOf'], self.uri_version))
+        self.version_graph.add((g_d.identifier, DCTERMS['source'], rdflib.Literal(file)))
+        # Add graph data to dict
         self.data_graph_dict[base_name] = g_d
     
-    def add_version_attribute(self, namespace, predicate, object, namespace_dist):
-        # Test if namespace is aleady added 
-        if namespace not in [ns[0] for ns in self.version_graph.namespace_manager.namespaces()]:
-            self.version_graph.bind(namespace, namespace_dist[namespace])
+    def add_version_attribute(self, predicate, object):
         # Add property
-        self.version_graph.add((self.uri_version, namespace_dist[namespace][predicate], object))
+        self.version_graph.add((self.uri_version, predicate, object))
+        
+    def add_version_namespaces(self, namespace_list, namespace_dist):
+        # Test if namespace is aleady added
+        for namespace in namespace_list:
+            if namespace not in [ns[0] for ns in self.version_graph.namespace_manager.namespaces()]:
+                self.version_graph.bind(namespace, namespace_dist[namespace])
