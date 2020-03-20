@@ -43,48 +43,45 @@ new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 
 new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/")
 
+all_pmids = new_Ensemble_pccompound.get_all_pmids()
 all_cids = new_Ensemble_pccompound.get_all_cids()
 
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
-def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, out_dir, filtered_ressource_name, input_ids_uri):
+def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, input_ressource_uri, out_dir, filtered_ressource_name, input_ids_uri, isZipped, namespace_dict):
     """A function to parse the .ttl.gz PubChem RDF files to only extract line for which id are associated to ids from list
     - PubChem_ref_folfer: The folder where are all the PubChem  RDF files
     - the list of all ids to fetch in files
     """
+    # Convert pmids list in a set, because the test 'in' will be more efficient
+    set_all_ids = set([prefix + id for id in all_ids])
     ressource_filtered_version = Database_ressource_version(ressource = filtered_ressource_name, version_date = date.today().isoformat())
     # On récupère le graph RDF qui décrit avec ses métadatas la ressource à filtrer
     g_ressource = rdflib.Graph()
     g_ressource.parse(input_ressource_file, format='turtle')
     # Les différents fichiers sont les subjects annotés avec le isPartOf vers la ressource cible. 
-    for s,p,o in g_ressource.triples((None, DCTERMS['isPartOf'], None)):
-        file_name = g_ressource.value(subject = s, predicate = DCTERMS['source'], object=None)
-        file_out = file_name.split(".ttl.gz")[0] + "_fitlered.trig"
-        g_data = rdflib.Graph()
-        ressource_filtered_version.append_data_graph(file_out, [])
-
-    # Convert pmids list in a set, because the test 'in' will be more efficient
-    set_all_ids = set([prefix + id for id in all_ids])
-    RDF_ref_files = os.listdir(input_ressource_directory)
-    # On parcours tout les fichiers:
-    for f_input in RDF_ref_files:
-        print("Treating " + f_input + " ...")
-        # On parse le nom du fichier pour récupérer la racine et on créée le fichier de sortie :
-        f_output_name = f_input.split(".ttl.gz")[0] + "_fitlered.trig"
-        f_output = open(out_dir + f_output_name, "wt")
-        f = gzip.open(PubChem_ref_folfer + f_input,'rt')
-        # Il va falloir récupérer les Headers: 
-        l_h  = f.readline()
+    for s,p,o in g_ressource.triples((None, DCTERMS['isPartOf'], input_ressource_uri)):
+        file_content = str()
+        file_name = str(g_ressource.value(subject = s, predicate = DCTERMS['source'], object=None))
+        base_name = file_name.split(".")[0]
+        file_out = base_name + "_filtered.trig"
+        if isZipped:
+            f_input = gzip.open(input_ressource_directory + file_name,'rt')
+        else:
+            f_input = open(input_ressource_directory + file_name,'r')
+        print("Treating " + file_name + " ...")
+        # Il va falloir récupérer les namespaces: 
+        l_h  = f_input.readline()
         while l_h.startswith('@', 0, 1):
-            f_output.write(l_h)
-            l_h = f.readline()
+            file_content += l_h
+            l_h = f_input.readline()
         # On initialise le boolean a Flase
         bool = False
         # Pour chaque ligne, on parse
-        for line in f:
+        for line in f_input:
             columns = line.split(sep='\t')
-            # Si la ligne désigne un triplet (et pas sa suite lorsque l'on a plusieurs objets en turtle )
+            # Si la ligne désigne un triplet le début d'un triplet
             if columns[0] != '':
                 # Si le pmid appartient à notre liste, on passe bool à True de tel sorte que les ligne suivante soient ajouter au fichier tant qu'un triplet avec un pmid qui n'appartient pas à notre liste est rencontré
                 if columns[0] in set_all_ids:
@@ -93,8 +90,27 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
                     bool = False
             # Si bool est True, on print la ligne
             if bool:
-                f_output.write(line)
-        f_output.close()
+                file_content += line
+        f_input.close()
+        # On créée alors le nouveau graph: Pas besoin de spécifier des namespace car ce seront les même que dans le fichier source
+        ressource_filtered_version.append_data_graph(file = file_out, namespace_list  = [], namespace_dict = None)
+        ressource_filtered_version.data_graph_dict[base_name + "_filtered"].parse(data = file_content, format = 'turtle')
+    # On ajoute les infos :
+    ressource_filtered_version.add_version_namespaces(["void"], namespace_dict)
+    ressource_filtered_version.add_version_attribute(DCTERMS["description"], rdflib.Literal(str(g_ressource.value(subject=input_ressource_uri, predicate=DCTERMS["description"], object=None)) + " - Filtered version", lang = "en" ))
+    ressource_filtered_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(str(g_ressource.value(subject=input_ressource_uri, predicate=DCTERMS["title"], object=None)) + " - Filtered version", lang = "en" ))
+    ressource_filtered_version.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal(sum([len(g) for g in ressource_filtered_version.data_graph_dict.values()]) , datatype=XSD.long ))
+    ressource_filtered_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_filtered_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
+    ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ressource_uri)
+    ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ids_uri)
+    # 
+    path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version_date + "/"
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
+    ressource_filtered_version.version_graph.serialize(destination=out_dir + filtered_ressource_name + "/" + "ressource_info_" + ressource_filtered_version.version_date + ".ttl", format = 'turtle')
+    for f_name, g_data in ressource_filtered_version.data_graph_dict.items():
+         g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
+
 
 
 # Cette fonction à pour but de lancer une requête vers le REST de PubChem et de récupérer le résultat en csv et de l'écire en turtle
@@ -225,12 +241,15 @@ requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference/2020-03-06/", 
-                  all_ids = new_Ensemble_pccompound.get_all_pmids(),
+                  all_ids = all_pmids,
                   prefix = "reference:PMID", 
                   out_dir = "data/PubChem_References/",
                   input_ressource_file = "data/PubChem_References/reference/ressource_info_2020-03-06.ttl",
+                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"),
                   filtered_ressource_name = "referenceFiltered",
-                  input_ids_uri = new_Ensemble_pccompound.ressource_version.uri_version)
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID_triples/2020-03-20"),
+                  isZipped = True,
+                  namespace_dict = namespaces)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
 parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")

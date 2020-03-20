@@ -18,6 +18,7 @@ class Ensemble_pccompound:
         self.pccompound_list = list()        
         self.append_failure = list()
         self.ressource_version = None
+        self.ressource_version_endpoint = None
     
     def append_pccompound(self, cid, query_builder):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
@@ -86,24 +87,36 @@ class Ensemble_pccompound:
         return cids
     
     def create_CID_PMID_ressource(self, namespace_dict, out_dir):
-        self.ressource_version = Database_ressource_version(ressource = "CID_PMID_triples", version_date = date.today().isoformat())
-        self.ressource_version.append_data_graph(file = "cid_isDiscussedBy_pmid.trig", namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
-        self.ressource_version.append_data_graph(file = "cid_pmid_endpoint.trig", namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
+        self.ressource_version = Database_ressource_version(ressource = "CID_PMID", version_date = date.today().isoformat())
+        self.ressource_version_endpoint = Database_ressource_version(ressource = "CID_PMID_enpoint", version_date = date.today().isoformat())
+
+        self.ressource_version.append_data_graph(file = "cid_pmid.trig", namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
+        self.ressource_version_endpoint.append_data_graph(file = "cid_pmid_endpoint.trig", namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
         # On remplis les graphs
-        self.fill_cids_pmids_graph(g = self.ressource_version.data_graph_dict["cid_isDiscussedBy_pmid"], namespaces_dict = namespace_dict)
-        self.fill_cids_pmids_endpoint_graph(g = self.ressource_version.data_graph_dict["cid_pmid_endpoint"], namespaces_dict = namespace_dict)
-        # On ajoute les infos :
+        self.fill_cids_pmids_graph(g = self.ressource_version.data_graph_dict["cid_pmid"], namespaces_dict = namespace_dict)
+        self.fill_cids_pmids_endpoint_graph(g = self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"], namespaces_dict = namespace_dict)
+        # On ajoute les infos pour la première ressource:
         self.ressource_version.add_version_namespaces(["void"], namespace_dict)
-        self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the PubChem Compound (CID) and the related publications (pmids). Information (nb of triples, etc ...) are provided only for the <cid isDiscussedBy pmid> part of the ressource, cause of endpoint will be redondant informations"))
+        self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the PubChem Compound (CID) and the related publications (pmids)"))
         self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("CID to PMIDS RDF triples"))
-        self.ressource_version.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal( len(self.ressource_version.data_graph_dict["cid_isDiscussedBy_pmid"]), datatype=XSD.long ))
-        self.ressource_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in self.ressource_version.data_graph_dict["cid_isDiscussedBy_pmid"].subjects()])), datatype=XSD.long ))
-        self.ressource_version.add_version_attribute(RDFS["comment"], rdflib.Literal("The total number of distinct pmid is : " + str(len(set([str(o) for o in self.ressource_version.data_graph_dict["cid_isDiscussedBy_pmid"].objects()])))))
+        self.ressource_version.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal( len(self.ressource_version.data_graph_dict["cid_pmid"]), datatype=XSD.long ))
+        self.ressource_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in self.ressource_version.data_graph_dict["cid_pmid"].subjects()])), datatype=XSD.long ))
+        self.ressource_version.add_version_attribute(RDFS["comment"], rdflib.Literal("The total number of distinct pmid is : " + str(len(set([str(o) for o in self.ressource_version.data_graph_dict["cid_pmid"].objects()])))))
+        # On ajoute les infos pour la seconde ressource, les endpoint:
+        self.ressource_version_endpoint.add_version_namespaces(["void"], namespace_dict)
+        self.ressource_version_endpoint.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains additionnal informations about relations between cid and pmids by expliciting sources of this relations"))
+        self.ressource_version_endpoint.add_version_attribute(DCTERMS["title"], rdflib.Literal("CID to PMIDS endpoints RDF triples"))
+        self.ressource_version_endpoint.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal( len(self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"]), datatype=XSD.long ))
+        self.ressource_version_endpoint.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"].subjects()])), datatype=XSD.long ))
         # On écrit les fichiers
-        path_out = out_dir + "CID_PMID_triples/" + self.ressource_version.version_date + "/"
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)
-        self.ressource_version.data_graph_dict["cid_isDiscussedBy_pmid"].serialize(destination=path_out + "cid_isDiscussedBy_pmid.trig", format='trig')
-        self.ressource_version.data_graph_dict["cid_pmid_endpoint"].serialize(destination=path_out + "cid_pmid_endpoint.trig", format='trig')
-        self.ressource_version.version_graph.serialize(destination=out_dir + "CID_PMID_triples/" + "ressource_info_" + self.ressource_version.version_date + ".ttl", format='turtle')
+        path_out_1 = out_dir + "CID_PMID/" + self.ressource_version.version_date + "/"
+        path_out_2 = out_dir + "CID_PMID_endpoints/" + self.ressource_version.version_date + "/"
+        if not os.path.exists(path_out_1):
+            os.makedirs(path_out_1)
+        if not os.path.exists(path_out_2):
+            os.makedirs(path_out_2)
+        self.ressource_version.data_graph_dict["cid_pmid"].serialize(destination=path_out_1 + "cid_pmid.trig", format='trig')
+        self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"].serialize(destination=path_out_2 + "cid_pmid_endpoint.trig", format='trig')
+        self.ressource_version.version_graph.serialize(destination=out_dir + "CID_PMID/" + "ressource_info_" + self.ressource_version.version_date + ".ttl", format='turtle')
+        self.ressource_version_endpoint.version_graph.serialize(destination=out_dir + "CID_PMID_endpoints/" + "ressource_info_" + self.ressource_version_endpoint.version_date + ".ttl", format='turtle')
         
