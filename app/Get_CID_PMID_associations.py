@@ -160,7 +160,7 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
     offset = start_offset
     pack_rank = 1
     print("Create new ressource")
-    ressource_version = Database_ressource_version(ressource = "PubChem/" + ressource_name, version = version)
+    ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
     ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
     print("Creating directoty")
     path_out = out_dir + ressource_name + "/" + ressource_version.version + "/"
@@ -196,6 +196,8 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
             os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
             pack_rank += 1
             ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
+        if offset == 100000:
+            is_not_the_last = False
     print("End !")
     # Compléter l'annotation de la ressource :
     ressource_version.add_version_namespaces(["void"], namespaces_dict)
@@ -242,7 +244,7 @@ dowload_pubChem("reference", "data/PubChem_References/")
 
 
 requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm',
-                                         start_offset = 0, out_dir = "data/PubChem_References/",
+                                         start_offset = 0, out_dir = "data/TEST/",
                                          ressource_name = "PrimarySubjectTerm", namespaces_list = ["reference", "fabio", "mesh"],
                                          namespaces_dict = namespaces,
                                          version = None)
