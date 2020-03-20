@@ -9,9 +9,9 @@ class Database_ressource_version:
     - a dict of data graph containing triples associated to the data of the ressource
     - a graph which describe the version of the ressource being build
     """
-    def __init__(self, ressource, version_date):
+    def __init__(self, ressource, version):
         self.ressource = ressource
-        self.version_date = version_date
+        self.version = version
         self.uri_version = None
         self.data_graph_dict = dict()
         self.version_graph = self.initialyze_version()
@@ -19,18 +19,21 @@ class Database_ressource_version:
     def initialyze_version(self):
         g_v = rdflib.Graph()
         g_v.bind("dcterms", rdflib.Namespace("http://purl.org/dc/terms/"))
+        # Si une version a été donnée on l'utilise sinon par défault on met la date:
+        if not self.version:
+            self.version = date.today().isoformat()
         # On crée l'URI de la version
-        self.uri_version = rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version_date)
+        self.uri_version = rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version)
         g_v.add((rdflib.URIRef("http://database/ressources/" + self.ressource), DCTERMS['hasVersion'], self.uri_version))
-        g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(self.version_date, datatype=XSD.date)))
+        g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(self.version, datatype=XSD.date)))
         return g_v
     
     def append_data_graph(self, file, namespace_list, namespace_dict):
         base_name = re.split("\.", file)[0]
         # On crée le graph avec l'URI et les namespaces associés
-        g_d = rdflib.Graph(identifier=rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version_date + "/" + base_name))
+        g_d = rdflib.Graph(identifier=rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version + "/" + base_name))
         # On ajoute un namespace correspondante à la version et à la ressource que l'on traite :
-        g_d.bind(self.ressource + "_" + self.version_date, rdflib.Namespace("http://database/ressources/" + self.ressource + "/" + self.version_date + "/"))
+        g_d.bind(self.ressource + "_" + self.version, rdflib.Namespace("http://database/ressources/" + self.ressource + "/" + self.version + "/"))
         for ns_name in namespace_list:
             g_d.bind(ns_name, namespace_dict[ns_name])
         

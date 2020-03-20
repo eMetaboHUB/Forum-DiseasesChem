@@ -41,7 +41,7 @@ new_Ensemble_pccompound = Ensemble_pccompound()
 new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
 new_Ensemble_pccompound.append_pccompound("6036", query_builder)
 
-new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/")
+new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/", None)
 
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
 all_cids = new_Ensemble_pccompound.get_all_cids()
@@ -49,14 +49,14 @@ all_cids = new_Ensemble_pccompound.get_all_cids()
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
-def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, input_ressource_uri, out_dir, filtered_ressource_name, input_ids_uri, isZipped, namespace_dict):
+def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, input_ressource_uri, out_dir, filtered_ressource_name, input_ids_uri, isZipped, namespace_dict, version, separator):
     """A function to parse the .ttl.gz PubChem RDF files to only extract line for which id are associated to ids from list
     - PubChem_ref_folfer: The folder where are all the PubChem  RDF files
     - the list of all ids to fetch in files
     """
     # Convert pmids list in a set, because the test 'in' will be more efficient
     set_all_ids = set([prefix + id for id in all_ids])
-    ressource_filtered_version = Database_ressource_version(ressource = filtered_ressource_name, version_date = date.today().isoformat())
+    ressource_filtered_version = Database_ressource_version(ressource = filtered_ressource_name, version = version)
     # On récupère le graph RDF qui décrit avec ses métadatas la ressource à filtrer
     g_ressource = rdflib.Graph()
     g_ressource.parse(input_ressource_file, format='turtle')
@@ -80,7 +80,7 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
         bool = False
         # Pour chaque ligne, on parse
         for line in f_input:
-            columns = line.split(sep='\t')
+            columns = line.split(sep=separator)
             # Si la ligne désigne un triplet le début d'un triplet
             if columns[0] != '':
                 # Si le pmid appartient à notre liste, on passe bool à True de tel sorte que les ligne suivante soient ajouter au fichier tant qu'un triplet avec un pmid qui n'appartient pas à notre liste est rencontré
@@ -104,10 +104,10 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ressource_uri)
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ids_uri)
     # 
-    path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version_date + "/"
+    path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version + "/"
     if not os.path.exists(path_out):
         os.makedirs(path_out)
-    ressource_filtered_version.version_graph.serialize(destination=out_dir + filtered_ressource_name + "/" + "ressource_info_" + ressource_filtered_version.version_date + ".ttl", format = 'turtle')
+    ressource_filtered_version.version_graph.serialize(destination=out_dir + filtered_ressource_name + "/" + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
     for f_name, g_data in ressource_filtered_version.data_graph_dict.items():
          g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
 
@@ -149,25 +149,30 @@ def add_triples_from_csv(g, lines, namespaces_dict, predicate):
         g.add((rdflib.URIRef(parsed_l[1]), namespaces_dict[p_ns[0]][p_ns[1]], rdflib.URIRef(parsed_l[4])))
 
 
-def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, ressource_name, namespaces_list, namespaces_dict):
+def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, ressource_name, namespaces_list, namespaces_dict, version):
     """ - graph: The Subject of the triples (c'est pété comme nom mais c'est comme ça qu'ils l'appellent ...)
         - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
-            - out_dir: output directoty to write files
+        - out_dir: output directoty to write files
+        Vue que l'offset commence à 0, si il y a plusieurs paquets il y en aura 10000 de plus dans le premier
     """
     # On initilialise la table request_failure_list:
     request_failure_list = list()
     offset = start_offset
-    base_name = re.split("\.", out_name)[0]
+    pack_rank = 1
     print("Create new ressource")
-    ressource_version = Database_ressource_version(ressource = "PubChem/" + ressource_name, version_date = date.today().isoformat())
-    ressource_version.append_data_graph(out_name, namespaces_list, namespaces_dict)
+    ressource_version = Database_ressource_version(ressource = "PubChem/" + ressource_name, version = version)
+    ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
+    print("Creating directoty")
+    path_out = out_dir + ressource_name + "/" + ressource_version.version + "/"
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
     print("Starting at offset " + str(offset))
     out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
     # On récupère le dernier élément de la liste en la tronquant, si c'est true, c'est que le fichier à 10002 lignes et qu'on attend encore certainement des résultats.
     is_not_the_last = out.pop()
     # On additionne au graph:
     print("- Add to Graph -")
-    add_triples_from_csv(ressource_version.data_graph_dict[base_name], out, namespaces, predicate)
+    add_triples_from_csv(ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)], out, namespaces, predicate)
     while(is_not_the_last):
         offset += 10000
         print("offset: " + str(offset))
@@ -183,24 +188,26 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
                 is_not_the_last = out.pop()
                 i +=1
         print("- Add to Graph -")
-        add_triples_from_csv(ressource_version.data_graph_dict[base_name], out, namespaces, predicate)
-        if(offset == 500000):
-            is_not_the_last = False
+        add_triples_from_csv(ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)], out, namespaces, predicate)
+        # On fait des paquets de 10.000.000 par fichiers
+        if (offset % 10000000) == 0:
+            print("Creating pack")
+            ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
+            os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
+            pack_rank += 1
+            ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
     print("End !")
     # Compléter l'annotation de la ressource :
     ressource_version.add_version_namespaces(["void"], namespaces_dict)
     ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the pmid and the major MeSH associated to the publication"))
     ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("PMID to Primary Subject Term RDF triples"))
-    ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(ressource_version.data_graph_dict[base_name]), datatype=XSD.long ))
-    ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in ressource_version.data_graph_dict[base_name].subjects()])), datatype=XSD.long ))
-    path_out = out_dir + ressource_name + "/" + ressource_version.version_date + "/"
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
+    ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( sum([len(g) for g in ressource_version.data_graph_dict.values()]) , datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
     # On écrits les fichiers dans les répertoires correspondants
-    ressource_version.data_graph_dict[base_name].serialize(destination=path_out + out_name, format='turtle')
-    ressource_version.version_graph.serialize(out_dir + ressource_name + "/" + "ressource_info_" + ressource_version.version_date + ".ttl", format = 'turtle')
+    ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
+    ressource_version.version_graph.serialize(out_dir + ressource_name + "/" + "ressource_info_" + ressource_name + "_" + ressource_version.version + ".ttl", format = 'turtle')
     
-    os.system("gzip " + path_out + out_name)
+    os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
     return request_failure_list
 
         
@@ -219,7 +226,7 @@ def dowload_pubChem(dir, out_path):
     # On récupère les données que l'on enregistre dans le directory créée
     os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=3 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
-    ressource_version = Database_ressource_version(ressource = "PubChem/" + dir, version_date = str(global_modif_date))
+    ressource_version = Database_ressource_version(ressource = "PubChem/" + dir, version = str(global_modif_date))
     ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
     # On annote la nouvelle version avec les informations du fichier void
     for s,p,o in g_metada.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + dir), None, None)):
@@ -228,29 +235,42 @@ def dowload_pubChem(dir, out_path):
         # On va crée un URI complémentaire en ajoutant le nom du ichier pour les identifiers
         ressource_version.append_data_graph(graph_file, [], None)
     # On écrit le graph le fichier
-    ressource_version.version_graph.serialize(out_path + dir + "/" + "ressource_info_" + str(global_modif_date) + ".ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(out_path + dir + "/" + "ressource_info_" + dir + "_" + str(global_modif_date) + ".ttl", format = 'turtle')
 
 
 dowload_pubChem("reference", "data/PubChem_References/")
 
 
-requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm.ttl.gz',
+requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm',
                                          start_offset = 0, out_dir = "data/PubChem_References/",
                                          ressource_name = "PrimarySubjectTerm", namespaces_list = ["reference", "fabio", "mesh"],
-                                         namespaces_dict = namespaces)
+                                         namespaces_dict = namespaces,
+                                         version = None)
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference/2020-03-06/", 
                   all_ids = all_pmids,
                   prefix = "reference:PMID", 
                   out_dir = "data/PubChem_References/",
-                  input_ressource_file = "data/PubChem_References/reference/ressource_info_2020-03-06.ttl",
+                  input_ressource_file = "data/PubChem_References/reference/ressource_info_reference_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"),
                   filtered_ressource_name = "referenceFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID_triples/2020-03-20"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
                   isZipped = True,
-                  namespace_dict = namespaces)
+                  namespace_dict = namespaces,
+                  version = None,
+                  separator = '\t')
 
 # On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
-parse_pubchem_RDF("data/PubChem_compound/", all_cids, "compound:CID", "pccompound_filered/")
-
+parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySubjectTerm/2020-03-20/",
+                  all_ids = all_pmids,
+                  prefix = "reference:PMID",
+                  out_dir = "data/PubChem_References/",
+                  input_ressource_file = "data/PubChem_References/PrimarySubjectTerm/ressource_info_PrimarySubjectTerm_2020-03-20.ttl",
+                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/PrimarySubjectTerm/2020-03-20"),
+                  filtered_ressource_name = "PrimarySubjectTermFiltered",
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
+                  isZipped = True,
+                  namespace_dict = namespaces,
+                  version = None,
+                  separator = ' ')
