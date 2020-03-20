@@ -213,7 +213,10 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
     return request_failure_list
 
         
-def dowload_pubChem(dir, out_path):
+def dowload_pubChem(dir, request_ressource, out_path):
+    """
+    - request_ressource: one of the void:subset of the PubChem RDF, such as :compound, reference, etc... 
+    """
     # On télécharge le fichier void et les données
     os.system("wget ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl")
     # On parse le fichier des metadatas
@@ -221,26 +224,26 @@ def dowload_pubChem(dir, out_path):
     g_metada.parse("void.ttl", format='turtle')
     global_modif_date = g_metada.value(subject=rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#PubChemRDF"), predicate=rdflib.URIRef("http://purl.org/dc/terms/modified"), object=None)
     # On crée un repertoire correspondant au subset PubChem récupéré et à la date de récupération
-    version_path = out_path + dir + "/" + str(global_modif_date) + "/"
+    version_path = out_path + request_ressource + "/" + str(global_modif_date) + "/"
     if not os.path.exists(version_path):
         os.makedirs(version_path)
-    os.system("mv void.ttl " + out_path + dir + "/")
+    os.system("mv void.ttl " + out_path + request_ressource + "/")
     # On récupère les données que l'on enregistre dans le directory créée
-    os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=3 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
+    os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
-    ressource_version = Database_ressource_version(ressource = "PubChem/" + dir, version = str(global_modif_date))
+    ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = str(global_modif_date))
     ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
     # On annote la nouvelle version avec les informations du fichier void
-    for s,p,o in g_metada.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + dir), None, None)):
+    for s,p,o in g_metada.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource), None, None)):
         ressource_version.add_version_attribute(predicate = p, object = o) 
     for graph_file in os.listdir(version_path):
         # On va crée un URI complémentaire en ajoutant le nom du ichier pour les identifiers
         ressource_version.append_data_graph(graph_file, [], None)
     # On écrit le graph le fichier
-    ressource_version.version_graph.serialize(out_path + dir + "/" + "ressource_info_" + dir + "_" + str(global_modif_date) + ".ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(out_path + request_ressource + "/" + "ressource_info_" + request_ressource + "_" + str(global_modif_date) + ".ttl", format = 'turtle')
 
 
-dowload_pubChem("reference", "data/PubChem_References/")
+dowload_pubChem("reference", "reference", "data/PubChem_References/")
 
 
 requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm',
@@ -276,3 +279,6 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
                   namespace_dict = namespaces,
                   version = None,
                   separator = ' ')
+
+
+dowload_pubChem("compound/general/pc_compound_type.ttl.gz", "compound", "data/PubChem_Compound/")
