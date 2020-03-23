@@ -183,7 +183,7 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
             print("Starting Check !")
             i = 0
             # We check three times, if is_not_the_last become True, we exist the loop and continue with the next offset or if we reach the last check (the third) and it's always the last, so it's the end 
-            while (not is_not_the_last) and i < 5:
+            while (not is_not_the_last) and i < 10:
                 out = request_RESTful_PubChem(graph, predicate, str(offset), request_failure_list)
                 is_not_the_last = out.pop()
                 i +=1
@@ -196,8 +196,6 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
             os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
             pack_rank += 1
             ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
-        if offset == 100000:
-            is_not_the_last = False
     print("End !")
     # Compléter l'annotation de la ressource :
     ressource_version.add_version_namespaces(["void"], namespaces_dict)
@@ -227,7 +225,7 @@ def dowload_pubChem(dir, request_ressource, out_path):
     version_path = out_path + request_ressource + "/" + str(global_modif_date) + "/"
     if not os.path.exists(version_path):
         os.makedirs(version_path)
-    os.system("mv void.ttl " + out_path + request_ressource + "/")
+    os.system("mv void.ttl " + out_path)
     # On récupère les données que l'on enregistre dans le directory créée
     os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
@@ -247,7 +245,7 @@ dowload_pubChem("reference", "reference", "data/PubChem_References/")
 
 
 requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm',
-                                         start_offset = 0, out_dir = "data/TEST/",
+                                         start_offset = 0, out_dir = "data/PubChem_References/",
                                          ressource_name = "PrimarySubjectTerm", namespaces_list = ["reference", "fabio", "mesh"],
                                          namespaces_dict = namespaces,
                                          version = None)
@@ -272,7 +270,7 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
                   prefix = "reference:PMID",
                   out_dir = "data/PubChem_References/",
                   input_ressource_file = "data/PubChem_References/PrimarySubjectTerm/ressource_info_PrimarySubjectTerm_2020-03-20.ttl",
-                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/PrimarySubjectTerm/2020-03-20"),
+                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PrimarySubjectTerm/2020-03-20"),
                   filtered_ressource_name = "PrimarySubjectTermFiltered",
                   input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
                   isZipped = True,
@@ -281,4 +279,20 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
                   separator = ' ')
 
 
+
 dowload_pubChem("compound/general/pc_compound_type.ttl.gz", "compound", "data/PubChem_Compound/")
+
+parse_pubchem_RDF(input_ressource_directory = "data/PubChem_Compound/compound/2020-03-06/",
+                  all_ids = all_cids,
+                  prefix = "compound:CID",
+                  out_dir = "data/PubChem_Compound/",
+                  input_ressource_file = "data/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
+                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
+                  filtered_ressource_name = "CompoundFiltered",
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
+                  isZipped = True,
+                  namespace_dict = namespaces,
+                  version = None,
+                  separator = '\t')
+
+dowload_pubChem("measuregroup", "measuregroup", "data/PubChem_MeasureGroup/")
