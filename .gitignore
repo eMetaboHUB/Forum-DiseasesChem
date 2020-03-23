@@ -63,6 +63,7 @@ Thumbs.db
 *.odp
 *.netstats
 *.ttl
+*.trig
 # Folders #
 # #########
 data/**

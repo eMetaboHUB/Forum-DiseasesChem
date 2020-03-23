@@ -1,0 +1,25 @@
+version: '3'
+services:
+    virtuoso:
+         image: tenforce/virtuoso                    
+         environment:
+              VIRT_Parameters_NumberOfBuffers: 2720000   # See virtuoso/README.md to adapt value of this line
+              VIRT_Parameters_MaxDirtyBuffers: 2000000    # See virtuoso/README.md to adapt value of this line
+              VIRT_Parameters_TN_MAX_memory: 4000000000
+              VIRT_SPARQL_ResultSetMaxRows: 100000000
+              VIRT_SPARQL_MaxDataSourceSize: 1000000000
+              VIRT_Flags_TN_MAX_memory: 4000000000
+              VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
+              VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
+              VIRT_SPARQL_MaxQueryExecutionTime: 300          # 5 min
+              VIRT_Parameters_MaxMemPoolSize: 800000000
+              VIRT_Database_LockFile: virtuoso.lck
+              DBA_PASSWORD: "myDBTest"
+              SPARQL_UPDATE: "false"
+              DEFAULT_GRAPH: "http://database/ressources/"
+         volumes:
+            - ./share:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps
+            - ./data/virtuoso:/data
+         ports:
+            - 9980:8890
+

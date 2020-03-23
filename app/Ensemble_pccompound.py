@@ -1,8 +1,14 @@
 from Pccompound import Pccompound
 import eutils
+import rdflib
 import numpy
 import sys
+import os
+from rdflib.namespace import XSD, DCTERMS, RDFS
+from datetime import date
 import xml.etree.ElementTree as ET
+from Database_ressource_version import Database_ressource_version
+
 class Ensemble_pccompound:
     """This class represent an ensembl of Pccompound objects, it's composed of:
     - a list of Pccompound objects
@@ -11,6 +17,8 @@ class Ensemble_pccompound:
     def __init__(self):
         self.pccompound_list = list()        
         self.append_failure = list()
+        self.ressource_version = None
+        self.ressource_version_endpoint = None
     
     def append_pccompound(self, cid, query_builder):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
@@ -40,42 +48,74 @@ class Ensemble_pccompound:
         # For each PMID ressource in the union set, determine which are the orginals sources of the association.
         for source in pmids_by_source.keys():
             a = numpy.array(numpy.isin(pmids_union, pmids_by_source[source])).nonzero()
-            [sources[index].append(("\"" + source + "\"")) for index in a[0].tolist()]
+            [sources[index].append((source)) for index in a[0].tolist()]
         self.pccompound_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
-        
-    def export_cids_pmids_triples_ttl(self, output_file):
-        """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each CID, all association with PMID are indexed with the cito:isDiscussedBy predicat.
-        - output_file: a path to the output file
+    
+    def fill_cids_pmids_graph(self, g, namespaces_dict):
+        """This function create a rdflib graph containing all the cid - pmid associations contains in the Ensemble_pccompound object.
+        g is a rdflib Graph were fill these triples
         """
-        # Preparing file and writing prefix
-        f = open(output_file, "w")
-        f.write("@prefix cito:\t<http://purl.org/spar/cito/> .\n@prefix compound:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .\n@prefix reference:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .\n")
+        # Add all triples to graph
         for pcc in self.pccompound_list:
-            pmid_export = " ,\n\t\t".join(["reference:PMID"+pmid for pmid in pcc.get_pmids()]) + " .\n"
-            pmid_export = "compound:CID" + pcc.get_cid() + "\tcito:isDiscussedBy\t" + pmid_export
-            f.write(pmid_export)
-        f.close
-        
-    def export_cid_pmid_endpoint(self, output_file):
-        """This function export a Ensemble_pccompound as a triples RDF way (format .ttl). For each combination of CID & PMID sources are annotated
-        - output_file: a path to the output file
+            cid = 'CID' + pcc.get_cid()
+            for pmid in pcc.get_pmids():
+                g.add((namespaces_dict["compound"][cid], namespaces_dict["cito"].isDiscussedBy, namespaces_dict["reference"]['PMID' + pmid]))
+    
+    def fill_cids_pmids_endpoint_graph(self, g, namespaces_dict):
+        """This function create a rdflib graph containing all the cid - pmid endpoints associations contains in the Ensemble_pccompound object.
+        g is a rdflib Graph were fill these triples
         """
-        f = open(output_file, "w")
-        f.write("@prefix endpoint:	<http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/> .\n@prefix cito:\t<http://purl.org/spar/cito/> .\n@prefix obo:\t<http://purl.obolibrary.org/obo/> .\n@prefix compound:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .\n@prefix reference:\t<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .\n@prefix dcterms:\t<http://purl.org/dc/terms/> .\n")
         for pcc in self.pccompound_list:
-            pmids = pcc.get_pmids()
-            subject_list = [("CID" + pcc.get_cid() + "_" + "PMID" + pmid) for pmid in pcc.get_pmids()]
-            contributors = [",".join(pmid.get_source()) for pmid in pcc.pmid_list]
-            complete_triples = [("endpoint:" + subject_list[index] + "\tobo:IAO_0000136\tcompound:CID" + pcc.get_cid() + " ;\n\t\tcito:citesAsDataSource\treference:PMID" + pmids[index] + " ;\n\t\tdcterms:contributor\t" + contributors[index] + " .\n") for index in range(len(pcc.pmid_list))]
-            f.write("".join(complete_triples))
-        f.close
-        
+            cid = 'CID' + pcc.get_cid()
+            for p in pcc.pmid_list:
+                pmid = 'PMID' + p.get_pmid()
+                source = ",".join(p.get_source())
+                s = cid + "_" + pmid
+                # Add to graph
+                g.add((namespaces_dict["endpoint"][s], namespaces_dict["obo"].IAO_0000136, namespaces_dict["compound"][cid]))
+                g.add((namespaces_dict["endpoint"][s], namespaces_dict["cito"].citesAsDataSource, namespaces_dict["reference"][pmid]))
+                g.add((namespaces_dict["endpoint"][s], namespaces_dict["dcterms"].contributor, rdflib.Literal(source)))
+    
     def get_all_pmids(self):
         """this function allows to extract the union of all pmids associated with Pccompounds objects in the Ensemble_pccompound objects"""
         pmids_union = list(set().union(*([pcc.get_pmids() for pcc in self.pccompound_list])))
         return pmids_union
-        
+    
     def get_all_cids(self):
         """this function allows to extract the union of all cids associated with Pccompounds objects in the Ensemble_pccompound objects"""
         cids = [pcc.get_cid() for pcc in self.pccompound_list]
         return cids
+    
+    def create_CID_PMID_ressource(self, namespace_dict, out_dir, version):
+        self.ressource_version = Database_ressource_version(ressource = "CID_PMID", version = version)
+        self.ressource_version_endpoint = Database_ressource_version(ressource = "CID_PMID_enpoint", version = version)
+        
+        self.ressource_version.append_data_graph(file = "cid_pmid.trig", namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
+        self.ressource_version_endpoint.append_data_graph(file = "cid_pmid_endpoint.trig", namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
+        # On remplis les graphs
+        self.fill_cids_pmids_graph(g = self.ressource_version.data_graph_dict["cid_pmid"], namespaces_dict = namespace_dict)
+        self.fill_cids_pmids_endpoint_graph(g = self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"], namespaces_dict = namespace_dict)
+        # On ajoute les infos pour la première ressource:
+        self.ressource_version.add_version_namespaces(["void"], namespace_dict)
+        self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the PubChem Compound (CID) and the related publications (pmids)"))
+        self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("CID to PMIDS RDF triples"))
+        self.ressource_version.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal( len(self.ressource_version.data_graph_dict["cid_pmid"]), datatype=XSD.long ))
+        self.ressource_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in self.ressource_version.data_graph_dict["cid_pmid"].subjects()])), datatype=XSD.long ))
+        # On ajoute les infos pour la seconde ressource, les endpoint:
+        self.ressource_version_endpoint.add_version_namespaces(["void"], namespace_dict)
+        self.ressource_version_endpoint.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains additionnal informations about relations between cid and pmids by expliciting sources of this relations"))
+        self.ressource_version_endpoint.add_version_attribute(DCTERMS["title"], rdflib.Literal("CID to PMIDS endpoints RDF triples"))
+        self.ressource_version_endpoint.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal( len(self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"]), datatype=XSD.long ))
+        self.ressource_version_endpoint.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"].subjects()])), datatype=XSD.long ))
+        # On écrit les fichiers
+        path_out_1 = out_dir + "CID_PMID/" + self.ressource_version.version + "/"
+        path_out_2 = out_dir + "CID_PMID_endpoints/" + self.ressource_version.version + "/"
+        if not os.path.exists(path_out_1):
+            os.makedirs(path_out_1)
+        if not os.path.exists(path_out_2):
+            os.makedirs(path_out_2)
+        self.ressource_version.data_graph_dict["cid_pmid"].serialize(destination=path_out_1 + "cid_pmid.trig", format='trig')
+        self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"].serialize(destination=path_out_2 + "cid_pmid_endpoint.trig", format='trig')
+        self.ressource_version.version_graph.serialize(destination=out_dir + "CID_PMID/" + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
+        self.ressource_version_endpoint.version_graph.serialize(destination=out_dir + "CID_PMID_endpoints/" + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
+        
