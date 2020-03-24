@@ -68,3 +68,5 @@ Thumbs.db
 # #########
 data/**
 unused_data/**
+docker-virtuoso/share/**
+docker-virtuoso/data/**

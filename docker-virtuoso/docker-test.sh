@@ -33,13 +33,6 @@ ld_dir_all ('./dumps/MeSH/', '*.nt', 'http://id.nlm.nih.gov/mesh');
 ld_dir_all ('./dumps/vocabulary/', '*.ttl', 'http://database/inference-rules/');
 ld_dir_all ('./dumps/vocabulary/', '*.rdf', 'http://database/inference-rules/');
 ld_dir_all ('./dumps/vocabulary/', '*.owl', 'http://database/inference-rules/');
-
-select * from DB.DBA.load_list;
-rdf_loader_run();
-checkpoint;
-select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
-
-# Add my ontology
 ld_dir_all ('./dumps/new_inferences/', '*.ttl', 'http://database/inference-rules/');
 
 select * from DB.DBA.load_list;
@@ -56,6 +49,7 @@ checkpoint;
 
 
 sudo docker stop my-virtuoso
+
 sudo docker rm  my-virtuoso
 
 
