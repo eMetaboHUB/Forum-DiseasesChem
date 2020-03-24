@@ -10,9 +10,11 @@ import xml.etree.ElementTree as ET
 from Database_ressource_version import Database_ressource_version
 
 class Ensemble_pccompound:
-    """This class represent an ensembl of Pccompound objects, it's composed of:
-    - a list of Pccompound objects
-    - a list of cid for which NCBI request to get PMID association failed
+    """This class represent an ensembl of Pccompound objects:
+    - pccompound_list: a list of Pccompound objects
+    - append_failure: a list of the cid for which the NCBI eutils request fail
+    - ressource_version: the URI (rdflib.URIRef) that will automatocally be associated to the object as a version of the CID_PMID ressource
+    - ressource_version_endpoint: the URI (rdflib.URIRef) that will automatocally be associated to the object as a version of the CID_PMID_enpoint ressource
     """
     def __init__(self):
         self.pccompound_list = list()        
@@ -53,7 +55,8 @@ class Ensemble_pccompound:
     
     def fill_cids_pmids_graph(self, g, namespaces_dict):
         """This function create a rdflib graph containing all the cid - pmid associations contains in the Ensemble_pccompound object.
-        g is a rdflib Graph were fill these triples
+        - g: a rdflib Graph that will be filled with these triples
+        - namespaces_dict:  dict containing all the used namespaces.
         """
         # Add all triples to graph
         for pcc in self.pccompound_list:
@@ -63,7 +66,8 @@ class Ensemble_pccompound:
     
     def fill_cids_pmids_endpoint_graph(self, g, namespaces_dict):
         """This function create a rdflib graph containing all the cid - pmid endpoints associations contains in the Ensemble_pccompound object.
-        g is a rdflib Graph were fill these triples
+        - g: a rdflib Graph that will be filled with these triples
+        - namespaces_dict:  dict containing all the used namespaces.
         """
         for pcc in self.pccompound_list:
             cid = 'CID' + pcc.get_cid()
@@ -87,6 +91,12 @@ class Ensemble_pccompound:
         return cids
     
     def create_CID_PMID_ressource(self, namespace_dict, out_dir, version):
+        """
+        This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
+        - namespace_dict: dict containing all the used namespaces.
+        - out_dir: a path to an directory to write output files.
+        - version: the version name. If None, the date will be choose by default.
+        """
         self.ressource_version = Database_ressource_version(ressource = "CID_PMID", version = version)
         self.ressource_version_endpoint = Database_ressource_version(ressource = "CID_PMID_enpoint", version = version)
         

@@ -18,7 +18,7 @@ from Database_ressource_version import Database_ressource_version
 
 
 # The Api_key can be found on the NCBI account.
-
+# Creating the directory of all namespaces
 namespaces = {
     "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
     "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
@@ -40,7 +40,7 @@ query_builder = eutils.QueryService(cache = False,
 new_Ensemble_pccompound = Ensemble_pccompound()
 new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
 new_Ensemble_pccompound.append_pccompound("6036", query_builder)
-
+# Creating ressources files.
 new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/", None)
 
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
@@ -50,9 +50,20 @@ all_cids = new_Ensemble_pccompound.get_all_cids()
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
 def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, input_ressource_uri, out_dir, filtered_ressource_name, input_ids_uri, isZipped, namespace_dict, version, separator):
-    """A function to parse the .ttl.gz PubChem RDF files to only extract line for which id are associated to ids from list
-    - PubChem_ref_folfer: The folder where are all the PubChem  RDF files
-    - the list of all ids to fetch in files
+    """A function used to create a filtered version of a ressource, by parsing the reference file and extract only triples for which the subject is contains in a defined set.
+    Files are not lood as graph using rdflib, but are read as normal files because for heavy files, importing the graph is not memory efficient.
+    - input_ressource_directory: a path to the directory containing all the RDF files referenced has 'partOf' the reference source in the input_ressource_file
+    - input_ressource_file: a ressource_info file containing informations about the reference ressource.
+    - all_ids: a list of all the ids that should be used to parse the RDF files associated to the ressource.
+    - prefix: the string representing the prefix that shoud be added to the id to create the URI of subjects in the file.
+    - input_ressource_uri: the rdflib.UriRef associated to the reference ressource in the input_ressource_file
+    - out_dir: a path to an directory to write output files.
+    - filtered_ressource_name: the name of the new ressource, creating from the parsing of the reference file.
+    - input_ids_uri: the rdflib.UriRef associated to the reference ressource from which the set of all_ids was created.
+    - isZipped: is the reference files are zipped: True/False.
+    - namespace_dict: dict containing all the used namespaces.
+    - version: the version name. If None, the date will be choose by default.
+    - separator: the separator used in triples (.ttl) files to separated subject/predicate/object: \t or ' '
     """
     # Convert pmids list in a set, because the test 'in' will be more efficient
     set_all_ids = set([prefix + id for id in all_ids])
@@ -143,6 +154,13 @@ def request_RESTful_PubChem(graph, predicate, offset, request_failure_list):
 
 
 def add_triples_from_csv(g, lines, namespaces_dict, predicate):
+    """
+    This function is used to add triples to a graph g from a csv file
+    - g: the graph where to add triples
+    - lines: the list of lines of the csv file
+    - namespace_dict: dict containing all the used namespaces.
+    - predicate: the string of the predicate which is used in the csv file (prefix:predicate)
+    """
     p_ns = re.split(":", predicate)
     for l_index in range(1, len(lines) - 1):
         parsed_l = re.split("[\",]", lines[l_index])
@@ -150,10 +168,16 @@ def add_triples_from_csv(g, lines, namespaces_dict, predicate):
 
 
 def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, ressource_name, namespaces_list, namespaces_dict, version):
-    """ - graph: The Subject of the triples (c'est pété comme nom mais c'est comme ça qu'ils l'appellent ...)
-        - predicate: the predicate of the triple (witrh the prefix in a turtle syntax)
-        - out_dir: output directoty to write files
-        Vue que l'offset commence à 0, si il y a plusieurs paquets il y en aura 10000 de plus dans le premier
+    """ This function is used to create a new version of a ressource for which triples are fetch using rhe PubChem REST api using the subject database and the predicate.
+    - graph: the subject database of the triples to fetch from the REST api of PubChem.
+    - predicate: the predicate of the triple (with the prefix in a turtle syntax)
+    - out_name: the name of output RDF file
+    - start_offset: the offset used to start (Cf. PubChem REST api doc)
+    - out_dir: a path to an directory to write output files
+    - ressource_name: the name of the created ressource
+    - namespace_list: a list of the namespaces that should be associated to the graph
+    - namespace_dict: a dict containing all the used namespaces.
+    - version: the version name. If None, the date will be choose by default.
     """
     # On initilialise la table request_failure_list:
     request_failure_list = list()
@@ -213,7 +237,10 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
         
 def dowload_pubChem(dir, request_ressource, out_path):
     """
-    - request_ressource: one of the void:subset of the PubChem RDF, such as :compound, reference, etc... 
+    This function is used to download PubChem rdf files from the ftp server and create a new version of the associated ressource.
+    - dir: the path to the directory/file to fetch in the ftp server from ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/
+    - request_ressource: the name of the ressource as indicated in the void.ttl file.
+    - out_path: a path to a directory to write output files
     """
     # On télécharge le fichier void et les données
     os.system("wget ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl")
