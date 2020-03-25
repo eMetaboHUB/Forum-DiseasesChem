@@ -243,9 +243,43 @@ This request actualy work on corese !
 23/03/2020
 
 Currently : 
-- all the named graphs can be loaded and interrogate but inference using my ontology don't works in virtuoso
 - thethe docker is only avaible as a *docker run* but not as a docker-compose. 
 
 
+The query which may be used to get all the cid - MeSH diseases assocaition with the number of associated pmid is :  
 
+```
+DEFINE input:inference 'schema-inference-rules'
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+prefix cito: <http://purl.org/spar/cito/>
+prefix fabio:	<http://purl.org/spar/fabio/> 
+prefix owl: <http://www.w3.org/2002/07/owl#> 
+
+select ?cid ?mesh ?name ?countdist where {
+	
+	?mesh rdfs:label ?name .	
+	{
+		select ?mesh ?cid (count(distinct ?pmid) as ?countdist) where {
+		?cid cito:isDiscussedBy ?pmid .
+		?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+		?mesh a meshv:TopicalDescriptor .
+		
+		?mesh meshv:treeNumber ?tn .
+		FILTER(REGEX(?tn,"C"))
+		}
+		group by ?mesh ?cid
+		
+	}
+}ORDER BY DESC(?countdist)
+
+```
+Quelques explications :
+    - Si on découpe la requête en deux partie c'est parce que sinon on ne peut pas groupby ?mesh ?cid et aussi affichier directement le name associé car il ne s'agit pas d'un élément d'aggrégation.
+    - on doit **absolument** utilisé un *distinct* sur le comptage des pmids car : 1) Un même MeSH peut être inclus plusieurs fois (ex avec différents Qualifiers) et surtout quand 1 MeSH a souvent plusieurs tree number, ce qui fait que tout cela duplique les lignes ! et si on compte direct le nombre de pmid c'est faux !!
 
