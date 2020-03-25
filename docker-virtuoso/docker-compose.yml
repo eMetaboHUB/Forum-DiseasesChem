@@ -3,8 +3,8 @@ services:
     virtuoso:
          image: tenforce/virtuoso                    
          environment:
-              VIRT_Parameters_NumberOfBuffers: 2720000   # See virtuoso/README.md to adapt value of this line
-              VIRT_Parameters_MaxDirtyBuffers: 2000000    # See virtuoso/README.md to adapt value of this line
+              VIRT_Parameters_NumberOfBuffers: 1400000   # See virtuoso/README.md to adapt value of this line
+              VIRT_Parameters_MaxDirtyBuffers: 1000000    # See virtuoso/README.md to adapt value of this line
               VIRT_Parameters_TN_MAX_memory: 4000000000
               VIRT_SPARQL_ResultSetMaxRows: 100000000
               VIRT_SPARQL_MaxDataSourceSize: 1000000000
@@ -14,7 +14,7 @@ services:
               VIRT_SPARQL_MaxQueryExecutionTime: 300          # 5 min
               VIRT_Parameters_MaxMemPoolSize: 800000000
               VIRT_Database_LockFile: virtuoso.lck
-              DBA_PASSWORD: "myDBTest"
+              DBA_PASSWORD: "FORUMMetDisease"
               SPARQL_UPDATE: "false"
               DEFAULT_GRAPH: "http://database/ressources/"
          volumes:
