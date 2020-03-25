@@ -2,7 +2,7 @@
 
 # Starting with just one file
 
-docker-compose up -d
+docker-compose up
 
 # upload data
 echo "DELETE FROM DB.DBA.RDF_QUAD ;" >./share/upload.sh

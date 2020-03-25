@@ -195,6 +195,20 @@ parse_pubchem_RDF(input_ressource_directory = "path/to/PrimarySubjectTerm/versio
                   separator = ' ')
 ```
 * * *
+MeSH RDF triples must also be download in the same way. This can be do using the function ```dowload_MeSH```:
+```python
+dowload_MeSH(out_dir, namespaces_dict)
+```
+-   ```out_dir```: a path to an directory to write output files
+-   ```namespaces_dict```: a dict containing all the used namespaces.
+So to download the whole MeSH RDF, ce can simply do :
+
+```python
+dowload_MeSH("path/to/out/", namespaces)
+```
+
+
+* * *
 The same process can be done for pubChem compounds.
 ## Ontology
 
