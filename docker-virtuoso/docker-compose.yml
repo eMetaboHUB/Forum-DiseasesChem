@@ -14,7 +14,7 @@ services:
               VIRT_SPARQL_MaxQueryExecutionTime: 300          # 5 min
               VIRT_Parameters_MaxMemPoolSize: 800000000
               VIRT_Database_LockFile: virtuoso.lck
-              DBA_PASSWORD: "FORUMMetDisease"
+              DBA_PASSWORD: "FORUM-Met-Disease-DB"
               SPARQL_UPDATE: "false"
               DEFAULT_GRAPH: "http://database/ressources/"
          volumes:

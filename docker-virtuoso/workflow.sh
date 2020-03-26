@@ -1,6 +1,10 @@
 #!/bin/bash
 
+if [ -d "data" ]; then
+rm -r data
 rm share/upload.sh
+docker-compose down
+fi
 
 docker-compose up -d
 
@@ -43,6 +47,6 @@ dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
 
 sleep 10
 
-docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUMMetDisease" ./dumps/upload.sh'
+docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/upload.sh'
 
-echo "MetDisease database endpoint : http://localhost:9999/sparql"
+echo "MetDisease database endpoint : http://localhost:9980/sparql"
