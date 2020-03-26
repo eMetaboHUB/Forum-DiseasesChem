@@ -240,11 +240,13 @@ This request actualy work on corese !
 
 ## Virtuoso:
 
-23/03/2020
+Docker compose is available using the workflow.sh
+The *share* directory must contains all the data that have to be imported in virtuoso.
+Data are organized in different directory, each corresponding to a particular ressource.
+CID_PMID: contains all *.trig* RDF files the corresponding metadata *.ttl* files associated to the ressource CID_PMID you want to load.
 
-Currently : 
-- thethe docker is only avaible as a *docker run* but not as a docker-compose. 
-
+During the loading of the service it's important to check the result of the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;* which is checking about import errors.
+the service will be available at *http://localhost:9980/sparql* 
 
 The query which may be used to get all the cid - MeSH diseases assocaition with the number of associated pmid is :  
 
