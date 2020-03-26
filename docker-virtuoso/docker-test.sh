@@ -28,12 +28,12 @@ ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/', '*.trig', 
 ld_dir_all ('./dumps/PubChem_References/referenceFiltered/', '*.ttl', 'http://database/ressources/');
 ld_dir_all ('./dumps/PubChem_References/referenceFiltered/', '*.trig', '');
 
-ld_dir_all ('./dumps/MeSH/', '*.nt', 'http://id.nlm.nih.gov/mesh');
+ld_dir_all ('./dumps/MeSH/', '*.ttl', 'http://database/ressources/');
+ld_dir_all ('./dumps/MeSH/', '*.trig', '');
 
 ld_dir_all ('./dumps/vocabulary/', '*.ttl', 'http://database/inference-rules/');
 ld_dir_all ('./dumps/vocabulary/', '*.rdf', 'http://database/inference-rules/');
 ld_dir_all ('./dumps/vocabulary/', '*.owl', 'http://database/inference-rules/');
-ld_dir_all ('./dumps/new_inferences/', '*.ttl', 'http://database/inference-rules/');
 
 select * from DB.DBA.load_list;
 rdf_loader_run();
@@ -60,7 +60,8 @@ sudo docker rm  my-virtuoso
    WHERE  { GRAPH ?g {?s ?p ?o} } 
 ORDER BY  ?g
 
-# Load voca with inferences : 
+
+
 DEFINE input:inference 'schema-inference-rules'
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -73,11 +74,9 @@ prefix cito: <http://purl.org/spar/cito/>
 prefix fabio:	<http://purl.org/spar/fabio/> 
 prefix owl: <http://www.w3.org/2002/07/owl#> 
 
-SELECT ?p ?o
-WHERE 
-{
-    GRAPH <http://database/inference-rules/> 
-    {
-        voc:DiseaseMeSH ?p ?o .
-    }
-}
+select ?mesh (count(?pmid) as ?c) where {
+	?cid cito:isDiscussedBy ?pmid .
+	?pmid fabio:hasSubjectTerm ?mesh .
+	?mesh meshv:treeNumber ?tn .
+        FILTER(REGEX(?tn,"C"))
+} group by (?mesh) ORDER BY DESC(?c)
