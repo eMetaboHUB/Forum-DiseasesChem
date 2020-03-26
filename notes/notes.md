@@ -259,3 +259,43 @@ select ?pmid ?mesh where {
 }
 
 Olivier a suggérer que pour mieux gérer le versionning de nos RDF et aussipour correctement garder une trace de ce qui a été Importer/Modifier ou créée depuis le RDF de PubChem
+
+Donc finalement vue que le reasoner de Virtuoso n'est pas capable de faire les inférences OWL demandés, finalement on est obligé de le faire en SPARQL. Néanmoins cela semble plus performant et Olivier était également de cet avis.
+je copie colle quand même l'intoogie que l'on avait fait au cas où ça serve un jour.
+
+@prefix cito:	<http://purl.org/spar/cito/> .
+@prefix compound:	<http://rdf.ncbi.nlm.nih.gov/pubchem/compound/> .
+@prefix reference:	<http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> .
+@prefix endpoint:	<http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/> .
+@prefix obo:	<http://purl.obolibrary.org/obo/> .
+@prefix dcterms:	<http://purl.org/dc/terms/> .
+@prefix mesh:	<http://id.nlm.nih.gov/mesh/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix meshv: <http://id.nlm.nih.gov/mesh/vocab#> .
+@prefix fabio:	<http://purl.org/spar/fabio/> .
+@prefix xsd:	<http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix voc: <http://myorg.com/voc/doc#> .
+<http://myorg.com/voc/doc#> a owl:Ontology ;
+    dcterms:contributor "Delmas Maxime"^^xsd:string,
+        "Clément Frainay"^^xsd:string ,
+        "Olivier Filangi"^^xsd:string ;
+    dcterms:creator "Delmas Maxime"^^xsd:string ;
+    dcterms:date "2020-03-14"^^xsd:date ;
+    owl:versionInfo "1.0.0"^^xsd:string .
+
+voc:HasUndirectDescriptor owl:propertyChainAxiom ( fabio:hasSubjectTerm meshv:hasDescriptor ) .
+voc:HasUndirectDescriptor owl:equivalentProperty fabio:hasSubjectTerm .
+
+meshv:broaderDescriptor a owl:TransitiveProperty .
+
+voc:DiseaseMeSH a owl:Class ;
+    owl:oneOf
+        (mesh:D007239 mesh:D009369 mesh:D009140 mesh:D004066 mesh:D009057 mesh:D012140 mesh:D010038 mesh:D009422 mesh:D005128 mesh:D052801 mesh:D005261 mesh:D002318 mesh:D006425 mesh:D009358 mesh:D017437 mesh:D009750 mesh:D004700 mesh:D007154 mesh:D007280 mesh:D000820 mesh:D013568 mesh:D009784 mesh:D064419 mesh:D014947 ) .
+
+voc:DiseaseLinkedMesH rdf:type owl:Class ;
+        owl:equivalentClass [ rdf:type owl:Restriction ;
+            owl:onProperty meshv:broaderDescriptor ;
+            owl:someValuesFrom voc:DiseaseMeSH
+        ] .
