@@ -299,3 +299,22 @@ voc:DiseaseLinkedMesH rdf:type owl:Class ;
             owl:onProperty meshv:broaderDescriptor ;
             owl:someValuesFrom voc:DiseaseMeSH
         ] .
+
+
+
+Les DBidentifiers.org du modèle pose je pense un petit problème, car les URI ne sont pas celle pointés dans les ontology:
+Dans le chebi.owl, on a par exemple les URIs : 
+http://purl.obolibrary.org/obo/CHEBI_16424
+
+De la même manière dans les fichier de PubChem on a 
+@prefix obo:	<http://purl.obolibrary.org/obo/> .
+http://purl.obolibrary.org/obo/ obo:CHEBI_16424
+
+
+Mais dans le fichier de Human RDF, on a :
+ http://identifiers.org/chebi/CHEBI:16424
+
+ où celui pointe en fait vers :	https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:{$id}
+ ce qui n'est pas l'URI de la ressource dans l'ontology de ChEBI ...
+
+ Solution ? convertir toutes les URI du modèle en URI "correcte" comme dans l'ontology ?

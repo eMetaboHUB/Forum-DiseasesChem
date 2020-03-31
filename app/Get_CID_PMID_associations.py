@@ -370,3 +370,7 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_Compound/compound/20
                   separator = '\t')
 
 dowload_pubChem("measuregroup", "measuregroup", "data/PubChem_MeasureGroup/")
+
+
+
+# Flash disc at: /media/mxdelmas/DisqueDur/data_max/
