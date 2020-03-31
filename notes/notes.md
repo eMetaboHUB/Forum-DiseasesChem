@@ -318,3 +318,10 @@ Mais dans le fichier de Human RDF, on a :
  ce qui n'est pas l'URI de la ressource dans l'ontology de ChEBI ...
 
  Solution ? convertir toutes les URI du modèle en URI "correcte" comme dans l'ontology ?
+
+
+ Pour l'ensemble des propriétés PubChem compounds and descriptors.
+ Il y a beaucoup de propriété et certainement que la majorité ne nous interressent pas, genre "_Rotatable_Bond_Count" est-ce-qu'il serait pas préférable de les supprimer dces graph obtenus. Il faudrait les supprimer de la partie compound2descriptor et de la partie descriptor car ce sont en quelques sortes des blankNodes. On pourrait le faire en utilisant un set de type de propriété ChemINF que l'on voudrait conservé car chacun de ces blanknodes est annoté avec un type ChemINF. Donc a voir si ça vaut le coup...
+
+ * * *
+ * Après avoir parsé l'ensemble des PubChem Descriptor, il semble qu'il manque l'attribut *Compound_Identifier*. Ce n'est pas très grace car par exemple pour le CID6036 et bien la valeur c'est 6036, peut être donc qu'il s'emmerdent pas à la mettre et qu'elle est déterminer à la volée. Donc je peux l'enlever des features à recherchées !

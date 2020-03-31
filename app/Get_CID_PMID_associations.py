@@ -46,6 +46,32 @@ new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/", None)
 all_pmids = new_Ensemble_pccompound.get_all_pmids()
 all_cids = new_Ensemble_pccompound.get_all_cids()
 
+# Listes des features Compounds - Descriptors que l'on souhaite récupérées : 
+feature_list = ["_Canonical_SMILES",
+"_Covalent_Unit_Count",
+"_Defined_Atom_Stereo_Count",
+"_Defined_Bond_Stereo_Count",
+"_Exact_Mass",
+"_Hydrogen_Bond_Acceptor_Count",
+"_Hydrogen_Bond_Donor_Count",
+"_IUPAC_InChI",
+"_Isomeric_SMILES",
+"_Isotope_Atom_Count",
+"_Molecular_Formula",
+"_Molecular_Weight",
+"_Mono_Isotopic_Weight",
+"_Non-hydrogen_Atom_Count",
+"_Preferred_IUPAC_Name",
+"_Rotatable_Bond_Count",
+"_Structure_Complexity",
+"_TPSA",
+"_Total_Formal_Charge",
+"_Undefined_Atom_Stereo_Count",
+"_Undefined_Bond_Stereo_Count",
+"_XLogP3-AA"]
+
+# Création des couples features listes pour filtrer :
+compound_ids_features_list = [id + f for id in all_cids for f in feature_list]
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
@@ -87,8 +113,10 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
         while l_h.startswith('@', 0, 1):
             file_content += l_h
             l_h = f_input.readline()
-        # On initialise le boolean a Flase
+        # On initialise le boolean a False
         bool = False
+        # Un second simplement pour tester si au moins 1 élément a été récupérer et s'il faut donc créer un graph 
+        g_bool = False
         # Pour chaque ligne, on parse
         for line in f_input:
             columns = line.split(sep=separator)
@@ -97,15 +125,18 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
                 # Si le pmid appartient à notre liste, on passe bool à True de tel sorte que les ligne suivante soient ajouter au fichier tant qu'un triplet avec un pmid qui n'appartient pas à notre liste est rencontré
                 if columns[0] in set_all_ids:
                     bool = True
+                    g_bool = True
                 else:
                     bool = False
             # Si bool est True, on print la ligne
             if bool:
                 file_content += line
         f_input.close()
-        # On créée alors le nouveau graph: Pas besoin de spécifier des namespace car ce seront les même que dans le fichier source
-        ressource_filtered_version.append_data_graph(file = file_out, namespace_list  = [], namespace_dict = None)
-        ressource_filtered_version.data_graph_dict[base_name + "_filtered"].parse(data = file_content, format = 'turtle')
+        # if the obtained graph is empty, it's removed !
+        if g_bool:
+            # On créée alors le nouveau graph: Pas besoin de spécifier des namespace car ce seront les même que dans le fichier source
+            ressource_filtered_version.append_data_graph(file = file_out, namespace_list  = [], namespace_dict = None)
+            ressource_filtered_version.data_graph_dict[base_name + "_filtered"].parse(data = file_content, format = 'turtle')
     # On ajoute les infos :
     ressource_filtered_version.add_version_namespaces(["void"], namespace_dict)
     ressource_filtered_version.add_version_attribute(DCTERMS["description"], rdflib.Literal(str(g_ressource.value(subject=input_ressource_uri, predicate=DCTERMS["description"], object=None)) + " - Filtered version", lang = "en" ))
@@ -114,13 +145,13 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     ressource_filtered_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_filtered_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ressource_uri)
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ids_uri)
-    # 
+    # On écrit
     path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version + "/"
     if not os.path.exists(path_out):
         os.makedirs(path_out)
     ressource_filtered_version.version_graph.serialize(destination=out_dir + filtered_ressource_name + "/" + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
     for f_name, g_data in ressource_filtered_version.data_graph_dict.items():
-         g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
+            g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
 
 
 
@@ -310,8 +341,8 @@ def dowload_MeSH(out_dir, namespaces_dict):
 
 
 
-
-
+# TODO: Créer la fonction de parsing de graph pour les PubChem compounds (si besoin) afin de ne récupérer que les propriété qui nous interressent. On pourrait le faire en utilisant une sélection de type CHEMINF que celles-ci doivent avoir.
+# TODO: Créer une fonction qui permettrait de filtrer les objets. Par exemple la propriété Stereoisomer a pour objets une ensemble de CID, mais tout ces CID ne sont pas présents dans notre graph, car par exemple tous n'appartiennent pas au réseau. les filtrer ?
 
 dowload_MeSH("data/MeSH/", namespaces)
 
@@ -374,3 +405,32 @@ dowload_pubChem("measuregroup", "measuregroup", "data/PubChem_MeasureGroup/")
 
 
 # Flash disc at: /media/mxdelmas/DisqueDur/data_max/
+# dowload_pubChem("compound/general", "compound", "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/")
+# dowload_pubChem("descriptor/compound", "descriptor", "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/")
+
+# On cherche à parser sur les Compounds :
+parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
+                  all_ids = all_cids,
+                  prefix = "compound:CID",
+                  out_dir = "data/PubChem_Compound/",
+                  input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
+                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
+                  filtered_ressource_name = "CompoundFiltered",
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
+                  isZipped = True,
+                  namespace_dict = namespaces,
+                  version = None,
+                  separator = '\t')
+
+parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/2020-03-06/",
+                  all_ids = compound_ids_features_list,
+                  prefix = "descriptor:CID",
+                  out_dir = "data/PubChem_Descriptor/",
+                  input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/ressource_info_descriptor_2020-03-06.ttl",
+                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/descriptor/2020-03-06"),
+                  filtered_ressource_name = "DescriptorFiltered",
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
+                  isZipped = True,
+                  namespace_dict = namespaces,
+                  version = None,
+                  separator = '\t')

@@ -143,6 +143,8 @@ parse_pubchem_RDF(input_ressource_directory = "path/to/reference/version_X/",
 * * *
 A issue was also found in the pc_reference2chemical_diseases.ttl files. This files provides associations between pmids and Supplementary Concept MeSH Records (SCRs) which are composed of two principals types Diseases and Chemicals. The predicated used in this associations was *cito:discusses* whcih is the reverse property of *cito:isDiscussedBy*. But, *cito:isDiscussedBy* was already used to annotated associations between cid and pmids, so to prevent errors with inferences, I choose to change all the *cito:discusses* predicates in this files with *fabio:hasSubjectTerm* which is explicitly defined to be used with MeSH terms.
 
+A second issue is found in the pc_compound_type.ttl.gz file where currently two prefix lines for bp and nci and present few lines after the header which cause errors during the parsing. The proposed solution is simply to cut and paste this line in the header.
+
 * * *
 The main issue about PubChem RDF Reference files provided in the ftp server, is that they only provide triples with the *fabio:hasSubjectTerm* predicates, which correspond to secondary mesh associated to the pmid but don't provide the *fabio:hasPrimarySubjectTerm* which represent the main topics of the artcile, which is an import source of information.
 
