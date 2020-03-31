@@ -2,7 +2,7 @@ import rdflib
 import sys
 import re
 from datetime import date
-from rdflib.namespace import XSD, DCTERMS
+from rdflib.namespace import XSD, DCTERMS, RDF
 
 class Database_ressource_version:
     """This class represent a ressource version in the database, represented in a RDF model. It is composed of:
@@ -31,6 +31,8 @@ class Database_ressource_version:
         self.uri_version = rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version)
         g_v.add((rdflib.URIRef("http://database/ressources/" + self.ressource), DCTERMS['hasVersion'], self.uri_version))
         g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(self.version, datatype=XSD.date)))
+        # On indique qu'il s'agit d'une nouveau dataset:
+        g_v.add((self.uri_version, RDF["type"], rdflib.URIRef("http://rdfs.org/ns/void#Dataset")))
         return g_v
     
     def append_data_graph(self, file, namespace_list, namespace_dict):

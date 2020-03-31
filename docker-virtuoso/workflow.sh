@@ -10,6 +10,9 @@ docker-compose up -d
 
 # upload data
 echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
+
+echo "ld_dir_all ('./dumps/HumanGEM/', '*.ttl', 'http://database/ressources/SMBL');" >> share/upload.sh
+
 echo "ld_dir_all ('./dumps/CID_PMID/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/CID_PMID/', '*.trig', '');" >> share/upload.sh
 

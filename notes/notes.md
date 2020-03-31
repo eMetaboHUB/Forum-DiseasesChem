@@ -325,3 +325,19 @@ Mais dans le fichier de Human RDF, on a :
 
  * * *
  * Après avoir parsé l'ensemble des PubChem Descriptor, il semble qu'il manque l'attribut *Compound_Identifier*. Ce n'est pas très grace car par exemple pour le CID6036 et bien la valeur c'est 6036, peut être donc qu'il s'emmerdent pas à la mettre et qu'elle est déterminer à la volée. Donc je peux l'enlever des features à recherchées !
+
+Sparql query pour récupérer tout les smiles associés à mes species en passant par chebi : 
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+
+select ?specie ?ref ?smile where {
+  ?specie a SBMLrdf:Species .
+  ?specie bqbiol:is ?ref .
+  FILTER(STRSTARTS(STR(?ref), "http://purl.obolibrary.org/obo/CHEBI_"))
+  ?ref <http://purl.obolibrary.org/obo/chebi/smiles> ?smile
+}

@@ -86,7 +86,7 @@ class Ensemble_pccompound:
         return pmids_union
     
     def get_all_cids(self):
-        """this function allows to extract the union of all cids associated with Pccompounds objects in the Ensemble_pccompound objects"""
+        """this function allows to extract the union of all cids associated with Pccompounds objects in the Ensemble_pccompound objects which have associated litterature"""
         cids = [pcc.get_cid() for pcc in self.pccompound_list]
         return cids
     

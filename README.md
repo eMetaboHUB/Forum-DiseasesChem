@@ -126,6 +126,7 @@ parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_fi
 
 
 As Exemple, to filter the reference ressource to only have thoose involving with the studied compounds: 
+Here we are using all_pmids since it's not usefull to get information about publications that we can not link to our compounds. **but it's the same for the other ressource especially Compounds! Because we also want information about Compounds even if we can't associated some litterature to them ! We want them in the Graph !!** 
 ```python
 parse_pubchem_RDF(input_ressource_directory = "path/to/reference/version_X/", 
                   all_ids = all_pmids,
@@ -212,6 +213,8 @@ dowload_MeSH("path/to/out/", namespaces)
 
 * * *
 The same process can be done for pubChem compounds.
+**But when we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!**
+
 ## Ontology
 
 The differents RDF stores and RDFS/OWL Schema can be dowload in: 
@@ -286,4 +289,3 @@ select ?cid ?mesh ?name ?countdist where {
 Quelques explications :
     - Si on découpe la requête en deux partie c'est parce que sinon on ne peut pas groupby ?mesh ?cid et aussi affichier directement le name associé car il ne s'agit pas d'un élément d'aggrégation.
     - on doit **absolument** utilisé un *distinct* sur le comptage des pmids car : 1) Un même MeSH peut être inclus plusieurs fois (ex avec différents Qualifiers) et surtout quand 1 MeSH a souvent plusieurs tree number, ce qui fait que tout cela duplique les lignes ! et si on compte direct le nombre de pmid c'est faux !!
-
