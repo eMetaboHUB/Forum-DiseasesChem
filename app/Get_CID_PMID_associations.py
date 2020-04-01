@@ -28,7 +28,8 @@ namespaces = {
     "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
     "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
     "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
-    "void": rdflib.Namespace("http://rdfs.org/ns/void#")
+    "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
+    "skos": rdflib.Namespace("http://www.w3.org/2008/05/skos#")
 }
 
 # Listes des features Compounds - Descriptors que l'on souhaite récupérées : 

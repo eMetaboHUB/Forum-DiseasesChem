@@ -396,3 +396,5 @@ select * where {
         ORDER BY ?class
     }
 }
+
+Ha et aussi autre raison de bien vérifier nos ids: je me rends compte que des fois mon script n'a pas pu trouver d'information pour un PubChem CID dans le RDF, étrange puique je pars de toute la base. Il se trouve en fait que des fois, dans le SBML des éléments annotés CID sont en fait des SID chez PubChem, ils ont un CID, mais c'est pas celui indiqué dans le SBML. Bon après c'est seulement le cas pour 36 sur 1381 et c'est genre des gros lipides ou des trucs pas très bien annotés donc c'est pas très grace au pire. Mais peut être qu'avec UniChem on pourrait corriger ce genre de chose 
