@@ -126,6 +126,6 @@ class Ensemble_pccompound:
             os.makedirs(path_out_2)
         self.ressource_version.data_graph_dict["cid_pmid"].serialize(destination=path_out_1 + "cid_pmid.trig", format='trig')
         self.ressource_version_endpoint.data_graph_dict["cid_pmid_endpoint"].serialize(destination=path_out_2 + "cid_pmid_endpoint.trig", format='trig')
-        self.ressource_version.version_graph.serialize(destination=out_dir + "CID_PMID/" + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
-        self.ressource_version_endpoint.version_graph.serialize(destination=out_dir + "CID_PMID_endpoints/" + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
+        self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
+        self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
         

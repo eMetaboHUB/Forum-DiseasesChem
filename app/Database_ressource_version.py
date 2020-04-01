@@ -30,7 +30,7 @@ class Database_ressource_version:
         # On crée l'URI de la version
         self.uri_version = rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version)
         g_v.add((rdflib.URIRef("http://database/ressources/" + self.ressource), DCTERMS['hasVersion'], self.uri_version))
-        g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(self.version, datatype=XSD.date)))
+        g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(date.today().isoformat(), datatype=XSD.date)))
         # On indique qu'il s'agit d'une nouveau dataset:
         g_v.add((self.uri_version, RDF["type"], rdflib.URIRef("http://rdfs.org/ns/void#Dataset")))
         return g_v

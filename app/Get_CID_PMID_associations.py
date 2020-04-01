@@ -185,7 +185,7 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version + "/"
     if not os.path.exists(path_out):
         os.makedirs(path_out)
-    ressource_filtered_version.version_graph.serialize(destination=out_dir + filtered_ressource_name + "/" + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
+    ressource_filtered_version.version_graph.serialize(destination=path_out + filtered_ressource_name + "/" + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
     for f_name, g_data in ressource_filtered_version.data_graph_dict.items():
             g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
 
