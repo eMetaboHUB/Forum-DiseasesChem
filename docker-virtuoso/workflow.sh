@@ -17,6 +17,9 @@ echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/HumanGEM/', '*.ttl', 'http://database/ressources/SMBL');" >> share/upload.sh
 
+echo "ld_dir_all ('./dumps/UniChem/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/UniChem/', '*.trig', '');" >> share/upload.sh
+
 # echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 # echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
 
