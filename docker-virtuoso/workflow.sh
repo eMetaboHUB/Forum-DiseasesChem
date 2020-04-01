@@ -9,27 +9,34 @@ fi
 docker-compose up -d
 
 # upload data
+# Allowing request by service :
+echo "GRANT SELECT ON \"DB\".\"DBA\".\"SPARQL_SINV_2\" TO \"SPARQL\";" >> share/upload.sh
+echo "GRANT EXECUTE ON \"DB\".\"DBA\".\"SPARQL_SINV_IMP\" TO \"SPARQL\";" >> share/upload.sh
+# Start loading data :
 echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/HumanGEM/', '*.ttl', 'http://database/ressources/SMBL');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/CID_PMID/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/CID_PMID/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/CID_PMID_endpoints/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/CID_PMID_endpoints/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/CID_PMID_endpoints/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/CID_PMID_endpoints/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/MeSH/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/MeSH/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
+
+# echo "ld_dir_all ('./dumps/MeSH/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/MeSH/', '*.trig', '');" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/vocabulary/', '*.ttl', 'http://database/inference-rules/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/vocabulary/', '*.rdf', 'http://database/inference-rules/');" >> share/upload.sh

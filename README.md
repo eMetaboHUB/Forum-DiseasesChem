@@ -267,6 +267,7 @@ PREFIX voc: <http://myorg.com/voc/doc#>
 prefix cito: <http://purl.org/spar/cito/>
 prefix fabio:	<http://purl.org/spar/fabio/> 
 prefix owl: <http://www.w3.org/2002/07/owl#> 
+prefix void: <http://rdfs.org/ns/void#>
 
 select ?cid ?mesh ?name ?countdist where {
 	

@@ -326,6 +326,41 @@ Mais dans le fichier de Human RDF, on a :
  * * *
  * Après avoir parsé l'ensemble des PubChem Descriptor, il semble qu'il manque l'attribut *Compound_Identifier*. Ce n'est pas très grace car par exemple pour le CID6036 et bien la valeur c'est 6036, peut être donc qu'il s'emmerdent pas à la mettre et qu'elle est déterminer à la volée. Donc je peux l'enlever des features à recherchées !
 
+
+The query which may be used to get all the cid - MeSH diseases assocaition with the number of associated pmid is :  
+
+```
+DEFINE input:inference 'schema-inference-rules'
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+prefix cito: <http://purl.org/spar/cito/>
+prefix fabio:	<http://purl.org/spar/fabio/> 
+prefix owl: <http://www.w3.org/2002/07/owl#> 
+prefix void: <http://rdfs.org/ns/void#>
+
+select ?cid ?mesh ?name ?countdist where {
+	
+	?mesh rdfs:label ?name .	
+	{
+		select ?mesh ?cid (count(distinct ?pmid) as ?countdist) where {
+		?cid cito:isDiscussedBy ?pmid .
+		?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+		?mesh a meshv:TopicalDescriptor .
+		
+		?mesh meshv:treeNumber ?tn .
+		FILTER(REGEX(?tn,"C"))
+		}
+		group by ?mesh ?cid
+		
+	}
+}ORDER BY DESC(?countdist)
+
+
 Sparql query pour récupérer tout les smiles associés à mes species en passant par chebi : 
 DEFINE input:inference 'schema-inference-rules'
 prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
@@ -340,4 +375,24 @@ select ?specie ?ref ?smile where {
   ?specie bqbiol:is ?ref .
   FILTER(STRSTARTS(STR(?ref), "http://purl.obolibrary.org/obo/CHEBI_"))
   ?ref <http://purl.obolibrary.org/obo/chebi/smiles> ?smile
+}
+
+Pour accéder à MeSh Sparql depuis notre vituoso on peut faire comme ça :
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX mesh2020: <http://id.nlm.nih.gov/mesh/2020/>
+PREFIX mesh2019: <http://id.nlm.nih.gov/mesh/2019/>
+PREFIX mesh2018: <http://id.nlm.nih.gov/mesh/2018/>
+
+select * where {
+    service <http://id.nlm.nih.gov/mesh/sparql> {
+        SELECT DISTINCT ?class
+        FROM <http://id.nlm.nih.gov/mesh>
+        WHERE { [] a ?class . }
+        ORDER BY ?class
+    }
 }

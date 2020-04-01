@@ -76,16 +76,6 @@ compound_ids_features_list = [id + f for id in all_cids for f in feature_list]
 
 ### ==== WITH SBML FILE ==== ###
 
-# On fetch les pmids à partir des cid du SMBL !! :
-sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL("data/HumanGEM/HumanGEM.ttl", query_builder)
-
-sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
-# When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
-sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
-
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-03-31")
-smbl_compound_ids_features_list = [id + f for id in sbml_all_cids for f in feature_list]
-
 def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
     smbl = rdflib.Graph()
     smbl.parse(path_to_SMBL_RDF, format='turtle')
@@ -107,8 +97,23 @@ def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
     for cid in cid_list:
         print("Appening " + cid + " ...")
         new_Ensemble_pccompound.append_pccompound(cid, query_builder)
-    print("There was " + len(new_Ensemble_pccompound.append_failure) + " cid for which there was no publication found !")
+    print("There was " + str(len(new_Ensemble_pccompound.append_failure)) + " cid for which there was no publication found !")
     return(new_Ensemble_pccompound)
+
+# On fetch les pmids à partir des cid du SMBL !! :
+sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL("data/HumanGEM/HumanGEM.ttl", query_builder)
+
+sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
+# When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
+sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
+
+sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-03-31")
+smbl_compound_ids_features_list = [id + f for id in sbml_all_cids for f in feature_list]
+
+
+
+### ==== END SBML FILE ==== ###
+
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
 def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressource_file, input_ressource_uri, out_dir, filtered_ressource_name, input_ids_uri, isZipped, namespace_dict, version, separator):
