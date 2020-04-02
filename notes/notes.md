@@ -408,10 +408,62 @@ Pour aller chercher les identifiants manquant depuis notre store - RDF UniChem, 
   Mais on fait aussi un property path pour ajouter skos:closeMatch/skos:closeMatch, ce qui correspond aux liens intra-ressources pour les éléments que j'ai inférés avec closeMatch. On ajoute un filter not exist pour être sur que ce que l'on rajoute, c'est nouveau !
 
 select distinct  ?otherRef where {
-	model:M_m01323c a SBMLrdf:Species ;
+	?specie a SBMLrdf:Species ;
 		bqbiol:is ?ref .
 	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
 	FILTER not exists {              
-		model:M_m01323c bqbiol:is ?otherRef
+		?specie bqbiol:is ?otherRef
+	}
+}
+
+
+Pour compter par pattern d'uri rajouter :
+select  count(distinct(?otherRef)) where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
+	FILTER ( not exists {              
+		?specie bqbiol:is ?otherRef
+	} && STRSTARTS(STR(?otherRef), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") )
+
+}
+
+## POUR INSERER LES MODIFICATIONS DANS LE GRAPH :
+
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+INSERT
+{ 
+	GRAPH <http://database/ressources/SMBL> 
+		{ ?specie bqbiol:is ?otherRef } 
+}
+where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
+	FILTER not exists {              
+		?specie bqbiol:is ?otherRef
+	}
+}
+
+## Ensuite pour exporte suivre la procédure : 
+Il faut rentrer dans le docker : sudo docker exec -it docker-virtuoso_virtuoso_1 bash
+et suivre la procéduire : 
+http://vos.openlinksw.com/owiki/wiki/VOS/VirtRDFDatasetDump
+
+
+## Pour écrire le fichier tabulé :
+
+select distinct ?specie ?otherRef where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
+	FILTER not exists {              
+		?specie bqbiol:is ?otherRef
 	}
 }

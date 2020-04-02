@@ -138,15 +138,15 @@ ressources_ids = {
 
 ressource_uris = {
     "chebi": ["http://identifiers.org/chebi/CHEBI:", "http://purl.obolibrary.org/obo/CHEBI_", "https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:"],
-    "pubchem": ["https://identifiers.org/pubchem.compound/", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"],
+    "pubchem": ["http://identifiers.org/pubchem.compound/", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"],
     "kegg": ["http://identifiers.org/kegg.compound/", "https://www.kegg.jp/entry/"],
     "hmdb": ["http://identifiers.org/hmdb/"],
     "lipidmaps": ["http://identifiers.org/lipidmaps/"] 
 }
 
 graph_original_uri_prefix = {
-    "chebi": "http://purl.obolibrary.org/obo/CHEBI_",
-    "pubchem": "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/",
+    "chebi": "http://identifiers.org/chebi/CHEBI:",
+    "pubchem": "http://identifiers.org/pubchem.compound/",
     "kegg": "http://identifiers.org/kegg.compound/",
     "hmdb": "http://identifiers.org/hmdb/",
     "lipidmaps": "http://identifiers.org/lipidmaps/"
