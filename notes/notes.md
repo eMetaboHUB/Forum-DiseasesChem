@@ -398,3 +398,20 @@ select * where {
 }
 
 Ha et aussi autre raison de bien vérifier nos ids: je me rends compte que des fois mon script n'a pas pu trouver d'information pour un PubChem CID dans le RDF, étrange puique je pars de toute la base. Il se trouve en fait que des fois, dans le SBML des éléments annotés CID sont en fait des SID chez PubChem, ils ont un CID, mais c'est pas celui indiqué dans le SBML. Bon après c'est seulement le cas pour 36 sur 1381 et c'est genre des gros lipides ou des trucs pas très bien annotés donc c'est pas très grace au pire. Mais peut être qu'avec UniChem on pourrait corriger ce genre de chose 
+
+
+Pour aller chercher les identifiants manquant depuis notre store - RDF UniChem, je fais:
+
+## Pour chaque élément que je connais (bqbiol:is ?ref), on va chercher tout ce que j'ai en close Match, ce qui correspond à : 
+  - Tout les liens inférés par Unichem ENTRE les différentes ressources
+  - Les liens Intra-ressource (annotés avec exact-match) pour les éléments que je connais déjà car exactMatch est une sous-propriété de close Match
+  Mais on fait aussi un property path pour ajouter skos:closeMatch/skos:closeMatch, ce qui correspond aux liens intra-ressources pour les éléments que j'ai inférés avec closeMatch. On ajoute un filter not exist pour être sur que ce que l'on rajoute, c'est nouveau !
+
+select distinct  ?otherRef where {
+	model:M_m01323c a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
+	FILTER not exists {              
+		model:M_m01323c bqbiol:is ?otherRef
+	}
+}
