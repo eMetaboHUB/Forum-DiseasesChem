@@ -290,3 +290,82 @@ select ?cid ?mesh ?name ?countdist where {
 Quelques explications :
     - Si on découpe la requête en deux partie c'est parce que sinon on ne peut pas groupby ?mesh ?cid et aussi affichier directement le name associé car il ne s'agit pas d'un élément d'aggrégation.
     - on doit **absolument** utilisé un *distinct* sur le comptage des pmids car : 1) Un même MeSH peut être inclus plusieurs fois (ex avec différents Qualifiers) et surtout quand 1 MeSH a souvent plusieurs tree number, ce qui fait que tout cela duplique les lignes ! et si on compte direct le nombre de pmid c'est faux !!
+
+## Improve ID coverage using UniChem & Identfiers.org :
+
+Unichem is a database which provides usefull equivalences between identifiers between databases. For example ChEBI:37327 is equivalent to PubchemCID:5372720 and also to chembl: 	CHEMBL68500, etc ...
+On an other way, Identifiers.org provides several URI which can be associated to a same ressource, for example: https://identifiers.org/CHEBI:36927, or 		https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:36927. But this database is incomplete and some URIs which corresponds to the RDF representation of the ressource like implemented by the provided may be missing. For example http://purl.obolibrary.org/obo/CHEBI_ and http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID are missing. So this information were added manualy
+
+The goal of the functions provide in get_info_from_UniChem is to merge information from Identifiers.org adn UniChem to provided a set of equivalent URI which represent the same molecule between ressources, and between URIs associated to ressources.
+So, we can separate the equivalences in two different types :
+  - intra-ressource: For an identifier of a molecule in a defined ressource, if the ressource have more than one possible URI, we can create a set of exactly-matching URI intra ressource for this molecule. Example: If ChEBI have 2 URIs like 'https://identifiers.org/CHEBI:' and 'http://purl.obolibrary.org/obo/CHEBI_', for one ChEBI idenfiers, we can make un exactly matching equivalence between the both URIs such as 'https://identifiers.org/CHEBI:36927' **skos:exactMatch** 'http://purl.obolibrary.org/obo/CHEBI_36927' With **skos:exactMatch** we indicate that the both concepts have exactly the same meaning, so we can pass from one to each other directly without errors. This property is so *Symetric* and *Transitive*.
+  - inter-ressource: For an identifier of a molecule, UniChem may have provide us an equivalence in an other database.  For example ChEBI:37327 is equivalent to PubchemCID:5372720. So we will create an associations between this two identifiers using the predicate skos:closeMatch and **ONLY** for only one URI of each ressource. Indeed, since each URI intra ressource are linkded by a predicate skos:exactMatch which is a transitive property, we only have to provide the new association between the two ressource with one URI of each, to propagate it to all ressources related URIs. **skos:closeMatch** indicates that two concepts are sufficiently similar and that the two can be used interchangeably, nevertheless, this  is not transitive, to avoid spreading  equivalence errors.
+
+Note that all existing identifiers in the ressources provided by UniChem are not returned, but only those for which UniChem have an equivalence in a other database, but to build the intra-ressource equivalence we need to have all the ids, or at list all those which are present in the SBML. So, to avoid this biais, the RDF graph of the SBML is initialy loaded to extract all the existing identifiers, which will be complete by those provided by UniChem.
+
+With all these new triples referring new associations between URIs we can used it to build a graph and with a SPARQL request, try to extract new identifiers for each species from those already annotated.
+
+The result may be called a URI-Graph.
+
+```python
+create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path_out, version)
+```
+-   ```path_to_graph```: The path to a SBML graph in a turtle format.
+-   ```ressources_ids```: A dict containing ressource name as key and ressource id in the UniChem database as values. Ressource ids may be found at https://www.ebi.ac.uk/unichem/ucquery/listSources
+-   ```ressource_uris```: a dict containing all the possible ressources URIs associated to a ressource.
+-   ```namespaces```: a dict of namespaces
+-   ```path_out```: a path to write output files
+-   ```version```: a vesion name. If None date is used by default.
+
+### Examples of used parameters: 
+```python
+ressources_ids = {
+    "chebi": '7',
+    "pubchem": '22',
+    "kegg": '6',
+    "hmdb": '18',
+    "lipidmaps": '33'            
+}
+
+ressource_uris = {
+    "chebi": ["http://identifiers.org/chebi/CHEBI:", "http://purl.obolibrary.org/obo/CHEBI_", "https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:"],
+    "pubchem": ["http://identifiers.org/pubchem.compound/", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"],
+    "kegg": ["http://identifiers.org/kegg.compound/", "https://www.kegg.jp/entry/"],
+    "hmdb": ["http://identifiers.org/hmdb/"],
+    "lipidmaps": ["http://identifiers.org/lipidmaps/"] 
+}
+
+graph_original_uri_prefix = {
+    "chebi": "http://identifiers.org/chebi/CHEBI:",
+    "pubchem": "http://identifiers.org/pubchem.compound/",
+    "kegg": "http://identifiers.org/kegg.compound/",
+    "hmdb": "http://identifiers.org/hmdb/",
+    "lipidmaps": "http://identifiers.org/lipidmaps/"
+}
+```
+Note that Keys of dict must be the same in all graphs.
+By loading the SBML graph and the new graph containing identifiers equivalence in an RDF Store like Virtuoso, we can compute SPARQL query to extract all informations: 
+```SQL
+select distinct ?specie ?otherRef where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
+	FILTER not exists {              
+		?specie bqbiol:is ?otherRef
+	}
+}
+```
+In the first part of *skos:closeMatch*, we are extracting : (1) all the URIs equivalence between thoses that are already annotated and those provided in the URI-Graph by the skos:closeMatch predicate, and also, knowing that skos:exactmatch is a subproperty of skos:closeMatch of the new URI from intra-ressource equivalence. In the second part *|skos:closeMatch/skos:closeMatch* we are extracting all the new URI from intra-ressource equivalence from URIs which are infered from those we already know. To avoid adding redondant inforation, we filter using : *FILTER not exists { ?specie bqbiol:is ?otherRef }*.
+
+- To count the number of added URIs from a specific pattern :  
+```SQL
+select  count(distinct(?otherRef)) where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
+	FILTER ( not exists {              
+		?specie bqbiol:is ?otherRef
+	} && STRSTARTS(STR(?otherRef), "the/URI/pattern/) )
+
+}
+```

@@ -60,10 +60,11 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
     Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
     Between differents uris of the same ressource (called intra-uris) a skos:exactMatch relation is implemented
     - ressources_ids: a dict containing ressource name as key and ressource id in the UniChem database as values
-    - ressource_uris: a dict containing all the possible ressources uris that may be used. It will be used to choose for which ressource, ids should be extracted to compute intra-uris equivalence.
+    - ressource_uris: a dict containing all the possible ressources uris associated to a ressource.
       Note that keys in the dict must be the same as in the graph_original_uri_prefix dict.
     - namespaces: a dict of namespaces
     - path_out: a path to out files
+    - version: a version name. if None date is used by default.
     """
     ressource_version = Database_ressource_version(ressource = "ressources_id_mapping", version = version)
     # On ne prépare se dictionnaire que pour les ressource avec plus d'une URI :
