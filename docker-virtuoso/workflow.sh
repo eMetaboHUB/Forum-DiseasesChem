@@ -35,14 +35,16 @@ echo "DB.DBA.XML_SET_NS_DECL ('kegg_rdf', 'https://www.kegg.jp/entry/', 2);">> s
 echo "DB.DBA.XML_SET_NS_DECL ('cid_rdf', 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID', 2);">> share/upload.sh
 echo "DB.DBA.XML_SET_NS_DECL ('chebi_rdf', 'http://purl.obolibrary.org/obo/CHEBI_', 2);">> share/upload.sh
 echo "DB.DBA.XML_SET_NS_DECL ('chebi_2', 'https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:', 2);">> share/upload.sh
+echo "DB.DBA.XML_SET_NS_DECL ('chembl', 'http://identifiers.org/chembl.compound/', 2);">> share/upload.sh
+echo "DB.DBA.XML_SET_NS_DECL ('chembl_rdf', 'http://rdf.ebi.ac.uk/resource/chembl/molecule/', 2);">> share/upload.sh
 
 # Start loading data :
 echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/HumanGEM/', '*.ttl', 'http://database/ressources/SMBL');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/UniChem/2020-04-02/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/UniChem/2020-04-02/', '*.trig', '');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/UniChem/2020-04-03/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/UniChem/2020-04-03/', '*.trig', '');" >> share/upload.sh
 
 # echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 # echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh

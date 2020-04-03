@@ -11,7 +11,7 @@ services:
               VIRT_Flags_TN_MAX_memory: 2000000000
               VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
               VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
-              VIRT_SPARQL_MaxQueryExecutionTime: 300          # 5 min
+              VIRT_SPARQL_MaxQueryExecutionTime: 1000          # 5 min
               VIRT_Parameters_MaxMemPoolSize: 800000000
               VIRT_Database_LockFile: virtuoso.lck
               DBA_PASSWORD: "FORUM-Met-Disease-DB"
