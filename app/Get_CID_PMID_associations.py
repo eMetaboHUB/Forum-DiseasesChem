@@ -77,6 +77,14 @@ compound_ids_features_list = [id + f for id in all_cids for f in feature_list]
 
 ### ==== WITH SBML FILE ==== ###
 
+def extract_ids_from_SMBL_by_URI_prefix(path_to_SMBL_RDF, list_annot_graph, path_to_annot_graph):
+    sbml = rdflib.ConjunctiveGraph()
+    sbml.parse(path_to_SMBL_RDF, format='turtle')
+    for annot_graph in list_annot_graph:
+        sbml.parse(path_to_annot_graph + annot_graph, format='turtle')
+    return(sbml)
+
+
 def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
     smbl = rdflib.Graph()
     smbl.parse(path_to_SMBL_RDF, format='turtle')

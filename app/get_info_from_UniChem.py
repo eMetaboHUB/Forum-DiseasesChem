@@ -18,7 +18,9 @@ def get_mapping(ressource_1, ressource_2):
         r = requests.get(request_base)
         r.raise_for_status()
     except requests.exceptions.HTTPError as fail_request:
-        print("There was an error during the request : " + fail_request + "\n")
+        print("There was an error during the request : " + str(fail_request) + "\n")
+        return None, None
+    # Si la requête n'a pas échouée, on continue
     lines = str.splitlines(r.text)
     content = json.loads(lines[0])
     ids_ressource_1 = r = [mapping[ressource_1] for mapping in content]
@@ -46,8 +48,9 @@ def get_graph_ids_set(path_to_graph, graph_original_uri_prefix, ressource_uris):
             }
         """)
     uri_list = [uriRef[0].toPython() for uriRef in query]
+    keys = [key for key in intra_ids_dict.keys() if key in graph_original_uri_prefix]
     for uri in uri_list:
-        for key in intra_ids_dict.keys():
+        for key in keys:
             split_uri = uri.split(graph_original_uri_prefix[key])
             if len(split_uri) > 1:
                 # Sachant que l'on a fai la requête avec distinct, pas besoin de union, on peut directement add, il n'y aura pas de duplicats
@@ -80,7 +83,10 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
         print("Treating : " + r1 + " - " + r2 + " ...")
         ressource_version.append_data_graph(file = g_name + ".trig", namespace_list  = ["skos"], namespace_dict = namespaces)
         ids_r1, ids_r2 = get_mapping(ressources_ids[r1], ressources_ids[r2])
-        print("Data fetch from UniChem Ok")
+        # Si la requête précédement envoyée à échouée au passe à la paire de ressource suivante
+        if ids_r1 is None or ids_r2 is None:
+            print("Impossible to process information for identifiers equivalence between ressource " + r1 + " and " + r2 + "\n")
+            continue
         n_ids = len(ids_r1)
         for id_index in range(n_ids):
             #  On écrit les équivalence inter-ressource seulement pour une URI de chaque ressource, le liens avec les autres se fera par le biais des équivalence intra-ressource
@@ -134,7 +140,8 @@ ressources_ids = {
     "pubchem": '22',
     "kegg": '6',
     "hmdb": '18',
-    "lipidmaps": '33'            
+    "lipidmaps": '33',
+    "chembl": '1'
 }
 
 ressource_uris = {
@@ -142,7 +149,8 @@ ressource_uris = {
     "pubchem": ["http://identifiers.org/pubchem.compound/", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"],
     "kegg": ["http://identifiers.org/kegg.compound/", "https://www.kegg.jp/entry/"],
     "hmdb": ["http://identifiers.org/hmdb/"],
-    "lipidmaps": ["http://identifiers.org/lipidmaps/"] 
+    "lipidmaps": ["http://identifiers.org/lipidmaps/"] ,
+    "chembl": ["https://identifiers.org/chembl.compound/", "http://rdf.ebi.ac.uk/resource/chembl/molecule/"]
 }
 
 graph_original_uri_prefix = {
