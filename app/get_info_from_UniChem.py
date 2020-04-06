@@ -5,6 +5,7 @@ import re
 from rdflib.namespace import XSD, DCTERMS, OWL
 import os
 import json
+import gzip
 import itertools
 from Database_ressource_version import Database_ressource_version
 
@@ -26,6 +27,40 @@ def get_mapping(ressource_1, ressource_2):
     ids_ressource_1 = r = [mapping[ressource_1] for mapping in content]
     ids_ressource_2 = r = [mapping[ressource_2] for mapping in content]
     return(ids_ressource_1, ids_ressource_2)
+
+def download_mapping_from_ftp(ressource_1, ressource_2, path_out):
+    """
+    This function is used to dowload the ressource mapping file from the ftp server
+    """
+    out = path_out + "data/"
+    if not os.path.exists(out):
+        os.makedirs(out)
+    f_name = "src" + ressource_1 + "src" + ressource_2 + ".txt.gz"
+    # One of the main issue is that the mapping between 2 ressources in provided on only one sens, so r1.vs.r2 or r2.vs.r1, wo we need to check if a file was dowloaded from the ftop, if not it's indicated that the mapping is represented in the reverse order.
+    isReverse = False
+    os.system("wget --quiet -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_1 + "/" + f_name)
+    if not os.path.isfile(out + f_name):
+        print(ressource_1 + ' .vs. ' + ressource_2 + " was not found in this order, try in the order : " + ressource_2 + ' .vs. ' + ressource_1)
+        isReverse = True
+        f_name = "src" + ressource_2 + "src" + ressource_1 + ".txt.gz"
+        os.system("wget --quiet -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_2 + "/" + f_name)
+    # Parsing file : 
+    f_input = gzip.open(out + f_name,'rt')
+    header = f_input.readline()
+    print(header)
+    ids_ressource_1 = list()
+    ids_ressource_2 = list()
+    for line in f_input:
+        columns = line.rstrip().split(sep='\t')
+        ids_ressource_1.append(columns[0])
+        ids_ressource_2.append(columns[1])
+    # If data was found in the reverse order, we also return in the reverse order to keep the initial ids for ressource_1 and ressource_2
+    if isReverse:
+        return(ids_ressource_2, ids_ressource_1)
+    return(ids_ressource_1, ids_ressource_2)
+
+
+    
 
 def get_graph_ids_set(path_to_graph, graph_original_uri_prefix, ressource_uris):
     """
@@ -82,7 +117,8 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
         g_name = (r1 + "_" + r2)
         print("Treating : " + r1 + " - " + r2 + " ...")
         ressource_version.append_data_graph(file = g_name + ".trig", namespace_list  = ["skos"], namespace_dict = namespaces)
-        ids_r1, ids_r2 = get_mapping(ressources_ids[r1], ressources_ids[r2])
+        # Le WevService semble mal fonctionner ... donc je suis passer par une nouvelle méthode où de download depuis le ftp :
+        ids_r1, ids_r2 = download_mapping_from_ftp(ressources_ids[r1], ressources_ids[r2], path_out)
         # Si la requête précédement envoyée à échouée au passe à la paire de ressource suivante
         if ids_r1 is None or ids_r2 is None:
             print("Impossible to process information for identifiers equivalence between ressource " + r1 + " and " + r2 + "\n")

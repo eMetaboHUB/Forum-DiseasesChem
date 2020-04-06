@@ -420,7 +420,7 @@ construct {
 		FILTER (
 			not exists {?specie bqbiol:is ?otherRef }
       &&
-		  not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
+      not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
 		)
 
 		}
@@ -503,11 +503,10 @@ select count(distinct(?otherRef_syn)) where {
 			bqbiol:is ?ref .
 		?ref skos:closeMatch ?otherRef .
 		FILTER (
-			not exists {?specie bqbiol:is ?otherRef }
+      not exists {?specie bqbiol:is ?otherRef }
       &&
-		  not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
+      not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
 		)
-
 		}
 	}
 }
