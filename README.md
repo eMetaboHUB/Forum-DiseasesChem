@@ -345,8 +345,10 @@ graph_original_uri_prefix = {
 ```
 Note that Keys of dict must be the same in all graphs.
 By loading the SBML graph and the new graph containing identifiers equivalence in an RDF Store like Virtuoso, we can compute SPARQL query to extract all informations:
-This request may be separated in 3 main parts : 
+This request may be separated in 3 main parts :
+And **version** must be fill in the Graph URI. 
 #### part 1 : Get synonyms of existing uris : 
+As indicated in the Graph URI, this file should be named *synonyms.trig*
 ```SQL
 
 DEFINE input:inference 'schema-inference-rules'
@@ -357,7 +359,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	?specie bqbiol:is ?ref_syn
+	 GRAPH <http://database/ressources/annotation_graph/version/synonyms> { ?specie bqbiol:is ?ref_syn . }
 }where {
 	?specie a SBMLrdf:Species ;
 		bqbiol:is ?ref .
@@ -368,6 +370,7 @@ construct {
 For a specie, we extract all the current uris associated to the predicate bqbiol:is, and for those elements we extract uris which are in skos:exactMatch with them, so their intra-ressources URI synonyms
 
 #### part 2  : Extraction of infered equivalent uris :
+As indicated in the Graph URI, this file should be named *infered_uris.trig*
 ```SQL
 
 DEFINE input:inference 'schema-inference-rules'
@@ -378,7 +381,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	?specie bqbiol:is ?otherRef .
+	GRAPH <http://database/ressources/annotation_graph/version/infered_uris> { ?specie bqbiol:is ?otherRef . }
 }where {
 		?specie a SBMLrdf:Species ;
 			bqbiol:is ?ref .
@@ -394,6 +397,7 @@ construct {
 For a specie, we extract all the current uris associated to the predicate bqbiol:is, and for those elements we extract uris which are associated to the element with a skos:closeMath predicate, corresponding to equivalent URIs from identfiers equivalence provided by UniChem. **BUT**, we specifie that the extracted URI **must** not ne already known in the current graph *not exists { ?specie bqbiol:is ?otherRef }* **AND** that the extracted URI are not a synonym of the current annotate URIs (*not exists {?ref skos:exactMatch ?otherRef option(t_distinct)}*), because of *skos:exactMatch* is a sub-property of *skos:closeMatch*, by searching equivalent URIs using skos:closeMatch, we may extract synonyms of the already annotated URIs, but this is already done by the first request.
 
 #### part 3 : Extraction of synonymes of infered equivalent uris :
+As indicated in the Graph URI, this file should be named *infered_uris_synonyms.trig*
 ```SQL
 
 DEFINE input:inference 'schema-inference-rules'
@@ -404,7 +408,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	?specie bqbiol:is ?otherRef_syn.
+	GRAPH <http://database/ressources/annotation_graph/version/infered_uris_synonyms> { ?specie bqbiol:is ?otherRef_syn . }
 }where {
 	?otherRef skos:exactMatch ?otherRef_syn option(t_distinct) .
 	FILTER (

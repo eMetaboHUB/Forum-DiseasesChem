@@ -155,7 +155,25 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
     ressource_version.version_graph.serialize(destination=path_out + "ressource_info_ids_correspondance" + ressource_version.version + ".ttl", format = 'turtle')
 
 
-
+def create_annotation_graph_version(path_to_annot_graphs_dir, version):
+    """
+    This function is used to create the ressource_info file associated to the version of the created annotation_graph.
+    - path_to_annot_graphs_dir: A path to a directory containing all the associated annotation graph created using Virtuoso as .TriG file (Cf. README)
+    - version: the version of the annotations graphs, MUST be the same as the one used in Virtuoso !
+    """
+    ressource_version = Database_ressource_version(ressource = "annotation_graph", version = version)
+    for annot_graph in os.listdir(path_to_annot_graphs_dir):
+        if not annot_graph.endswith(".trig"):
+            continue
+        annot_graph_name = annot_graph.split('.trig')
+        ressource_version.append_data_graph(file = annot_graph, namespace_list  = [], namespace_dict = None)
+        ressource_version.data_graph_dict[annot_graph_name[0]].parse(path_to_annot_graphs_dir + annot_graph, format = 'trig')
+    ressource_version.add_version_namespaces(["void"], namespaces)
+    ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("Annotation graphs contains additionnal annotation which can be usefull to explore the SBML file"))
+    ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("Annotation Graph"))
+    ressource_version.add_version_attribute(namespaces["void"]["triples"], rdflib.Literal(sum([len(g) for g in ressource_version.data_graph_dict.values()]) , datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
+    ressource_version.version_graph.serialize(destination=path_to_annot_graphs_dir + "ressource_info_annotation_graph_" + ressource_version.version + ".ttl", format = 'turtle')
 
 namespaces = {
     "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
@@ -199,3 +217,5 @@ graph_original_uri_prefix = {
 path_to_graph = "data/HumanGEM/HumanGEM.ttl"
  
 create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, "data/UniChem/", None)
+
+create_annotation_graph_version("data/annot_graphs/2020-04-06/", '2020-04-06')

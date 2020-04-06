@@ -77,30 +77,33 @@ compound_ids_features_list = [id + f for id in all_cids for f in feature_list]
 
 ### ==== WITH SBML FILE ==== ###
 
-def extract_ids_from_SMBL_by_URI_prefix(path_to_SMBL_RDF, list_annot_graph, path_to_annot_graph):
+def merge_SMBL_and_annot_graphs(path_to_SMBL_RDF, list_annot_graph, path_to_annot_graph):
     sbml = rdflib.ConjunctiveGraph()
     sbml.parse(path_to_SMBL_RDF, format='turtle')
     for annot_graph in list_annot_graph:
-        sbml.parse(path_to_annot_graph + annot_graph, format='turtle')
+        sbml.parse(path_to_annot_graph + annot_graph, format='trig')
     return(sbml)
 
-
-def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
-    smbl = rdflib.Graph()
-    smbl.parse(path_to_SMBL_RDF, format='turtle')
-    # On va chercher tout les cid avec une requête sparql :
-    query = smbl.query(
+def extract_ids_from_SMBL_by_URI_prefix(smbl_graph, uri_prefix):
+    # On va chercher tout les id avec une requête sparql qui correspondent à ce prefix :
+    query = smbl_graph.query(
         """
-        select distinct (strafter(STR(?ref),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/") as ?cid)
+        select distinct (strafter(STR(?ref),\"""" + uri_prefix + """\") as ?id)
         where {
             ?species a SBMLrdf:Species .
             ?species bqbiol:is ?ref .
-            FILTER(STRSTARTS(STR(?ref), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"))
+            FILTER(STRSTARTS(STR(?ref), \"""" + uri_prefix + """\"))
             }
         """)
-    # On récupère et formate correctement la liste de cid
-    cid_list = [cid[0].toPython() for cid in query]
+    # On récupère et formate correctement la liste d'ids
+    id_list = [id[0].toPython() for id in query]
+    return(id_list)
+
+def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder, list_annot_graph, path_to_annot_graph):
+    smbl_graph = merge_SMBL_and_annot_graphs(path_to_SMBL_RDF, list_annot_graph, path_to_annot_graph)
+    cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
     # On crée l'object Ensemble_pccompound
+    print(len(cid_list))
     new_Ensemble_pccompound = Ensemble_pccompound()
     # Pour chaque cid, on va chercher ses références en utilsiant la fonction append_pccompound.
     for cid in cid_list:
@@ -110,8 +113,8 @@ def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
     return(new_Ensemble_pccompound)
 
 # On fetch les pmids à partir des cid du SMBL !! :
-sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL("data/HumanGEM/HumanGEM.ttl", query_builder)
-
+sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL("data/HumanGEM/HumanGEM.ttl", query_builder, ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
+# "synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig" , "data/annot_graphs/2020-04-06/"
 sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
 # When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
 sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
