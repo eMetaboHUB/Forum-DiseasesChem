@@ -345,12 +345,12 @@ graph_original_uri_prefix = {
 ```
 Note that Keys of dict must be the same in all graphs.
 By loading the SBML graph and the new graph containing identifiers equivalence in an RDF Store like Virtuoso, we can compute SPARQL query to extract all informations:
+**Initials URIs in the SMBL graph MUST be identifiers.org URIS !**
 This request may be separated in 3 main parts :
 And **version** must be fill in the Graph URI. 
 #### part 1 : Get synonyms of existing uris : 
 As indicated in the Graph URI, this file should be named *synonyms.trig*
 ```SQL
-
 DEFINE input:inference 'schema-inference-rules'
 prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
 prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
@@ -424,7 +424,7 @@ construct {
 		FILTER (
 			not exists {?specie bqbiol:is ?otherRef }
       &&
-      not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
+    		not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
 		)
 
 		}
@@ -507,17 +507,11 @@ select count(distinct(?otherRef_syn)) where {
 			bqbiol:is ?ref .
 		?ref skos:closeMatch ?otherRef .
 		FILTER (
-      not exists {?specie bqbiol:is ?otherRef }
-      &&
-      not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
+      		not exists {?specie bqbiol:is ?otherRef }
+      		&&
+      		not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
 		)
 		}
 	}
 }
 ```
-
-
-
-
-**WARINING:** ?otherRef is representing the **primary uri** used in the close:Match triples to link ids between ressources, so the uri pattern need to be the one which is used is this type of triples !
-?otherRef_syn is representing all the additionnal URIs that can be added, knowing those adding with the close:Match triples and the direct association between uris intra-ressources represented by skos:exactMath that link **primary uri** to the others.

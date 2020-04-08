@@ -399,36 +399,26 @@ select * where {
 
 Ha et aussi autre raison de bien vérifier nos ids: je me rends compte que des fois mon script n'a pas pu trouver d'information pour un PubChem CID dans le RDF, étrange puique je pars de toute la base. Il se trouve en fait que des fois, dans le SBML des éléments annotés CID sont en fait des SID chez PubChem, ils ont un CID, mais c'est pas celui indiqué dans le SBML. Bon après c'est seulement le cas pour 36 sur 1381 et c'est genre des gros lipides ou des trucs pas très bien annotés donc c'est pas très grace au pire. Mais peut être qu'avec UniChem on pourrait corriger ce genre de chose 
 
+### Pour ChemBL : 
+Je pense pas que ChemBL soit si important dans un premier temps car finalement j'ai pu importer ces identifiants qu'à partir de ce que je connaissait déjà, dès lors cela ne m'apportera aucune nouvelles information pour les SMILES ou les Inchi par exemple.
+Pour les InchiKey et les autres, je pense qu'il faudra aussi créer des triples avec un contruct.
 
-Pour aller chercher les identifiants manquant depuis notre store - RDF UniChem, je fais:
 
-## Pour chaque élément que je connais (bqbiol:is ?ref), on va chercher tout ce que j'ai en close Match, ce qui correspond à : 
-  - Tout les liens inférés par Unichem ENTRE les différentes ressources
-  - Les liens Intra-ressource (annotés avec exact-match) pour les éléments que je connais déjà car exactMatch est une sous-propriété de close Match
-  Mais on fait aussi un property path pour ajouter skos:closeMatch/skos:closeMatch, ce qui correspond aux liens intra-ressources pour les éléments que j'ai inférés avec closeMatch. On ajoute un filter not exist pour être sur que ce que l'on rajoute, c'est nouveau !
-
-select distinct  ?otherRef where {
-	?specie a SBMLrdf:Species ;
+# Requête pour trouver le nombre de species qui présente une référence dont l'URI appartient à tel pattern : 
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+select count(distinct(?specie)) where {
+ 	?specie a SBMLrdf:Species ;
 		bqbiol:is ?ref .
-	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
-	FILTER not exists {              
-		?specie bqbiol:is ?otherRef
-	}
+  	FILTER ( STRSTARTS(STR(?ref), "http://identifiers.org/metanetx.chemical/"))
 }
 
-
-Pour compter par pattern d'uri rajouter :
-select  count(distinct(?otherRef)) where {
-	?specie a SBMLrdf:Species ;
-		bqbiol:is ?ref .
-	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
-	FILTER ( not exists {              
-		?specie bqbiol:is ?otherRef
-	} && STRSTARTS(STR(?otherRef), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") )
-
-}
-
-## POUR INSERER LES MODIFICATIONS DANS LE GRAPH :
+## Pour compter le nombre de species pour lesquelles on ne dispose **pas** d'indentifiants metanetX, mais pour lesquelles on disposerait d'autres identifiants qui nous permettrait de retrouver des infos sur les InCHi, SMILES, etc ...
 
 DEFINE input:inference 'schema-inference-rules'
 prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
@@ -437,33 +427,75 @@ prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
 prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-INSERT
-{ 
-	GRAPH <http://database/ressources/SMBL> 
-		{ ?specie bqbiol:is ?otherRef } 
+
+select count(distinct(?specie)) where {
+ 	?specie a SBMLrdf:Species ;
+	bqbiol:is ?ref .
+	FILTER ( STRSTARTS(STR(?ref), "http://identifiers.org/chebi/CHEBI:") || STRSTARTS(STR(?ref), "http://identifiers.org/pubchem.compound/") || STRSTARTS(STR(?ref), "http://identifiers.org/lipidmaps/"))
+ 	MINUS
+ 	{
+ 	 	?specie a SBMLrdf:Species ;
+	 			bqbiol:is ?ref_metanetX .
+		FILTER ( STRSTARTS(STR(?ref_metanetX), "http://identifiers.org/metanetx.chemical/"))
+ 	}
 }
-where {
+
+
+Pour le test sur les inchi et smiles pour savoir s'ils sont uniques à la molécule, dans un premier temps je fais avec Specie name, mais lorsque l'on aura définit l'entity biologique supérieure il y aura juste a changer ça. Pour récupérer tout ceux qui ne sont pas unique il suffit de mettre 	having(count(distinct(?spe_name)) > 1)
+
+La requête pour aller chercher tout les couples spe_name Smiles qui lesquels le smiles est associé à x spe_name est : 
+```SQL
+
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+prefix mnx: <https://rdf.metanetx.org/schema/>
+prefix sio: <http://semanticscience.org/resource/>
+
+select distinct ?spe_name ?str_smiles where {
+
+{
+	select str(?smiles) as ?str_smiles where {
+		?specie a SBMLrdf:Species ;
+			SBMLrdf:name ?spe_name .
+		OPTIONAL { ?specie bqbiol:is ?ref_metaNetX . FILTER ( STRSTARTS(STR(?ref_metaNetX), "https://rdf.metanetx.org/chem/")) }
+		OPTIONAL { ?specie bqbiol:is ?ref_chebi . FILTER ( STRSTARTS(STR(?ref_chebi), "http://purl.obolibrary.org/obo/CHEBI_")) }
+		OPTIONAL { ?specie bqbiol:is ?ref_pc . FILTER ( STRSTARTS(STR(?ref_pc), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")) }            
+		{ ?ref_metaNetX mnx:smiles ?smiles . }
+		UNION
+		{ ?ref_chebi <http://purl.obolibrary.org/obo/chebi/smiles> ?smiles . }
+		UNION
+		{ 
+		?ref_pc sio:has-attribute ?ref_pc_desc .
+		?ref_pc_desc a sio:CHEMINF_000376 ;
+			sio:has-value ?smiles
+		}
+		                
+		}
+	group by str(?smiles)
+	having(count(distinct(?spe_name)) = 4)
+}
+
 	?specie a SBMLrdf:Species ;
-		bqbiol:is ?ref .
-	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
-	FILTER not exists {              
-		?specie bqbiol:is ?otherRef
+		SBMLrdf:name ?spe_name .
+	OPTIONAL { ?specie bqbiol:is ?ref_metaNetX . FILTER ( STRSTARTS(STR(?ref_metaNetX), "https://rdf.metanetx.org/chem/")) }
+	OPTIONAL { ?specie bqbiol:is ?ref_chebi . FILTER ( STRSTARTS(STR(?ref_chebi), "http://purl.obolibrary.org/obo/CHEBI_")) }
+	OPTIONAL { ?specie bqbiol:is ?ref_pc . FILTER ( STRSTARTS(STR(?ref_pc), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")) }            
+	{ ?ref_metaNetX mnx:smiles ?smiles . }
+	UNION
+	{ ?ref_chebi <http://purl.obolibrary.org/obo/chebi/smiles> ?smiles . }
+	UNION
+	{ 
+	?ref_pc sio:has-attribute ?ref_pc_desc .
+	?ref_pc_desc a sio:CHEMINF_000376 ;
+		sio:has-value ?smiles
 	}
+FILTER(str(?smiles) in (?str_smiles))
+
 }
 
-## Ensuite pour exporte suivre la procédure : 
-Il faut rentrer dans le docker : sudo docker exec -it docker-virtuoso_virtuoso_1 bash
-et suivre la procéduire : 
-http://vos.openlinksw.com/owiki/wiki/VOS/VirtRDFDatasetDump
-
-
-## Pour écrire le fichier tabulé :
-
-select distinct ?specie ?otherRef where {
-	?specie a SBMLrdf:Species ;
-		bqbiol:is ?ref .
-	?ref skos:closeMatch|skos:closeMatch/skos:closeMatch ?otherRef .
-	FILTER not exists {              
-		?specie bqbiol:is ?otherRef
-	}
-}
+```

@@ -38,12 +38,12 @@ def download_mapping_from_ftp(ressource_1, ressource_2, path_out):
     f_name = "src" + ressource_1 + "src" + ressource_2 + ".txt.gz"
     # One of the main issue is that the mapping between 2 ressources in provided on only one sens, so r1.vs.r2 or r2.vs.r1, wo we need to check if a file was dowloaded from the ftop, if not it's indicated that the mapping is represented in the reverse order.
     isReverse = False
-    os.system("wget --quiet -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_1 + "/" + f_name)
+    os.system("wget  -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_1 + "/" + f_name)
     if not os.path.isfile(out + f_name):
         print(ressource_1 + ' .vs. ' + ressource_2 + " was not found in this order, try in the order : " + ressource_2 + ' .vs. ' + ressource_1)
         isReverse = True
         f_name = "src" + ressource_2 + "src" + ressource_1 + ".txt.gz"
-        os.system("wget --quiet -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_2 + "/" + f_name)
+        os.system("wget -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_2 + "/" + f_name)
     # Parsing file : 
     f_input = gzip.open(out + f_name,'rt')
     header = f_input.readline()
@@ -71,7 +71,7 @@ def get_graph_ids_set(path_to_graph, graph_original_uri_prefix, ressource_uris):
     - ressource_uris: a dict containing all the possible ressources uris that may be used. It will be used to choose for which ressource, ids should be extracted to compute intra-uris equivalence.
       Note that keys in the dict must be the same as in the graph_original_uri_prefix dict.
     """
-    intra_ids_dict = {key: set() for key in ressources_ids.keys() if len(ressource_uris[key]) > 1 }
+    intra_ids_dict = {key: set() for key in ressource_uris.keys() if len(ressource_uris[key]) > 1 }
     g = rdflib.Graph()
     g.parse(path_to_graph, format = 'turtle')
     query = g.query(
@@ -197,14 +197,15 @@ ressources_ids = {
     "lipidmaps": '33',
     "chembl": '1'
 }
-
+# The first URI must always be the identifiers.Org URI !
 ressource_uris = {
     "chebi": ["http://identifiers.org/chebi/CHEBI:", "http://purl.obolibrary.org/obo/CHEBI_", "https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:"],
     "pubchem": ["http://identifiers.org/pubchem.compound/", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"],
     "kegg": ["http://identifiers.org/kegg.compound/", "https://www.kegg.jp/entry/"],
     "hmdb": ["http://identifiers.org/hmdb/"],
     "lipidmaps": ["http://identifiers.org/lipidmaps/"] ,
-    "chembl": ["https://identifiers.org/chembl.compound/", "http://rdf.ebi.ac.uk/resource/chembl/molecule/"]
+    "chembl": ["https://identifiers.org/chembl.compound/", "http://rdf.ebi.ac.uk/resource/chembl/molecule/"],
+    "metanetx": ["http://identifiers.org/metanetx.chemical/", "https://rdf.metanetx.org/chem/"]
 }
 
 graph_original_uri_prefix = {
@@ -212,10 +213,11 @@ graph_original_uri_prefix = {
     "pubchem": "http://identifiers.org/pubchem.compound/",
     "kegg": "http://identifiers.org/kegg.compound/",
     "hmdb": "http://identifiers.org/hmdb/",
-    "lipidmaps": "http://identifiers.org/lipidmaps/"
+    "lipidmaps": "http://identifiers.org/lipidmaps/",
+    "metanetx": "http://identifiers.org/metanetx.chemical/"
 }
 path_to_graph = "data/HumanGEM/HumanGEM.ttl"
  
 create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, "data/UniChem/", None)
 
-create_annotation_graph_version("data/annot_graphs/2020-04-06/", '2020-04-06')
+create_annotation_graph_version("data/annot_graphs/2020-04-07/", '2020-04-07')
