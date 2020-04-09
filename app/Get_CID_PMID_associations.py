@@ -28,7 +28,8 @@ namespaces = {
     "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
     "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
     "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
-    "void": rdflib.Namespace("http://rdfs.org/ns/void#")
+    "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
+    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core")
 }
 
 # Listes des features Compounds - Descriptors que l'on souhaite récupérées : 
@@ -55,43 +56,49 @@ feature_list = ["_Canonical_SMILES",
 "_Undefined_Bond_Stereo_Count",
 "_XLogP3-AA"]
 
-apiKey = "0ddb3479f5079f21272578dc6e040278a508"
-# Building requests
-query_builder = eutils.QueryService(cache = False,
-                                    default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
-                                    api_key = apiKey)
 
-new_Ensemble_pccompound = Ensemble_pccompound()
-new_Ensemble_pccompound.append_pccompound("11355423", query_builder)
-new_Ensemble_pccompound.append_pccompound("6036", query_builder)
-# # Creating ressources files.
-new_Ensemble_pccompound.create_CID_PMID_ressource(namespaces, "data/", None)
-all_pmids = new_Ensemble_pccompound.get_all_pmids()
-all_cids = new_Ensemble_pccompound.get_all_cids() + new_Ensemble_pccompound.append_failure
-# # Création des couples features listes pour filtrer :
-compound_ids_features_list = [id + f for id in all_cids for f in feature_list]
+def merge_SMBL_and_annot_graphs(path_to_SMBL_RDF, list_annot_graph, path_to_annot_graph):
+    """
+    This function is used to build a conjuctive graph with rdflib, merging triples from the original SBML graph and triples from annotations graphs
+    - path_to_SMBL_RDF: a path to the SMBL graph (.ttl)
+    - a list of annotation graph files that have to be loaded
+    - a path to the directory containing annotation graphs
+    """
+    sbml = rdflib.ConjunctiveGraph()
+    sbml.parse(path_to_SMBL_RDF, format='turtle')
+    for annot_graph in list_annot_graph:
+        sbml.parse(path_to_annot_graph + annot_graph, format='trig')
+    return(sbml)
 
-
-
-
-### ==== WITH SBML FILE ==== ###
-
-def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
-    smbl = rdflib.Graph()
-    smbl.parse(path_to_SMBL_RDF, format='turtle')
-    # On va chercher tout les cid avec une requête sparql :
-    query = smbl.query(
+def extract_ids_from_SMBL_by_URI_prefix(smbl_graph, uri_prefix):
+    """
+    This function is used to request a sbml graph in sparl to extract all identifiers that match a prefix URI.
+    - the sbml_graph, a rdflib.Graph object
+    - uri_prefix: the URI prefix
+    """
+    # On va chercher tout les id avec une requête sparql qui correspondent à ce prefix :
+    query = smbl_graph.query(
         """
-        select distinct (strafter(STR(?ref),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/") as ?cid)
+        select distinct (strafter(STR(?ref),\"""" + uri_prefix + """\") as ?id)
         where {
             ?species a SBMLrdf:Species .
             ?species bqbiol:is ?ref .
-            FILTER(STRSTARTS(STR(?ref), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"))
+            FILTER(STRSTARTS(STR(?ref), \"""" + uri_prefix + """\"))
             }
         """)
-    # On récupère et formate correctement la liste de cid
-    cid_list = [cid[0].toPython() for cid in query]
+    # On récupère et formate correctement la liste d'ids
+    id_list = [id[0].toPython() for id in query]
+    return(id_list)
+
+def create_Ensemble_pccompound_from_SMBL(smbl_graph, query_builder):
+    """
+    This function is used to build an Ensemble_pccompound from CID identifiers presents in the sbml graph, by first extracting all CID from PubChem URIs.
+    - smbl_graph: the sbml Graph
+    - a query_builder
+    """
+    cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
     # On crée l'object Ensemble_pccompound
+    print(len(cid_list))
     new_Ensemble_pccompound = Ensemble_pccompound()
     # Pour chaque cid, on va chercher ses références en utilsiant la fonction append_pccompound.
     for cid in cid_list:
@@ -100,19 +107,6 @@ def create_Ensemble_pccompound_from_SMBL(path_to_SMBL_RDF, query_builder):
     print("There was " + str(len(new_Ensemble_pccompound.append_failure)) + " cid for which there was no publication found !")
     return(new_Ensemble_pccompound)
 
-# On fetch les pmids à partir des cid du SMBL !! :
-sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL("data/HumanGEM/HumanGEM.ttl", query_builder)
-
-sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
-# When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
-sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
-
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-03-31")
-smbl_compound_ids_features_list = [id + f for id in sbml_all_cids for f in feature_list]
-
-
-
-### ==== END SBML FILE ==== ###
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
@@ -190,7 +184,7 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version + "/"
     if not os.path.exists(path_out):
         os.makedirs(path_out)
-    ressource_filtered_version.version_graph.serialize(destination=path_out + filtered_ressource_name + "/" + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
+    ressource_filtered_version.version_graph.serialize(destination=path_out + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
     for f_name, g_data in ressource_filtered_version.data_graph_dict.items():
             g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
 
@@ -385,13 +379,34 @@ def dowload_MeSH(out_dir, namespaces_dict):
 # TODO: Créer la fonction de parsing de graph pour les PubChem compounds (si besoin) afin de ne récupérer que les propriété qui nous interressent. On pourrait le faire en utilisant une sélection de type CHEMINF que celles-ci doivent avoir.
 # TODO: Créer une fonction qui permettrait de filtrer les objets. Par exemple la propriété Stereoisomer a pour objets une ensemble de CID, mais tout ces CID ne sont pas présents dans notre graph, car par exemple tous n'appartiennent pas au réseau. les filtrer ?
 
+
+
+apiKey = "0ddb3479f5079f21272578dc6e040278a508"
+# Building requests
+query_builder = eutils.QueryService(cache = False,
+                                    default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
+                                    api_key = apiKey)
+# On crée le graph SBML mergé :
+smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
+# On fetch les pmids à partir des cid du SMBL !! :
+sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL(smbl_graph, query_builder)
+# "synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig" , "data/annot_graphs/2020-04-06/"
+sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
+# When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
+sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
+# Create Graph
+sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06")
+smbl_compound_ids_features_list = [id + f for id in sbml_all_cids for f in feature_list]
+
+
+
 dowload_MeSH("data/MeSH/", namespaces)
 
 dowload_pubChem("reference", "reference", "data/PubChem_References/")
 
 dowload_pubChem("compound/general/pc_compound_type.ttl.gz", "compound", "data/PubChem_Compound/")
-
-dowload_pubChem("measuregroup", "measuregroup", "data/PubChem_MeasureGroup/")
+dowload_pubChem("compound/general", "compound", "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/")
+dowload_pubChem("descriptor/compound", "descriptor", "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/")
 
 
 requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio:hasPrimarySubjectTerm', out_name = 'PrimarySubjectTerm',
@@ -399,68 +414,6 @@ requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio
                                          ressource_name = "PrimarySubjectTerm", namespaces_list = ["reference", "fabio", "mesh"],
                                          namespaces_dict = namespaces,
                                          version = None)
-
-# On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PMIDS que j'ai sélectionner
-parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference/2020-03-06/", 
-                  all_ids = all_pmids,
-                  prefix = "reference:PMID", 
-                  out_dir = "data/PubChem_References/",
-                  input_ressource_file = "data/PubChem_References/reference/ressource_info_reference_2020-03-06.ttl",
-                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"),
-                  filtered_ressource_name = "referenceFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
-                  isZipped = True,
-                  namespace_dict = namespaces,
-                  version = None,
-                  separator = '\t')
-
-# On parse les lignes des fichier RDF .ttl de PubChem pour ne récupérer que les lignes qui impliques des PubChem compound que j'ai sélectionner
-parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySubjectTerm/2020-03-20/",
-                  all_ids = all_pmids,
-                  prefix = "reference:PMID",
-                  out_dir = "data/PubChem_References/",
-                  input_ressource_file = "data/PubChem_References/PrimarySubjectTerm/ressource_info_PrimarySubjectTerm_2020-03-20.ttl",
-                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PrimarySubjectTerm/2020-03-20"),
-                  filtered_ressource_name = "PrimarySubjectTermFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
-                  isZipped = True,
-                  namespace_dict = namespaces,
-                  version = None,
-                  separator = ' ')
-
-
-
-# Flash disc at: /media/mxdelmas/DisqueDur/data_max/
-# dowload_pubChem("compound/general", "compound", "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/")
-# dowload_pubChem("descriptor/compound", "descriptor", "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/")
-
-# On cherche à parser sur les Compounds :
-parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
-                  all_ids = all_cids,
-                  prefix = "compound:CID",
-                  out_dir = "data/PubChem_Compound/",
-                  input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
-                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
-                  filtered_ressource_name = "CompoundFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
-                  isZipped = True,
-                  namespace_dict = namespaces,
-                  version = None,
-                  separator = '\t')
-
-parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/2020-03-06/",
-                  all_ids = compound_ids_features_list,
-                  prefix = "descriptor:CID",
-                  out_dir = "data/PubChem_Descriptor/",
-                  input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/ressource_info_descriptor_2020-03-06.ttl",
-                  input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/descriptor/2020-03-06"),
-                  filtered_ressource_name = "DescriptorFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/2020-03-20"),
-                  isZipped = True,
-                  namespace_dict = namespaces,
-                  version = None,
-                  separator = '\t')
-
 
 
 
@@ -477,10 +430,10 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference
                   input_ressource_file = "data/PubChem_References/reference/ressource_info_reference_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"),
                   filtered_ressource_name = "referenceFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-03-31"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-03-31",
+                  version = "SMBL_2020-04-06",
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySubjectTerm/2020-03-20/",
@@ -490,10 +443,10 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
                   input_ressource_file = "data/PubChem_References/PrimarySubjectTerm/ressource_info_PrimarySubjectTerm_2020-03-20.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PrimarySubjectTerm/2020-03-20"),
                   filtered_ressource_name = "PrimarySubjectTermFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-03-31"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-03-31",
+                  version = "SMBL_2020-04-06",
                   separator = ' ')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
@@ -503,10 +456,10 @@ parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_ma
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
                   filtered_ressource_name = "CompoundFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-03-31"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-03-31",
+                  version = "SMBL_2020-04-06",
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/2020-03-06/",
@@ -516,8 +469,8 @@ parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_ma
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/ressource_info_descriptor_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/descriptor/2020-03-06"),
                   filtered_ressource_name = "DescriptorFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-03-31"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-03-31",
+                  version = "SMBL_2020-04-06",
                   separator = '\t')

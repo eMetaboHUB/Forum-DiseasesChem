@@ -290,3 +290,228 @@ select ?cid ?mesh ?name ?countdist where {
 Quelques explications :
     - Si on découpe la requête en deux partie c'est parce que sinon on ne peut pas groupby ?mesh ?cid et aussi affichier directement le name associé car il ne s'agit pas d'un élément d'aggrégation.
     - on doit **absolument** utilisé un *distinct* sur le comptage des pmids car : 1) Un même MeSH peut être inclus plusieurs fois (ex avec différents Qualifiers) et surtout quand 1 MeSH a souvent plusieurs tree number, ce qui fait que tout cela duplique les lignes ! et si on compte direct le nombre de pmid c'est faux !!
+
+## Improve ID coverage using UniChem & Identfiers.org :
+
+Unichem is a database which provides usefull equivalences between identifiers between databases. For example ChEBI:37327 is equivalent to PubchemCID:5372720 and also to chembl: 	CHEMBL68500, etc ...
+On an other way, Identifiers.org provides several URI which can be associated to a same ressource, for example: https://identifiers.org/CHEBI:36927, or 		https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:36927. But this database is incomplete and some URIs which corresponds to the RDF representation of the ressource like implemented by the provided may be missing. For example http://purl.obolibrary.org/obo/CHEBI_ and http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID are missing. So this information were added manualy
+
+The goal of the functions provide in get_info_from_UniChem is to merge information from Identifiers.org adn UniChem to provided a set of equivalent URI which represent the same molecule between ressources, and between URIs associated to ressources.
+So, we can separate the equivalences in two different types :
+  - intra-ressource: For an identifier of a molecule in a defined ressource, if the ressource have more than one possible URI, we can create a set of exactly-matching URI intra ressource for this molecule. Example: If ChEBI have 2 URIs like 'https://identifiers.org/CHEBI:' and 'http://purl.obolibrary.org/obo/CHEBI_', for one ChEBI idenfiers, we can make un exactly matching equivalence between the both URIs such as 'https://identifiers.org/CHEBI:36927' **skos:exactMatch** 'http://purl.obolibrary.org/obo/CHEBI_36927' With **skos:exactMatch** we indicate that the both concepts have exactly the same meaning, so we can pass from one to each other directly without errors. This property is so *Symetric* and *Transitive*.
+  - inter-ressource: For an identifier of a molecule, UniChem may have provide us an equivalence in an other database.  For example ChEBI:37327 is equivalent to PubchemCID:5372720. So we will create an associations between this two identifiers using the predicate skos:closeMatch and **ONLY** for only one URI of each ressource. Indeed, since each URI intra ressource are linkded by a predicate skos:exactMatch which is a transitive property, we only have to provide the new association between the two ressource with one URI of each, to propagate it to all ressources related URIs. **skos:closeMatch** indicates that two concepts are sufficiently similar and that the two can be used interchangeably, nevertheless, this  is not transitive, to avoid spreading  equivalence errors.
+
+Note that all existing identifiers in the ressources provided by UniChem are not returned, but only those for which UniChem have an equivalence in a other database, but to build the intra-ressource equivalence we need to have all the ids, or at list all those which are present in the SBML. So, to avoid this biais, the RDF graph of the SBML is initialy loaded to extract all the existing identifiers, which will be complete by those provided by UniChem.
+
+With all these new triples referring new associations between URIs we can used it to build a graph and with a SPARQL request, try to extract new identifiers for each species from those already annotated.
+
+The result may be called a URI-Graph.
+
+```python
+create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path_out, version)
+```
+-   ```path_to_graph```: The path to a SBML graph in a turtle format.
+-   ```ressources_ids```: A dict containing ressource name as key and ressource id in the UniChem database as values. Ressource ids may be found at https://www.ebi.ac.uk/unichem/ucquery/listSources
+-   ```ressource_uris```: a dict containing all the possible ressources URIs associated to a ressource.
+-   ```namespaces```: a dict of namespaces
+-   ```path_out```: a path to write output files
+-   ```version```: a vesion name. If None date is used by default.
+
+### Examples of used parameters: 
+```python
+ressources_ids = {
+    "chebi": '7',
+    "pubchem": '22',
+    "kegg": '6',
+    "hmdb": '18',
+    "lipidmaps": '33'            
+}
+
+ressource_uris = {
+    "chebi": ["http://identifiers.org/chebi/CHEBI:", "http://purl.obolibrary.org/obo/CHEBI_", "https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:"],
+    "pubchem": ["http://identifiers.org/pubchem.compound/", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"],
+    "kegg": ["http://identifiers.org/kegg.compound/", "https://www.kegg.jp/entry/"],
+    "hmdb": ["http://identifiers.org/hmdb/"],
+    "lipidmaps": ["http://identifiers.org/lipidmaps/"] 
+}
+
+graph_original_uri_prefix = {
+    "chebi": "http://identifiers.org/chebi/CHEBI:",
+    "pubchem": "http://identifiers.org/pubchem.compound/",
+    "kegg": "http://identifiers.org/kegg.compound/",
+    "hmdb": "http://identifiers.org/hmdb/",
+    "lipidmaps": "http://identifiers.org/lipidmaps/"
+}
+```
+Note that Keys of dict must be the same in all graphs.
+By loading the SBML graph and the new graph containing identifiers equivalence in an RDF Store like Virtuoso, we can compute SPARQL query to extract all informations:
+**Initials URIs in the SMBL graph MUST be identifiers.org URIS !**
+This request may be separated in 3 main parts :
+And **version** must be fill in the Graph URI. 
+#### part 1 : Get synonyms of existing uris : 
+As indicated in the Graph URI, this file should be named *synonyms.trig*
+```SQL
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+construct {
+	 GRAPH <http://database/ressources/annotation_graph/version/synonyms> { ?specie bqbiol:is ?ref_syn . }
+}where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:exactMatch ?ref_syn option(t_distinct) .
+
+}
+```
+For a specie, we extract all the current uris associated to the predicate bqbiol:is, and for those elements we extract uris which are in skos:exactMatch with them, so their intra-ressources URI synonyms
+
+#### part 2  : Extraction of infered equivalent uris :
+As indicated in the Graph URI, this file should be named *infered_uris.trig*
+```SQL
+
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+construct {
+	GRAPH <http://database/ressources/annotation_graph/version/infered_uris> { ?specie bqbiol:is ?otherRef . }
+}where {
+		?specie a SBMLrdf:Species ;
+			bqbiol:is ?ref .
+		?ref skos:closeMatch ?otherRef .
+		FILTER (
+			not exists { ?specie bqbiol:is ?otherRef }
+			&&
+			not exists {?ref skos:exactMatch ?otherRef option(t_distinct)}
+		)
+
+}
+```
+For a specie, we extract all the current uris associated to the predicate bqbiol:is, and for those elements we extract uris which are associated to the element with a skos:closeMath predicate, corresponding to equivalent URIs from identfiers equivalence provided by UniChem. **BUT**, we specifie that the extracted URI **must** not ne already known in the current graph *not exists { ?specie bqbiol:is ?otherRef }* **AND** that the extracted URI are not a synonym of the current annotate URIs (*not exists {?ref skos:exactMatch ?otherRef option(t_distinct)}*), because of *skos:exactMatch* is a sub-property of *skos:closeMatch*, by searching equivalent URIs using skos:closeMatch, we may extract synonyms of the already annotated URIs, but this is already done by the first request.
+
+#### part 3 : Extraction of synonymes of infered equivalent uris :
+As indicated in the Graph URI, this file should be named *infered_uris_synonyms.trig*
+```SQL
+
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+construct {
+	GRAPH <http://database/ressources/annotation_graph/version/infered_uris_synonyms> { ?specie bqbiol:is ?otherRef_syn . }
+}where {
+	?otherRef skos:exactMatch ?otherRef_syn option(t_distinct) .
+	FILTER (
+		not exists { ?specie bqbiol:is ?otherRef_syn }
+		&&
+		not exists { ?ref skos:exactMatch ?otherRef_syn option(t_distinct) }
+	)
+	{
+		select ?specie ?otherRef ?ref where {
+		?specie a SBMLrdf:Species ;
+			bqbiol:is ?ref .
+		?ref skos:closeMatch ?otherRef .
+		FILTER (
+			not exists {?specie bqbiol:is ?otherRef }
+      &&
+    		not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
+		)
+
+		}
+	}
+}
+```
+For a specie, we extract all the current uris associated to the predicate bqbiol:is, and for those elements we extract uris which are associated to the element with a skos:closeMath predicate, corresponding to equivalent URIs from identfiers equivalence provided by UniChem. **BUT**, we check that this URIs are not already known in the current annotation **AND** that the *?otherRef* is not a synonym of ?ref (becacuse *skos:exactMatch* is a sub-property of *skos:closeMatch*). And, for those URIs, we extract all their direct synonyms using *skos:exactMatch* and we check that this synonyms are not already present in the annotation (*not exists { ?specie bqbiol:is ?otherRef_syn }*) **and**, that this synonyms are not synonyms of already known annotation (*not exists { ?ref skos:exactMatch ?otherRef_syn option(t_distinct) }*), like those we were added with the query !
+
+Finally it's really more computionnaly efficient to separate this work in three diffenret queries.
+
+
+### To count the number of added URIs from a specific pattern
+#### (#Part 1 ) 
+```SQL
+
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+select count(distinct(?ref_syn)) where {
+	?specie a SBMLrdf:Species ;
+		bqbiol:is ?ref .
+	?ref skos:exactMatch ?ref_syn option(t_distinct) .
+  	FILTER ( STRSTARTS(STR(?ref_syn), "/pattern/"))
+}
+
+```
+
+#### (#Part 2) 
+```SQL
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+select count(distinct(?otherRef)) where {
+		?specie a SBMLrdf:Species ;
+			bqbiol:is ?ref .
+		?ref skos:closeMatch ?otherRef .
+		FILTER (
+			not exists { ?specie bqbiol:is ?otherRef }
+			&&
+			not exists {?ref skos:exactMatch ?otherRef option(t_distinct)}
+      &&
+      STRSTARTS(STR(?otherRef), "/pattern/")
+		)
+
+}
+```
+
+#### (#Part 3)
+
+```SQL
+
+DEFINE input:inference 'schema-inference-rules'
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+
+select count(distinct(?otherRef_syn)) where {
+	?otherRef skos:exactMatch ?otherRef_syn option(t_distinct) .
+	FILTER (
+		not exists { ?specie bqbiol:is ?otherRef_syn }
+		&&
+		not exists { ?ref skos:exactMatch ?otherRef_syn option(t_distinct) }
+    &&
+    STRSTARTS(STR(?otherRef_syn), "/pattern/")
+	)
+	{
+		select ?specie ?otherRef ?ref where {
+		?specie a SBMLrdf:Species ;
+			bqbiol:is ?ref .
+		?ref skos:closeMatch ?otherRef .
+		FILTER (
+      		not exists {?specie bqbiol:is ?otherRef }
+      		&&
+      		not exists { ?ref skos:exactMatch ?otherRef option(t_distinct) }
+		)
+		}
+	}
+}
+```
