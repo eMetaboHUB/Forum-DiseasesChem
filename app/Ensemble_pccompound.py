@@ -15,12 +15,16 @@ class Ensemble_pccompound:
     - append_failure: a list of the cid for which the NCBI eutils request succeeded but for which there was no associated litterature
     - ressource_version: the URI (rdflib.URIRef) that will automatocally be associated to the object as a version of the CID_PMID ressource
     - ressource_version_endpoint: the URI (rdflib.URIRef) that will automatocally be associated to the object as a version of the CID_PMID_enpoint ressource
+    - all_pmids: a set of all the pmids which were fetch 
+    - subjects_cid_pmids: the number of subjects in the cid_pmid graph
+    - n_triples_cid_pmids: the total number of triples in the cid_pmid graph
+    - subjects_cid_pmids_enpoint: the number of subjects in the cid_pmid_endpoint graph
+    - n_triples_cid_pmids_endpoint: the total number of triples in the cid_pmid_endpoint graph
     """
     def __init__(self):
         self.pccompound_list = list()        
         self.append_failure = list()
         self.ressource_version = None
-        self.all_cids = set()
         self.all_pmids = set()
         self.ressource_version_endpoint = None
         self.available_pmids = 0
@@ -31,7 +35,7 @@ class Ensemble_pccompound:
         
     def append_pccompound(self, cid_pack, query_builder):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
-        - cid: a list PubChem Compound Identifier 
+        - cid_pack: a list PubChem Compound Identifier 
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key"""
         # Get CID associated PMID. using try we test if request fail or not. If request fail, it's added to append_failure list
         try:
@@ -108,6 +112,10 @@ class Ensemble_pccompound:
         - namespace_dict: dict containing all the used namespaces.
         - out_dir: a path to an directory to write output files.
         - version: the version name. If None, the date will be choose by default.
+        - cid_list: a list of cids
+        - pack_size: the size of the cids pack that have to be send as request
+        - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
+        - max_size : the maximal number of pmids by files
         """
         # Création des fichiers de sorties :
         if not os.path.exists("additional_files"):
@@ -181,8 +189,7 @@ class Ensemble_pccompound:
                 # On export les append failures :
                 for append_failure_cid in self.append_failure:
                     f_append_failure.write("%s\n" %(append_failure_cid))
-                print(" Ok\n\t\t Try to append new cids and pmids to the global set ...", end = '')
-                self.all_cids = self.all_cids.union(self.get_all_cids())
+                print(" Ok\n\t\t Try to append new pmids to the global set ...", end = '')
                 self.all_pmids = self.all_pmids.union(self.get_all_pmids())
                 print(" Ok\n\t\tTry to clear objects for next iteration ...", end = '')
                 # On vide les graphs et les objects : 

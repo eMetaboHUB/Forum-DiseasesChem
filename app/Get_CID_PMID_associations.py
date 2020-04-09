@@ -379,7 +379,6 @@ sbml_cid_pmid = Ensemble_pccompound()
 sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06", cid_list, 1000, query_builder, 5000000)
 
 sbml_all_pmids = sbml_cid_pmid.all_pmids
-sbml_all_cids = sbml_cid_pmid.all_cids
 
 smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]
 
@@ -435,7 +434,7 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
                   separator = ' ')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
-                  all_ids = sbml_all_cids,
+                  all_ids = cid_list,
                   prefix = "compound:CID",
                   out_dir = "data/PubChem_Compound/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
