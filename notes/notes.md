@@ -477,7 +477,7 @@ select distinct ?spe_name ?str_smiles where {
 		                
 		}
 	group by str(?smiles)
-	having(count(distinct(?spe_name)) = 4)
+	having(count(distinct(?spe_name)) = 1)
 }
 
 	?specie a SBMLrdf:Species ;
