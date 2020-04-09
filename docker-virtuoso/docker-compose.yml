@@ -3,12 +3,12 @@ services:
     virtuoso:
          image: tenforce/virtuoso                    
          environment:
-              VIRT_Parameters_NumberOfBuffers: 1400000   # See virtuoso/README.md to adapt value of this line
-              VIRT_Parameters_MaxDirtyBuffers: 1000000    # See virtuoso/README.md to adapt value of this line
-              VIRT_Parameters_TN_MAX_memory: 2000000000
+              VIRT_Parameters_NumberOfBuffers: 2800000   # See virtuoso/README.md to adapt value of this line
+              VIRT_Parameters_MaxDirtyBuffers: 2000000    # See virtuoso/README.md to adapt value of this line
+              VIRT_Parameters_TN_MAX_memory: 4000000000
               VIRT_SPARQL_ResultSetMaxRows: 100000000
               VIRT_SPARQL_MaxDataSourceSize: 1000000000
-              VIRT_Flags_TN_MAX_memory: 2000000000
+              VIRT_Flags_TN_MAX_memory: 4000000000
               VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
               VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
               VIRT_SPARQL_MaxQueryExecutionTime: 50000          # 5 min

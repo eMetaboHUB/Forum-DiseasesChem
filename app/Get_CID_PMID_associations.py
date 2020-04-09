@@ -90,23 +90,6 @@ def extract_ids_from_SMBL_by_URI_prefix(smbl_graph, uri_prefix):
     id_list = [id[0].toPython() for id in query]
     return(id_list)
 
-def create_Ensemble_pccompound_from_SMBL(smbl_graph, query_builder):
-    """
-    This function is used to build an Ensemble_pccompound from CID identifiers presents in the sbml graph, by first extracting all CID from PubChem URIs.
-    - smbl_graph: the sbml Graph
-    - a query_builder
-    """
-    cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
-    # On crée l'object Ensemble_pccompound
-    print(len(cid_list))
-    new_Ensemble_pccompound = Ensemble_pccompound()
-    # Pour chaque cid, on va chercher ses références en utilsiant la fonction append_pccompound.
-    for cid in cid_list:
-        print("Appening " + cid + " ...")
-        new_Ensemble_pccompound.append_pccompound(cid, query_builder)
-    print("There was " + str(len(new_Ensemble_pccompound.append_failure)) + " cid for which there was no publication found !")
-    return(new_Ensemble_pccompound)
-
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
@@ -384,19 +367,21 @@ def dowload_MeSH(out_dir, namespaces_dict):
 apiKey = "0ddb3479f5079f21272578dc6e040278a508"
 # Building requests
 query_builder = eutils.QueryService(cache = False,
-                                    default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
+                                    default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'y'},
                                     api_key = apiKey)
 # On crée le graph SBML mergé :
 smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
-# On fetch les pmids à partir des cid du SMBL !! :
-sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL(smbl_graph, query_builder)
-# "synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig" , "data/annot_graphs/2020-04-06/"
-sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
-# When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
-sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
+
+cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06")
-smbl_compound_ids_features_list = [id + f for id in sbml_all_cids for f in feature_list]
+sbml_cid_pmid = Ensemble_pccompound()
+
+sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06", cid_list, 1000, query_builder, 5000000)
+
+sbml_all_pmids = sbml_cid_pmid.all_pmids
+sbml_all_cids = sbml_cid_pmid.all_cids
+
+smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]
 
 
 
