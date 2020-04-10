@@ -371,19 +371,31 @@ query_builder = eutils.QueryService(cache = False,
                                     api_key = apiKey)
 # On crée le graph SBML mergé :
 smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
-
 cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
 sbml_cid_pmid = Ensemble_pccompound()
-
+# Launch fetching
 sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06", cid_list, 1000, query_builder, 5000000)
-
+# get all pmids :
 sbml_all_pmids = sbml_cid_pmid.all_pmids
-
 smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]
 
+### ==== With All CID that have a ChEBI === ###
+g = rdflib.Graph()
+g.parse("data/PubChem_Compound/compound/2020-03-06/pc_compound_type.ttl", format = 'turtle')
+query = g.query("""
+select distinct (strafter(STR(?compound),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?id)
+where {
+?compound rdf:type ?chebi .
+FILTER(STRSTARTS(STR(?chebi), "http://purl.obolibrary.org/obo/CHEBI_"))
+}
+""")
+cid_list = [res[0].toPython() for res in query]
+cid_pmid_from_ChEBI_list = Ensemble_pccompound()
+cid_pmid_from_ChEBI_list.create_CID_PMID_ressource(namespaces, "data/", "CID_FROM_CHEBI", cid_list, 1000, query_builder, 5000000)
 
 
+### === FIN === ###
 dowload_MeSH("data/MeSH/", namespaces)
 
 dowload_pubChem("reference", "reference", "data/PubChem_References/")

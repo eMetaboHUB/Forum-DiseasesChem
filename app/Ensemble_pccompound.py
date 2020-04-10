@@ -106,6 +106,15 @@ class Ensemble_pccompound:
         cids = [pcc.get_cid() for pcc in self.pccompound_list]
         return cids
     
+    def clean(self):
+        self.ressource_version.data_graph_dict[list(self.ressource_version.data_graph_dict.keys())[-1]] = None
+        self.ressource_version_endpoint.data_graph_dict[list(self.ressource_version_endpoint.data_graph_dict.keys())[-1]] = None
+        self.pccompound_list = None
+        self.pccompound_list = list()
+        self.append_failure = None
+        self.append_failure = list()
+        self.available_pmids = 0
+    
     def create_CID_PMID_ressource(self, namespace_dict, out_dir, version, cid_list, pack_size, query_builder, max_size):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
@@ -193,11 +202,7 @@ class Ensemble_pccompound:
                 self.all_pmids = self.all_pmids.union(self.get_all_pmids())
                 print(" Ok\n\t\tTry to clear objects for next iteration ...", end = '')
                 # On vide les graphs et les objects : 
-                self.ressource_version.data_graph_dict[cp_name].remove((None, None, None))
-                self.ressource_version_endpoint.data_graph_dict[cpe_name].remove((None, None, None))
-                self.pccompound_list.clear()
-                self.append_failure.clear()
-                self.available_pmids = 0
+                self.clean()
                 if index_list != len(cid_packed_list) - 1:
                     print(" Ok\n\t\tTry to create new graphs ...", end = '')
                     # On incrémente le fichier :
