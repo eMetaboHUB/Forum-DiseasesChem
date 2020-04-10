@@ -393,7 +393,13 @@ FILTER(STRSTARTS(STR(?chebi), "http://purl.obolibrary.org/obo/CHEBI_"))
 cid_list = [res[0].toPython() for res in query]
 cid_pmid_from_ChEBI_list = Ensemble_pccompound()
 cid_pmid_from_ChEBI_list.create_CID_PMID_ressource(namespaces, "data/", "CID_FROM_CHEBI", cid_list, 1000, query_builder, 5000000)
+all_pmids = cid_pmid_from_ChEBI_list.all_pmids
+# Export list :
+out = open("data/CID_PMID/CID_FROM_CHEBI/pmid_list.txt", "w")
+for pmid in all_pmids:
+    a = out.write("%s\n" %(pmid))
 
+out.close()
 
 ### === FIN === ###
 dowload_MeSH("data/MeSH/", namespaces)
