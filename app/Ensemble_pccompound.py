@@ -161,9 +161,9 @@ class Ensemble_pccompound:
             print(" Ok\n", end = '')
             if self.available_pmids > max_size or (index_list == len(cid_packed_list) - 1):
                 if index_list == len(cid_packed_list) - 1:
-                    print("\t\tEnd was reached with %d new pmids, start to export graph\n" %(self.available_pmids))
+                    print("\t\tEnd was reached with %d new cid-pmid association, start to export graph\n" %(self.available_pmids))
                 else:
-                    print("\t\tMaximal size (%d) was reached with %d new pmids, start to export graph\n" %(max_size, self.available_pmids))
+                    print("\t\tMaximal size (%d) was reached with %d new cid-pmid association, start to export graph\n" %(max_size, self.available_pmids))
                 # On remplis les graphs :
                 print("\t\tTry to fill graphs cids_pmids ... ", end = '')
                 self.fill_cids_pmids_graph(g = self.ressource_version.data_graph_dict[cp_name], namespaces_dict = namespace_dict)
