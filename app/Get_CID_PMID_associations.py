@@ -90,23 +90,6 @@ def extract_ids_from_SMBL_by_URI_prefix(smbl_graph, uri_prefix):
     id_list = [id[0].toPython() for id in query]
     return(id_list)
 
-def create_Ensemble_pccompound_from_SMBL(smbl_graph, query_builder):
-    """
-    This function is used to build an Ensemble_pccompound from CID identifiers presents in the sbml graph, by first extracting all CID from PubChem URIs.
-    - smbl_graph: the sbml Graph
-    - a query_builder
-    """
-    cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
-    # On crée l'object Ensemble_pccompound
-    print(len(cid_list))
-    new_Ensemble_pccompound = Ensemble_pccompound()
-    # Pour chaque cid, on va chercher ses références en utilsiant la fonction append_pccompound.
-    for cid in cid_list:
-        print("Appening " + cid + " ...")
-        new_Ensemble_pccompound.append_pccompound(cid, query_builder)
-    print("There was " + str(len(new_Ensemble_pccompound.append_failure)) + " cid for which there was no publication found !")
-    return(new_Ensemble_pccompound)
-
 
 
 # A partir de ma liste de tout les pmids dont j'ai besoin je vais chercher à filtrer les fichier RDF References de PubChem.
@@ -132,8 +115,15 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     # On récupère le graph RDF qui décrit avec ses métadatas la ressource à filtrer
     g_ressource = rdflib.Graph()
     g_ressource.parse(input_ressource_file, format='turtle')
+    subjects = set()
+    n_triples = 0
+    path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version + "/"
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
     # Les différents fichiers sont les subjects annotés avec le isPartOf vers la ressource cible. 
     for s,p,o in g_ressource.triples((None, DCTERMS['isPartOf'], input_ressource_uri)):
+        # On utilise None pour vider la mémoire associér à la variable
+        file_content = None
         file_content = str()
         file_name = str(g_ressource.value(subject = s, predicate = DCTERMS['source'], object=None))
         base_name = file_name.split(".")[0]
@@ -172,21 +162,21 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
             # On créée alors le nouveau graph: Pas besoin de spécifier des namespace car ce seront les même que dans le fichier source
             ressource_filtered_version.append_data_graph(file = file_out, namespace_list  = [], namespace_dict = None)
             ressource_filtered_version.data_graph_dict[base_name + "_filtered"].parse(data = file_content, format = 'turtle')
+            n_triples += len(ressource_filtered_version.data_graph_dict[base_name + "_filtered"])
+            subjects = subjects.union(set([str(s) for s in ressource_filtered_version.data_graph_dict[base_name + "_filtered"].subjects()]))
+            ressource_filtered_version.data_graph_dict[base_name + "_filtered"].serialize(destination = path_out + base_name + "_filtered" + ".trig", format='trig')
+            # On vide le graph
+            ressource_filtered_version.data_graph_dict[base_name + "_filtered"] = None
     # On ajoute les infos :
     ressource_filtered_version.add_version_namespaces(["void"], namespace_dict)
     ressource_filtered_version.add_version_attribute(DCTERMS["description"], rdflib.Literal(str(g_ressource.value(subject=input_ressource_uri, predicate=DCTERMS["description"], object=None)) + " - Filtered version", lang = "en" ))
     ressource_filtered_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(str(g_ressource.value(subject=input_ressource_uri, predicate=DCTERMS["title"], object=None)) + " - Filtered version", lang = "en" ))
-    ressource_filtered_version.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal(sum([len(g) for g in ressource_filtered_version.data_graph_dict.values()]) , datatype=XSD.long ))
-    ressource_filtered_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_filtered_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
+    ressource_filtered_version.add_version_attribute(namespace_dict["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
+    ressource_filtered_version.add_version_attribute(namespace_dict["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ressource_uri)
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ids_uri)
     # On écrit
-    path_out = out_dir + filtered_ressource_name + "/" + ressource_filtered_version.version + "/"
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
     ressource_filtered_version.version_graph.serialize(destination=path_out + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
-    for f_name, g_data in ressource_filtered_version.data_graph_dict.items():
-            g_data.serialize(destination = path_out + f_name + ".trig", format='trig')
 
 
 
@@ -249,6 +239,8 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
     request_failure_list = list()
     offset = start_offset
     pack_rank = 1
+    subjects = set()
+    n_triples = 0
     print("Create new ressource")
     ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
     ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
@@ -283,21 +275,30 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
         if (offset % 10000000) == 0:
             print("Creating pack")
             ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
+            # On ajoute les stats de nombre de sujets et triplets : 
+            n_triples += len(ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)])
+            subjects = subjects.union(set([str(s) for s in ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].subjects()]))
+            # On clean la mémoire associé au graph maintenant qu'il est écrit
+            ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)] = None
             os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
             pack_rank += 1
             ressource_version.append_data_graph(out_name + "_" + str(pack_rank) + ".ttl.gz", namespaces_list, namespaces_dict)
     print("End !")
+    # On fait pour le dernier graph
+    ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
+    os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
+    n_triples += len(ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)])
+    subjects = subjects.union(set([str(s) for s in ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].subjects()]))
+    ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)] = None
     # Compléter l'annotation de la ressource :
     ressource_version.add_version_namespaces(["void"], namespaces_dict)
     ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the pmid and the major MeSH associated to the publication"))
     ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("PMID to Primary Subject Term RDF triples"))
-    ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( sum([len(g) for g in ressource_version.data_graph_dict.values()]) , datatype=XSD.long ))
-    ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal(n_triples , datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal(len(subjects) , datatype=XSD.long ))
     # On écrits les fichiers dans les répertoires correspondants
-    ressource_version.data_graph_dict[out_name + "_" + str(pack_rank)].serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
     ressource_version.version_graph.serialize(out_dir + ressource_name + "/" + "ressource_info_" + ressource_name + "_" + ressource_version.version + ".ttl", format = 'turtle')
     
-    os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
     return request_failure_list
 
         
@@ -384,22 +385,41 @@ def dowload_MeSH(out_dir, namespaces_dict):
 apiKey = "0ddb3479f5079f21272578dc6e040278a508"
 # Building requests
 query_builder = eutils.QueryService(cache = False,
-                                    default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'},
+                                    default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'y'},
                                     api_key = apiKey)
 # On crée le graph SBML mergé :
 smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
-# On fetch les pmids à partir des cid du SMBL !! :
-sbml_cid_pmid = create_Ensemble_pccompound_from_SMBL(smbl_graph, query_builder)
-# "synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig" , "data/annot_graphs/2020-04-06/"
-sbml_all_pmids = sbml_cid_pmid.get_all_pmids()
-# When we want to filter the PubChem Compound RDF we must use all the CID, even if they failed to append litterature !!
-sbml_all_cids = sbml_cid_pmid.get_all_cids() + sbml_cid_pmid.append_failure
+cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06")
-smbl_compound_ids_features_list = [id + f for id in sbml_all_cids for f in feature_list]
+sbml_cid_pmid = Ensemble_pccompound()
+# Launch fetching
+sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06", cid_list, 1000, query_builder, 5000000)
+# get all pmids :
+sbml_all_pmids = sbml_cid_pmid.all_pmids
+smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]
 
+### ==== With All CID that have a ChEBI === ###
+g = rdflib.Graph()
+g.parse("data/PubChem_Compound/compound/2020-03-06/pc_compound_type.ttl", format = 'turtle')
+query = g.query("""
+select distinct (strafter(STR(?compound),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?id)
+where {
+?compound rdf:type ?chebi .
+FILTER(STRSTARTS(STR(?chebi), "http://purl.obolibrary.org/obo/CHEBI_"))
+}
+""")
+cid_list = [res[0].toPython() for res in query]
+cid_pmid_from_ChEBI_list = Ensemble_pccompound()
+cid_pmid_from_ChEBI_list.create_CID_PMID_ressource(namespaces, "data/", "CID_FROM_CHEBI", cid_list, 1000, query_builder, 5000000)
+all_pmids = cid_pmid_from_ChEBI_list.all_pmids
+# Export list :
+out = open("data/CID_PMID/CID_FROM_CHEBI/pmid_list.txt", "w")
+for pmid in all_pmids:
+    a = out.write("%s\n" %(pmid))
 
+out.close()
 
+### === FIN === ###
 dowload_MeSH("data/MeSH/", namespaces)
 
 dowload_pubChem("reference", "reference", "data/PubChem_References/")
@@ -424,16 +444,16 @@ requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio
 
 
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference/2020-03-06/", 
-                  all_ids = sbml_all_pmids,
+                  all_ids = all_pmids,
                   prefix = "reference:PMID", 
                   out_dir = "data/PubChem_References/",
                   input_ressource_file = "data/PubChem_References/reference/ressource_info_reference_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"),
                   filtered_ressource_name = "referenceFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/CID_FROM_CHEBI"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-04-06",
+                  version = "CID_FROM_CHEBI",
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySubjectTerm/2020-03-20/",
@@ -450,7 +470,7 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
                   separator = ' ')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
-                  all_ids = sbml_all_cids,
+                  all_ids = cid_list,
                   prefix = "compound:CID",
                   out_dir = "data/PubChem_Compound/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",

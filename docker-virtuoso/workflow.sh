@@ -43,7 +43,7 @@ echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/HumanGEM/', '*.ttl', 'http://database/ressources/SMBL');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl.gz', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl.gz', '');" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/annot_graphs/2020-04-07/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/annot_graphs/2020-04-07/', '*.trig', '');" >> share/upload.sh
@@ -51,26 +51,26 @@ echo "ld_dir_all ('./dumps/annot_graphs/2020-04-07/', '*.trig', '');" >> share/u
 # echo "ld_dir_all ('./dumps/UniChem/2020-04-07/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 # echo "ld_dir_all ('./dumps/UniChem/2020-04-07/', '*.trig', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/CID_PMID/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/CID_PMID_endpoints/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/CID_PMID_endpoints/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/CID_PMID_endpoints/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/CID_PMID_endpoints/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/SMBL_2020-03-31/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/SMBL_2020-03-31/', '*.trig', '');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/PubChem_References/referenceFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/MeSH/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/MeSH/', '*.trig', '');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/MeSH/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/MeSH/', '*.trig', '');" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/vocabulary/', '*.ttl', 'http://database/inference-rules/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/vocabulary/', '*.rdf', 'http://database/inference-rules/');" >> share/upload.sh
