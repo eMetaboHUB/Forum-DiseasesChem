@@ -388,7 +388,7 @@ cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.o
 # Create Graph
 sbml_cid_pmid = Ensemble_pccompound()
 # Launch fetching
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_2020-04-06", cid_list, 1000, query_builder, 5000000)
+sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_TEST", cid_list, 1000, query_builder, 5000000)
 # get all pmids :
 sbml_all_pmids = sbml_cid_pmid.all_pmids
 smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]

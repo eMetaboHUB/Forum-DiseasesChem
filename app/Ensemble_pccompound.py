@@ -107,8 +107,6 @@ class Ensemble_pccompound:
         return cids
     
     def clean(self):
-        self.ressource_version.data_graph_dict[list(self.ressource_version.data_graph_dict.keys())[-1]] = None
-        self.ressource_version_endpoint.data_graph_dict[list(self.ressource_version_endpoint.data_graph_dict.keys())[-1]] = None
         self.pccompound_list = None
         self.pccompound_list = list()
         self.append_failure = None
@@ -155,8 +153,8 @@ class Ensemble_pccompound:
         file_index = 1
         # On initialize les deux premières instances des graphs cid_pmids & cid_pmid_endpoint : 
         cp_name, cpe_name = "cid_pmid_" + str(file_index), "cid_pmid_endpoint_" + str(file_index)
-        self.ressource_version.append_data_graph(file = cp_name + ".trig", namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
-        self.ressource_version_endpoint.append_data_graph(file = cpe_name + ".trig", namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
+        g_cid_pmid = self.ressource_version.create_data_graph(namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
+        g_cid_pmid_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
         for index_list in range(0, len(cid_packed_list)):
             print("-- Start getting pmids of list %d !" %(index_list + 1))
             print("Try to append compounds ...", end = '')
@@ -175,19 +173,19 @@ class Ensemble_pccompound:
                     print("\t\tMaximal size (%d) was reached with %d new cid-pmid association, start to export graph\n" %(max_size, self.available_pmids))
                 # On remplis les graphs :
                 print("\t\tTry to fill graphs cids_pmids ... ", end = '')
-                self.fill_cids_pmids_graph(g = self.ressource_version.data_graph_dict[cp_name], namespaces_dict = namespace_dict)
+                self.fill_cids_pmids_graph(g = g_cid_pmid, namespaces_dict = namespace_dict)
                 print(" Ok\n\t\tTry to fill graphs cids_pmids_enpoint ... ", end = '')
-                self.fill_cids_pmids_endpoint_graph(g = self.ressource_version_endpoint.data_graph_dict[cpe_name], namespaces_dict = namespace_dict)
+                self.fill_cids_pmids_endpoint_graph(g = g_cid_pmid_endpoint, namespaces_dict = namespace_dict)
                 # On incrémente les nombres de sujets et de triples :
                 print(" Ok\n\t\tIncrement numbers of triples and subjects from added triples ...", end = '')
-                self.n_triples_cid_pmids += len(self.ressource_version.data_graph_dict[cp_name])
-                self.n_triples_cid_pmids_endpoint += len(self.ressource_version_endpoint.data_graph_dict[cpe_name])
-                self.subjects_cid_pmids = self.subjects_cid_pmids.union(set([str(s) for s in self.ressource_version.data_graph_dict[cp_name].subjects()]))
-                self.subjects_cid_pmids_enpoint = self.subjects_cid_pmids_enpoint.union(set([str(s) for s in self.ressource_version_endpoint.data_graph_dict[cpe_name].subjects()]))
+                self.n_triples_cid_pmids += len(g_cid_pmid)
+                self.n_triples_cid_pmids_endpoint += len(g_cid_pmid_endpoint)
+                self.subjects_cid_pmids = self.subjects_cid_pmids.union(set([str(s) for s in g_cid_pmid.subjects()]))
+                self.subjects_cid_pmids_enpoint = self.subjects_cid_pmids_enpoint.union(set([str(s) for s in g_cid_pmid_endpoint.subjects()]))
                 print(" Ok\n\t\tTry to write and compress graph as .tll in %s and %s ..." %(path_out_1, path_out_2), end = '')
                 # On export les graphs :
-                self.ressource_version.data_graph_dict[cp_name].serialize(destination=path_out_1 + cp_name + ".trig", format='trig')
-                self.ressource_version_endpoint.data_graph_dict[cpe_name].serialize(destination=path_out_2 + cpe_name + ".trig", format='trig')
+                g_cid_pmid.serialize(destination=path_out_1 + cp_name + ".trig", format='trig')
+                g_cid_pmid_endpoint.serialize(destination=path_out_2 + cpe_name + ".trig", format='trig')
                 # On zip :
                 os.system("gzip " + path_out_1 + cp_name + ".trig" + " " + path_out_2 + cpe_name + ".trig")
                 # On export les cid successful :
@@ -203,14 +201,16 @@ class Ensemble_pccompound:
                 print(" Ok\n\t\tTry to clear objects for next iteration ...", end = '')
                 # On vide les graphs et les objects : 
                 self.clean()
+                g_cid_pmid = None
+                g_cid_pmid_endpoint = None
                 if index_list != len(cid_packed_list) - 1:
                     print(" Ok\n\t\tTry to create new graphs ...", end = '')
                     # On incrémente le fichier :
                     file_index += 1
                     # On créée deux nouveaux graphs :
                     cp_name, cpe_name = "cid_pmid_" + str(file_index), "cid_pmid_endpoint_" + str(file_index)
-                    self.ressource_version.append_data_graph(file = cp_name + ".trig", namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
-                    self.ressource_version_endpoint.append_data_graph(file = cpe_name + ".trig", namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
+                    g_cid_pmid = self.ressource_version.create_data_graph(namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
+                    g_cid_pmid_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
                 print(" Ok\n", end = '')
         # On exporte le graph des metadata :
         print(" Export version graph with metadata ...", end = '')

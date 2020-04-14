@@ -8,14 +8,12 @@ class Database_ressource_version:
     """This class represent a ressource version in the database, represented in a RDF model. It is composed of:
     - ressource: the name of the ressource for which a new version will be created
     - uri_version: the new URI of the new version, created by the object it-self
-    - data_graph_dict: a dict containing all the graph associated to the ressource version. Keys are filenames and values are the rdflib.Graph() associated to.
     - version_graph: the graph containing information about the created version
     """
     def __init__(self, ressource, version):
         self.ressource = ressource
         self.version = version
         self.uri_version = None
-        self.data_graph_dict = dict()
         self.version_graph = self.initialyze_version()
     
     def initialyze_version(self):

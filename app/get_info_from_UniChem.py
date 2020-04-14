@@ -105,6 +105,8 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
     - version: a version name. if None date is used by default.
     """
     ressource_version = Database_ressource_version(ressource = "ressources_id_mapping", version = version)
+    n_triples = 0
+    subjects = set()
     # On ne prépare se dictionnaire que pour les ressource avec plus d'une URI :
     intra_ids_dict = get_graph_ids_set(path_to_graph, graph_original_uri_prefix, ressource_uris)
     path_out = path_out + ressource_version.version + "/"
@@ -116,7 +118,7 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
         r2 = ressource_pair[1]
         g_name = (r1 + "_" + r2)
         print("Treating : " + r1 + " - " + r2 + " ...")
-        ressource_version.append_data_graph(file = g_name + ".trig", namespace_list  = ["skos"], namespace_dict = namespaces)
+        current_graph = ressource_version.create_data_graph(namespace_list  = ["skos"], namespace_dict = namespaces)
         # Le WevService semble mal fonctionner ... donc je suis passer par une nouvelle méthode où de download depuis le ftp :
         ids_r1, ids_r2 = download_mapping_from_ftp(ressources_ids[r1], ressources_ids[r2], path_out)
         # Si la requête précédement envoyée à échouée au passe à la paire de ressource suivante
@@ -128,9 +130,11 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
             #  On écrit les équivalence inter-ressource seulement pour une URI de chaque ressource, le liens avec les autres se fera par le biais des équivalence intra-ressource
             all_uris = [rdflib.URIRef(ressource_uris[r1][0] + ids_r1[id_index])] + [rdflib.URIRef(ressource_uris[r2][0] + ids_r2[id_index])]
             for current_uri, next_uri in zip(all_uris, all_uris[1:]):
-                ressource_version.data_graph_dict[g_name].add((current_uri, namespaces["skos"]['closeMatch'], next_uri))
+                current_graph.add((current_uri, namespaces["skos"]['closeMatch'], next_uri))
         # On écrit le graph :
-        ressource_version.data_graph_dict[g_name].serialize(destination = path_out + g_name + ".trig", format='trig')
+        current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
+        n_triples += len(current_graph)
+        subjects = subjects.union(set([s for s in current_graph.subjects()]))
         # Si il y a plusieurs URI pour la ressource, il faut préparer les identifiants pour les correspondances intra-ressource
         if len(ressource_uris[r1]) > 1:
             intra_ids_dict[r1] = intra_ids_dict[r1].union(ids_r1)
@@ -139,19 +143,21 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
     # On écrit les équivalence intra-ressource
     for r_name in intra_ids_dict.keys():
         g_name = r_name + "_intra"
-        ressource_version.append_data_graph(file = (g_name + ".trig"), namespace_list  = ["skos"], namespace_dict = namespaces)
+        current_graph = ressource_version.create_data_graph(namespace_list  = ["skos"], namespace_dict = namespaces)
         intra_ids = list(intra_ids_dict[r_name])
         for id in intra_ids:
             intra_uris = [rdflib.URIRef(prefix + id) for prefix in ressource_uris[r_name]]
             for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
-                ressource_version.data_graph_dict[g_name].add((current_uri, namespaces["skos"]['exactMatch'], next_uri))
-        ressource_version.data_graph_dict[g_name].serialize(destination = path_out + g_name + ".trig", format='trig')
+                current_graph.add((current_uri, namespaces["skos"]['exactMatch'], next_uri))
+        current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
+        subjects = subjects.union(set([s for s in current_graph.subjects()]))
+        n_triples += len(current_graph)
     # On annote le graph :
     ressource_version.add_version_namespaces(["void"], namespaces)
     ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources in SBML"))
     ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances"))
-    ressource_version.add_version_attribute(namespaces["void"]["triples"], rdflib.Literal(sum([len(g) for g in ressource_version.data_graph_dict.values()]) , datatype=XSD.long ))
-    ressource_version.add_version_attribute(namespaces["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
     ressource_version.version_graph.serialize(destination=path_out + "ressource_info_ids_correspondance" + ressource_version.version + ".ttl", format = 'turtle')
 
 
@@ -162,17 +168,20 @@ def create_annotation_graph_version(path_to_annot_graphs_dir, version):
     - version: the version of the annotations graphs, MUST be the same as the one used in Virtuoso !
     """
     ressource_version = Database_ressource_version(ressource = "annotation_graph", version = version)
+    n_triples = 0
+    subjects = set()
     for annot_graph in os.listdir(path_to_annot_graphs_dir):
         if not annot_graph.endswith(".trig"):
             continue
-        annot_graph_name = annot_graph.split('.trig')
-        ressource_version.append_data_graph(file = annot_graph, namespace_list  = [], namespace_dict = None)
-        ressource_version.data_graph_dict[annot_graph_name[0]].parse(path_to_annot_graphs_dir + annot_graph, format = 'trig')
+        current_graph = ressource_version.create_data_graph(namespace_list  = [], namespace_dict = None)
+        current_graph.parse(path_to_annot_graphs_dir + annot_graph, format = 'trig')
+        n_triples += len(current_graph)
+        subjects = subjects.union(set([s for s in current_graph.subjects()]))
     ressource_version.add_version_namespaces(["void"], namespaces)
     ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("Annotation graphs contains additionnal annotation which can be usefull to explore the SBML file"))
     ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("Annotation Graph"))
-    ressource_version.add_version_attribute(namespaces["void"]["triples"], rdflib.Literal(sum([len(g) for g in ressource_version.data_graph_dict.values()]) , datatype=XSD.long ))
-    ressource_version.add_version_attribute(namespaces["void"]["distinctSubjects"], rdflib.Literal( len(set([s for g in ressource_version.data_graph_dict.values() for s in g.subjects()])), datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
+    ressource_version.add_version_attribute(namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
     ressource_version.version_graph.serialize(destination=path_to_annot_graphs_dir + "ressource_info_annotation_graph_" + ressource_version.version + ".ttl", format = 'turtle')
 
 namespaces = {
