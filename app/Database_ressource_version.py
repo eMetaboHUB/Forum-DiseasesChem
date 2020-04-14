@@ -31,29 +31,19 @@ class Database_ressource_version:
         self.uri_version = rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version)
         g_v.add((rdflib.URIRef("http://database/ressources/" + self.ressource), DCTERMS['hasVersion'], self.uri_version))
         g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(date.today().isoformat(), datatype=XSD.date)))
-        # On indique qu'il s'agit d'une nouveau dataset:
-        g_v.add((self.uri_version, RDF["type"], rdflib.URIRef("http://rdfs.org/ns/void#Dataset")))
         return g_v
     
-    def append_data_graph(self, file, namespace_list, namespace_dict):
+    def create_data_graph(self, namespace_list, namespace_dict):
         """
-        This function is used to append a new data graph to the ressource version. A data-graph is a graph containing triples associated to the ressource
-        - file: a file named that will be used as a Key to refer the graph in data_graph_dict, and which will be used as dc:source object.
+        This function is used to create a new data graph to the ressource version. A data-graph is a graph containing triples associated to the ressource
         - namespace_list: a list of the namespaces that should be associated to the graph
         - namespace_dict: a dict containing all the used namespaces.
         """
-        base_name = re.split("\.", file)[0]
         # On crée le graph avec l'URI et les namespaces associés
-        g_d = rdflib.Graph(identifier=rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version + "/" + base_name))
-        # On ajoute un namespace correspondante à la version et à la ressource que l'on traite :
-        g_d.bind(self.ressource + "_" + self.version, rdflib.Namespace("http://database/ressources/" + self.ressource + "/" + self.version + "/"))
+        g_d = rdflib.Graph(identifier=self.uri_version)
         for ns_name in namespace_list:
             g_d.bind(ns_name, namespace_dict[ns_name])
-        
-        self.version_graph.add((g_d.identifier, DCTERMS['isPartOf'], self.uri_version))
-        self.version_graph.add((g_d.identifier, DCTERMS['source'], rdflib.Literal(file)))
-        # Add graph data to dict
-        self.data_graph_dict[base_name] = g_d
+        return g_d
     
     def add_version_attribute(self, predicate, object):
         """
