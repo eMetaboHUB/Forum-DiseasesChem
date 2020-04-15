@@ -21,19 +21,25 @@ class Ensemble_pccompound:
     - subjects_cid_pmids_enpoint: the number of subjects in the cid_pmid_endpoint graph
     - n_triples_cid_pmids_endpoint: the total number of triples in the cid_pmid_endpoint graph
     """
-    def __init__(self):
-        self.pccompound_list = list()        
+    def __init__(self, ressource_name, version, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces):       
         self.append_failure = list()
-        self.ressource_version = None
-        self.all_pmids = set()
-        self.ressource_version_endpoint = None
+        self.ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
+        self.ressource_version_endpoint = Database_ressource_version(ressource = ressource_name + "_enpoint", version = version)
+        self.ns_linking_id = ns_linking_id
+        self.ns_linked_id = ns_linked_id
+        self.ns_endpoint = ns_endpoint
+        self.primary_predicate = primary_predicate
+        self.secondary_predicate = secondary_predicate
+        self.g_linked_id = self.ressource_version.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.primary_predicate[0]], namespace_dict = namespaces)
+        self.g_linked_id_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.secondary_predicate[0], self.ns_endpoint[0], "obo", "dcterms"], namespace_dict = namespaces)
         self.available_pmids = 0
+        self.all_pmids = set()
         self.subjects_cid_pmids = set()
         self.n_triples_cid_pmids = 0
         self.subjects_cid_pmids_enpoint = set()
         self.n_triples_cid_pmids_endpoint = 0
         
-    def append_pccompound(self, cid_pack, query_builder):
+    def append_pccompound(self, cid_pack, query_builder, g_link, g_link_endpoint):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
         - cid_pack: a list PubChem Compound Identifier 
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key"""
@@ -64,37 +70,43 @@ class Ensemble_pccompound:
             for source in pmids_by_source.keys():
                 a = numpy.array(numpy.isin(pmids_union, pmids_by_source[source])).nonzero()
                 [sources[index].append((source)) for index in a[0].tolist()]
-            self.pccompound_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
+            # self.pccompound_list.append(Pccompound(cid = cid, pmids = pmids_union, pmids_sources = sources))
+            # On ajoute dans le graph cid_pmid :
             # On incrémente le nombre de pmids ajoutés :
             self.available_pmids += len(pmids_union)
         return True
     
-    def fill_cids_pmids_graph(self, g, namespaces_dict):
-        """This function create a rdflib graph containing all the cid - pmid associations contains in the Ensemble_pccompound object.
+    def fill_ids_link_graph(self, linking_id, linked_id_list, namespaces):
+        """This function create a rdflib graph containing all the id - linked_id associations.
         - g: a rdflib Graph that will be filled with these triples
-        - namespaces_dict:  dict containing all the used namespaces.
+        - linking_id: The linking identifier
+        - linked_id_list: the linked id list from the request result
+        - ns_linking_id: a tuple containing information on the namespace of the linking id (ns, prefix)
+        - ns_linked_id: a tuple containing information on the namespace of the linked id (ns, prefix)
+        - premary_predicate: a tuple containing information on the predicate describing the relation between the linking and linked id (ns, predicate)
         """
         # Add all triples to graph
-        for pcc in self.pccompound_list:
-            cid = 'CID' + pcc.get_cid()
-            for pmid in pcc.get_pmids():
-                g.add((namespaces_dict["compound"][cid], namespaces_dict["cito"].isDiscussedBy, namespaces_dict["reference"]['PMID' + pmid]))
+        for linked_id in linked_id_list:
+            self.g_linked_id.add((namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id], namespaces[self.primary_predicate[0]][self.primary_predicate[1]], namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
     
-    def fill_cids_pmids_endpoint_graph(self, g, namespaces_dict):
+    def fill_ids_link_endpoint_graph(self, linking_id, linked_id_list, link_name_list, namespaces):
         """This function create a rdflib graph containing all the cid - pmid endpoints associations contains in the Ensemble_pccompound object.
-        - g: a rdflib Graph that will be filled with these triples
-        - namespaces_dict:  dict containing all the used namespaces.
+        - g: a rdflib Graph that will be filled with these triples- linking_id: The linking identifier
+        - linked_id_list: the linked id list from the request result
+        - link_name_list: the link_name list from the request result
+        - ns_linking_id: a tuple containing information on the namespace of the linking id (ns, prefix)
+        - ns_linked_id: a tuple containing information on the namespace of the linked id (ns, prefix)
+        - secondary_predicate: a tuple containing information on the predicate describing the relation between the linking and linked id (ns, predicate) to use in the endpoint
+        - ns_endpoint: a tuple containing information on the namespace of the endpoint (ns, prefix)
         """
-        for pcc in self.pccompound_list:
-            cid = 'CID' + pcc.get_cid()
-            for p in pcc.pmid_list:
-                pmid = 'PMID' + p.get_pmid()
-                source = ",".join(p.get_source())
-                s = cid + "_" + pmid
-                # Add to graph
-                g.add((namespaces_dict["endpoint"][s], namespaces_dict["obo"].IAO_0000136, namespaces_dict["compound"][cid]))
-                g.add((namespaces_dict["endpoint"][s], namespaces_dict["cito"].citesAsDataSource, namespaces_dict["reference"][pmid]))
-                g.add((namespaces_dict["endpoint"][s], namespaces_dict["dcterms"].contributor, rdflib.Literal(source)))
+        for linked_id_index in range(0, len(linked_id_list)):
+            linked_id = linked_id_list[linked_id_index]
+            link_name = ",".join(link_name_list[linked_id_index])
+            subject = linking_id + "_" + linked_id
+            # Add to graph
+            self.g_linked_id_endpoint.add((namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], namespaces["obo"]['IAO_0000136'], namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id]))
+            self.g_linked_id_endpoint.add((namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], namespaces[self.secondary_predicate[0]][self.secondary_predicate[1]], namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
+            self.g_linked_id_endpoint.add((namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], namespaces["dcterms"]['contributor'], rdflib.Literal(link_name)))
     
     def get_all_pmids(self):
         """this function allows to extract the union of all pmids associated with Pccompounds objects in the Ensemble_pccompound objects"""
@@ -130,9 +142,6 @@ class Ensemble_pccompound:
         f_success = open("additional_files/successful_cids.txt", 'w')
         f_append_failure = open("additional_files/cids_without_literature.txt", 'w')
         f_request_failure = open("additional_files/cid_request_failed.txt", 'w')
-        # On crée les 2 ressources :
-        self.ressource_version = Database_ressource_version(ressource = "CID_PMID", version = version)
-        self.ressource_version_endpoint = Database_ressource_version(ressource = "CID_PMID_enpoint", version = version)
         # On ajoute les infos pour la première ressource:
         self.ressource_version.add_version_namespaces(["void"], namespace_dict)
         self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between the PubChem Compound (CID) and the related publications (pmids)"))
@@ -153,13 +162,12 @@ class Ensemble_pccompound:
         file_index = 1
         # On initialize les deux premières instances des graphs cid_pmids & cid_pmid_endpoint : 
         cp_name, cpe_name = "cid_pmid_" + str(file_index), "cid_pmid_endpoint_" + str(file_index)
-        g_cid_pmid = self.ressource_version.create_data_graph(namespace_list = ["reference", "compound", "cito"], namespace_dict = namespace_dict)
-        g_cid_pmid_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = ["reference", "compound", "cito", "endpoint", "obo", "dcterms"], namespace_dict = namespace_dict)
         for index_list in range(0, len(cid_packed_list)):
             print("-- Start getting pmids of list %d !" %(index_list + 1))
             print("Try to append compounds ...", end = '')
             # On append les compouds: Si false est return c'est qu'il y a eu une erreur dans la requête, sinon on continue
-            test_append = self.append_pccompound(cid_packed_list[index_list], query_builder)
+            # test_append = self.append_pccompound(cid_packed_list[index_list], query_builder)
+            test_append = True
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
                 for cid_fail in cid_packed_list[index_list]:
@@ -173,9 +181,9 @@ class Ensemble_pccompound:
                     print("\t\tMaximal size (%d) was reached with %d new cid-pmid association, start to export graph\n" %(max_size, self.available_pmids))
                 # On remplis les graphs :
                 print("\t\tTry to fill graphs cids_pmids ... ", end = '')
-                self.fill_cids_pmids_graph(g = g_cid_pmid, namespaces_dict = namespace_dict)
+                # self.fill_cids_pmids_graph(g = g_cid_pmid, namespaces_dict = namespace_dict)
                 print(" Ok\n\t\tTry to fill graphs cids_pmids_enpoint ... ", end = '')
-                self.fill_cids_pmids_endpoint_graph(g = g_cid_pmid_endpoint, namespaces_dict = namespace_dict)
+                # self.fill_cids_pmids_endpoint_graph(g = g_cid_pmid_endpoint, namespaces_dict = namespace_dict)
                 # On incrémente les nombres de sujets et de triples :
                 print(" Ok\n\t\tIncrement numbers of triples and subjects from added triples ...", end = '')
                 self.n_triples_cid_pmids += len(g_cid_pmid)
