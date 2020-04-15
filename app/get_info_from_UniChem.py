@@ -132,6 +132,7 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
             for current_uri, next_uri in zip(all_uris, all_uris[1:]):
                 current_graph.add((current_uri, namespaces["skos"]['closeMatch'], next_uri))
         # On écrit le graph :
+        ressource_version.add_DataDump(g_name + ".trig")
         current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
         n_triples += len(current_graph)
         subjects = subjects.union(set([s for s in current_graph.subjects()]))
@@ -149,6 +150,7 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
             intra_uris = [rdflib.URIRef(prefix + id) for prefix in ressource_uris[r_name]]
             for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
                 current_graph.add((current_uri, namespaces["skos"]['exactMatch'], next_uri))
+        ressource_version.add_DataDump(g_name + ".trig")
         current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
         subjects = subjects.union(set([s for s in current_graph.subjects()]))
         n_triples += len(current_graph)
@@ -177,6 +179,7 @@ def create_annotation_graph_version(path_to_annot_graphs_dir, version):
         current_graph.parse(path_to_annot_graphs_dir + annot_graph, format = 'trig')
         n_triples += len(current_graph)
         subjects = subjects.union(set([s for s in current_graph.subjects()]))
+        ressource_version.add_DataDump(annot_graph)
     ressource_version.add_version_namespaces(["void"], namespaces)
     ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("Annotation graphs contains additionnal annotation which can be usefull to explore the SBML file"))
     ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal("Annotation Graph"))

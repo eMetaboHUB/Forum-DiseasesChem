@@ -162,6 +162,7 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
             current_graph.parse(data = file_content, format = 'turtle')
             n_triples += len(current_graph)
             subjects = subjects.union(set([str(s) for s in current_graph.subjects()]))
+            ressource_filtered_version.add_DataDump(base_name + "_filtered" + ".trig")
             current_graph.serialize(destination = path_out + base_name + "_filtered" + ".trig", format='trig')
             # On vide le graph
             current_graph = None
@@ -272,6 +273,7 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
         # On fait des paquets de 10.000.000 par fichiers
         if (offset % 10000000) == 0:
             print("Creating pack")
+            ressource_version.add_DataDump(out_name + "_" + str(pack_rank) + ".ttl")
             current_graph.serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
             # On ajoute les stats de nombre de sujets et triplets : 
             n_triples += len(current_graph)
@@ -283,6 +285,7 @@ def REST_ful_bulk_download(graph, predicate, out_name, start_offset, out_dir, re
             current_graph = ressource_version.create_data_graph(namespaces_list, namespaces_dict)
     print("End !")
     # On fait pour le dernier graph
+    ressource_version.add_DataDump(out_name + "_" + str(pack_rank) + ".ttl")
     current_graph.serialize(destination=path_out + out_name + "_" + str(pack_rank) + ".ttl", format='turtle')
     os.system("gzip " + path_out + out_name + "_" + str(pack_rank) + ".ttl")
     n_triples += len(current_graph)

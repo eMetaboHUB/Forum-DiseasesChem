@@ -3,7 +3,7 @@ import rdflib
 import numpy
 import sys
 import os
-from rdflib.namespace import XSD, DCTERMS, RDFS
+from rdflib.namespace import XSD, DCTERMS, RDFS, VOID
 from datetime import date
 import xml.etree.ElementTree as ET
 from Database_ressource_version import Database_ressource_version
@@ -155,12 +155,9 @@ class Elink_ressource_creator:
         f_append_failure = open("additional_files/linking_ids_without_linked_ids.txt", 'w')
         f_request_failure = open("additional_files/linking_ids_request_failed.txt", 'w')
         # On ajoute les infos pour la première ressource:
-        ns_void = rdflib.Namespace("http://rdfs.org/ns/void#")
-        self.ressource_version.version_graph.bind("void", ns_void)
         self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
         self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " RDF triples"))
         # On ajoute les infos pour la seconde ressource, les endpoint:
-        self.ressource_version_endpoint.version_graph.bind("void", ns_void)
         self.ressource_version_endpoint.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains additionnal informations describing relations between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
         self.ressource_version_endpoint.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " endpoint RDF triples"))
         # On prépare les répertoire : 
@@ -199,7 +196,9 @@ class Elink_ressource_creator:
                 self.n_subjects_g_linked_id_endpoint += len(self.get_all_linked_id_endpoints())
                 print(" Ok\n\t\tTry to write and compress graph as .tll in %s and %s ..." %(path_out_1, path_out_2), end = '')
                 # On export les graphs :
+                self.ressource_version.add_DataDump(g_linked_id_name + ".trig")
                 self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".trig", format='trig')
+                self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig")
                 self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".trig", format='trig')
                 # On zip :
                 os.system("gzip " + path_out_1 + g_linked_id_name + ".trig" + " " + path_out_2 + g_linked_id_endpoint_name + ".trig")
@@ -225,10 +224,10 @@ class Elink_ressource_creator:
                 print(" Ok\n", end = '')
         # On exporte le graph des metadata :
         print(" Export version graph with metadata ...", end = '')
-        self.ressource_version.add_version_attribute(ns_void["triples"], rdflib.Literal(self.n_triples_g_linked_id, datatype=XSD.long ))
-        self.ressource_version.add_version_attribute(ns_void["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
-        self.ressource_version_endpoint.add_version_attribute(ns_void["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
-        self.ressource_version_endpoint.add_version_attribute(ns_void["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id_endpoint, datatype=XSD.long ))
+        self.ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id, datatype=XSD.long ))
+        self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
+        self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
+        self.ressource_version_endpoint.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id_endpoint, datatype=XSD.long ))
         self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
         self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
         print(" Ok\n Export all linked ids ...", end = '')
