@@ -1,4 +1,3 @@
-from Pccompound import Pccompound
 import eutils
 import rdflib
 import numpy
@@ -9,24 +8,34 @@ from datetime import date
 import xml.etree.ElementTree as ET
 from Database_ressource_version import Database_ressource_version
 
-class Ensemble_pccompound:
+class Elink_ressource_creator:
     """This class represent an ensembl of Pccompound objects:
-    - pccompound_list: a list of Pccompound objects
-    - append_failure: a list of the cid for which the NCBI eutils request succeeded but for which there was no associated litterature
-    - ressource_version: the URI (rdflib.URIRef) that will automatocally be associated to the object as a version of the CID_PMID ressource
-    - ressource_version_endpoint: the URI (rdflib.URIRef) that will automatocally be associated to the object as a version of the CID_PMID_enpoint ressource
-    - all_pmids: a set of all the pmids which were fetch 
-    - subjects_cid_pmids: the number of subjects in the cid_pmid graph
-    - n_triples_cid_pmids: the total number of triples in the cid_pmid graph
-    - subjects_cid_pmids_enpoint: the number of subjects in the cid_pmid_endpoint graph
-    - n_triples_cid_pmids_endpoint: the total number of triples in the cid_pmid_endpoint graph
+    - dbfrom: The NCBI Entrez database for linking ids
+    - db: The NCBI Entrez database for linked ids
+    - namespaces: a dict containing namespace names as keys and associated rdflib.Namespace() objects as values
+    - ressource_version: Database_ressource_version objects representing a new version of the association between linking_ids and linked ids association
+    - ressource_version_endpoint: Database_ressource_version objects representing a new version of the additionnal information about associations between linking_ids and linked ids association
+    - ns_linking_id: a tuple representing namespace name and associated prefix (if one should be added next before the id) for linking ids
+    - ns_linked_id: a tuple representing namespace name and associated prefix (if one should be added next before the id) for linked ids
+    - ns_endpoint: a tuple representing namespace name and associated prefix (if one should be added next before the id) for endpoints ids
+    - primary_predicate: a tuple representing the primary predicate with namespace name and predicate name, that will be used to illutrate the relation between linking ids and linked ids
+    - secondary_predicate: a tuple representing the secondary predicate with namespace name and predicate name, that will be used to illutrate the additionnal relation between linking ids and linked ids in the endpoint graph
+    - g_linked_id: a rdflib graph storing association between linking ids and linked ids using the primary_predicate
+    - g_linked_id_endpoint: a rdflib graph storing describing associations between linking ids and linked ids using the secondary_predicate
+    - append_failure: a list of the linking ids for which the NCBI eutils request succeeded but for which there was no associated linked ids
+    - available_linked_ids: a variable that store the current number of linking ids added to graphs
+    - all_linked_ids: a set of all the linked ids which were added to graphs 
+    - n_subjects_g_linked_id: the number of subjects in the g_linked_id graph
+    - n_triples_g_linked_id: the total number of triples in the g_linked_id graph
+    - n_subjects_g_linked_id_endpoint: the number of subjects in the g_linked_id_endpoint graph
+    - n_triples_g_linked_id_endpoint: the total number of triples in the g_linked_id_endpoint graph
     """
     def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces):       
         self.dbfrom = dbfrom
         self.db = db
         self.namespaces = namespaces
         self.ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
-        self.ressource_version_endpoint = Database_ressource_version(ressource = ressource_name + "_enpoint", version = version)
+        self.ressource_version_endpoint = Database_ressource_version(ressource = ressource_name + "_endpoints", version = version)
         self.ns_linking_id = ns_linking_id
         self.ns_linked_id = ns_linked_id
         self.ns_endpoint = ns_endpoint
@@ -42,9 +51,9 @@ class Ensemble_pccompound:
         self.n_subjects_g_linked_id_endpoint = 0
         self.n_triples_g_linked_id_endpoint = 0
         
-    def append_pccompound(self, id_pack, query_builder):
+    def append_linked_ids(self, id_pack, query_builder):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
-        - id_pack: a list PubChem Compound Identifier 
+        - id_pack: a list Entrez Identifier 
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key"""
         # Get linking_id associated linked_id. using try we test if request fail or not. If request fail, it's added to append_failure list
         try:
@@ -74,22 +83,16 @@ class Ensemble_pccompound:
                 a = numpy.array(numpy.isin(linked_id_list, linked_id_by_link_name[link_name])).nonzero()
                 [link_name_list[index].append((link_name)) for index in a[0].tolist()]
             # Add in graph :
-            print("\t\tTry to fill graphs g_linked_id ... ", end = '')
             self.fill_ids_link_graph(linking_id, linked_id_list)
-            print(" Ok\n\t\tTry to fill graphs g_linked_id_endpoint ... ", end = '')
             self.fill_ids_link_endpoint_graph(linking_id, linked_id_list, link_name_list)
             # On incrémente le nombre de pmids ajoutés :
             self.available_linked_ids += len(linked_id_list)
         return True
     
     def fill_ids_link_graph(self, linking_id, linked_id_list):
-        """This function create a rdflib graph containing all the id - linked_id associations.
-        - g: a rdflib Graph that will be filled with these triples
+        """This function fill the g_linked_id graph with linking ids and linked ids associations.
         - linking_id: The linking identifier
         - linked_id_list: the linked id list from the request result
-        - ns_linking_id: a tuple containing information on the namespace of the linking id (ns, prefix)
-        - ns_linked_id: a tuple containing information on the namespace of the linked id (ns, prefix)
-        - premary_predicate: a tuple containing information on the predicate describing the relation between the linking and linked id (ns, predicate)
         """
         # Add all triples to graph
         for linked_id in linked_id_list:
@@ -97,13 +100,9 @@ class Ensemble_pccompound:
     
     def fill_ids_link_endpoint_graph(self, linking_id, linked_id_list, link_name_list):
         """This function create a rdflib graph containing all the cid - pmid endpoints associations contains in the Ensemble_pccompound object.
-        - g: a rdflib Graph that will be filled with these triples- linking_id: The linking identifier
+        - linking_id: The linking identifier
         - linked_id_list: the linked id list from the request result
         - link_name_list: the link_name list from the request result
-        - ns_linking_id: a tuple containing information on the namespace of the linking id (ns, prefix)
-        - ns_linked_id: a tuple containing information on the namespace of the linked id (ns, prefix)
-        - secondary_predicate: a tuple containing information on the predicate describing the relation between the linking and linked id (ns, predicate) to use in the endpoint
-        - ns_endpoint: a tuple containing information on the namespace of the endpoint (ns, prefix)
         """
         for linked_id_index in range(0, len(linked_id_list)):
             linked_id = linked_id_list[linked_id_index]
@@ -130,6 +129,7 @@ class Ensemble_pccompound:
         return all_linked_ids_endpoints
     
     def clean(self):
+        """This function allow to clean and empty memory for bulky attributes"""
         self.g_linked_id = None
         self.g_linked_id = self.ressource_version.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.primary_predicate[0]], namespace_dict = self.namespaces)
         self.g_linked_id_endpoint = None
@@ -138,11 +138,11 @@ class Ensemble_pccompound:
         self.append_failure = list()
         self.available_linked_ids = 0
     
-    def create_CID_PMID_ressource(self, out_dir, id_list, pack_size, query_builder, max_size):
+    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
-        - cid_list: a list of cids
+        - id_list: a list of input Entrez identifiers that will be used as linking ids
         - pack_size: the size of the cids pack that have to be send as request
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
         - max_size : the maximal number of pmids by files
@@ -179,7 +179,7 @@ class Ensemble_pccompound:
             print("-- Start getting pmids of list %d !" %(index_list + 1))
             print("Try to append compounds ...", end = '')
             # On append les linked_ids: Si false est return c'est qu'il y a eu une erreur dans la requête, sinon on continue
-            test_append = self.append_pccompound(id_packed_list[index_list], query_builder)
+            test_append = self.append_linked_ids(id_packed_list[index_list], query_builder)
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
                 for id_fail in id_packed_list[index_list]:

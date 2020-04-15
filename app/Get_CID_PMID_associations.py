@@ -11,7 +11,7 @@ import re
 from rdflib.namespace import XSD, DCTERMS
 from pathlib import Path
 import os, time
-from Ensemble_pccompound import Ensemble_pccompound
+from Elink_ressource_creator import Elink_ressource_creator
 from Ensemble_citation import Ensemble_citation
 from Database_ressource_version import Database_ressource_version
 
@@ -386,11 +386,20 @@ query_builder = eutils.QueryService(cache = False,
 smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
 cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
-sbml_cid_pmid = Ensemble_pccompound()
+sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID", 
+                                        version = "SMBL_2020-15-04", 
+                                        dbfrom = "pccompound",
+                                        db = "pubmed",
+                                        ns_linking_id = ("compound", "CID"),
+                                        ns_linked_id = ("reference", "PMID"),
+                                        ns_endpoint = ("endpoint", ""),
+                                        primary_predicate = ("cito", "isDiscussedBy"),
+                                        secondary_predicate = ("cito", "citeAsDataSource"),
+                                        namespaces = namespaces)
 # Launch fetching
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_TEST", cid_list, 1000, query_builder, 5000000)
+sbml_cid_pmid.create_ressource("data/", cid_list, 1000, query_builder, 5000000)
 # get all pmids :
-sbml_all_pmids = sbml_cid_pmid.all_pmids
+sbml_all_pmids = sbml_cid_pmid.all_linked_ids
 smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]
 
 ### ==== With All CID that have a ChEBI === ###
@@ -404,9 +413,18 @@ FILTER(STRSTARTS(STR(?chebi), "http://purl.obolibrary.org/obo/CHEBI_"))
 }
 """)
 cid_list = [res[0].toPython() for res in query]
-cid_pmid_from_ChEBI_list = Ensemble_pccompound()
-cid_pmid_from_ChEBI_list.create_CID_PMID_ressource(namespaces, "data/", "CID_FROM_CHEBI", cid_list, 1000, query_builder, 5000000)
-all_pmids = cid_pmid_from_ChEBI_list.all_pmids
+cid_pmid_from_ChEBI_list = Elink_ressource_creator(ressource_name = "CID_PMID", 
+                                        version = "CID_FROM_CHEBI_2", 
+                                        dbfrom = "pccompound",
+                                        db = "pubmed",
+                                        ns_linking_id = ("compound", "CID"),
+                                        ns_linked_id = ("reference", "PMID"),
+                                        ns_endpoint = ("endpoint", ""),
+                                        primary_predicate = ("cito", "isDiscussedBy"),
+                                        secondary_predicate = ("cito", "citeAsDataSource"),
+                                        namespaces = namespaces)
+cid_pmid_from_ChEBI_list.create_ressource("data/", cid_list, 1000, query_builder, 5000000)
+all_pmids = cid_pmid_from_ChEBI_list.all_linked_ids
 # Export list :
 out = open("data/CID_PMID/CID_FROM_CHEBI/pmid_list.txt", "w")
 for pmid in all_pmids:
