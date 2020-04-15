@@ -64,6 +64,7 @@ This function is used to create a new version of the *ressource* and *ressource_
 -   ```pack_size```: the *linking identifier* packed size which will be send to the NCBI server. Pack size of 500 or 1000 can really improve computation time, but, there is a limit in the number of *linked identifiers* that can be extracted at the same time. If selected *linked identifiers* have a lot of associated, prefer small pack size to be sure to get all the information.
 -   ```query_builder```: a Eutils QueryService used to request to NCBI server
 -   ```max_size```: the maximal number of *linking identifier***-***linked identifiers* associations in a RDF file. Formalize a huge amount of association in RDF can be really time and memory consuming. Keep also in mind that there will be 3 triples to build in *ressource_endpoint* graph for one in *ressource* graph.
+-	```uri_targeted_ressource```: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
 
 
 So as exemple, to get all the literature association of cids contains in the SBML graph:

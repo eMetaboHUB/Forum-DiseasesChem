@@ -390,7 +390,7 @@ smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonym
 cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
 sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID", 
-                                        version = "SMBL_2020-15-04", 
+                                        version = "SMBL_2020-15-04_2", 
                                         dbfrom = "pccompound",
                                         db = "pubmed",
                                         ns_linking_id = ("compound", "CID"),
