@@ -12,7 +12,6 @@ from rdflib.namespace import XSD, DCTERMS
 from pathlib import Path
 import os, time
 from Elink_ressource_creator import Elink_ressource_creator
-from Ensemble_citation import Ensemble_citation
 from Database_ressource_version import Database_ressource_version
 
 
@@ -400,7 +399,7 @@ sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID",
                                         secondary_predicate = ("cito", "citeAsDataSource"),
                                         namespaces = namespaces)
 # Launch fetching
-sbml_cid_pmid.create_ressource("data/", cid_list, 1000, query_builder, 5000000, [rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"), rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06")])
+sbml_cid_pmid.create_ressource("data/", cid_list, 10000, query_builder, 5000000, [rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"), rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06")])
 # get all pmids :
 sbml_all_pmids = sbml_cid_pmid.all_linked_ids
 smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]

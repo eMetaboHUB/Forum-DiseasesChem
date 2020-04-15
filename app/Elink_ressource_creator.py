@@ -174,8 +174,7 @@ class Elink_ressource_creator:
         # On initialize les deux premières instances des graphs g_linked_id & g_linked_id_endpoint : 
         g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(file_index), self.ressource_version_endpoint.ressource + "_" + str(file_index)
         for index_list in range(0, len(id_packed_list)):
-            print("-- Start getting pmids of list %d !" %(index_list + 1))
-            print("Try to append compounds ...", end = '')
+            print("-- Start getting pmids of list %d !\nTry to append compounds ..." %(index_list + 1), end = '')
             # On append les linked_ids: Si false est return c'est qu'il y a eu une erreur dans la requête, sinon on continue
             test_append = self.append_linked_ids(id_packed_list[index_list], query_builder)
             if not test_append:
