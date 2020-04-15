@@ -3,7 +3,7 @@ import rdflib
 import numpy
 import sys
 import os
-from rdflib.namespace import XSD, DCTERMS, RDFS, VOID
+from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 from datetime import date
 import xml.etree.ElementTree as ET
 from Database_ressource_version import Database_ressource_version
@@ -138,7 +138,7 @@ class Elink_ressource_creator:
         self.append_failure = list()
         self.available_linked_ids = 0
     
-    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size):
+    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, uri_targeted_ressources):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
@@ -146,6 +146,7 @@ class Elink_ressource_creator:
         - pack_size: the size of the cids pack that have to be send as request
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
         - max_size : the maximal number of pmids by files
+        - uri_targeted_ressource: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
         """
         # Création des fichiers de sorties :
         if not os.path.exists("additional_files"):
@@ -224,6 +225,9 @@ class Elink_ressource_creator:
                 print(" Ok\n", end = '')
         # On exporte le graph des metadata :
         print(" Export version graph with metadata ...", end = '')
+        self.ressource_version.add_version_attribute(RDF["type"], VOID["Linkset"])
+        for uri_targeted_ressource in uri_targeted_ressources:
+            self.ressource_version.add_version_attribute(VOID["target"], uri_targeted_ressource)
         self.ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id, datatype=XSD.long ))
         self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
         self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))

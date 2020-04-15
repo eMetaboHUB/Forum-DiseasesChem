@@ -400,7 +400,7 @@ sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID",
                                         secondary_predicate = ("cito", "citeAsDataSource"),
                                         namespaces = namespaces)
 # Launch fetching
-sbml_cid_pmid.create_ressource("data/", cid_list, 1000, query_builder, 5000000)
+sbml_cid_pmid.create_ressource("data/", cid_list, 1000, query_builder, 5000000, [rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"), rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06")])
 # get all pmids :
 sbml_all_pmids = sbml_cid_pmid.all_linked_ids
 smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_list]
@@ -426,7 +426,7 @@ cid_pmid_from_ChEBI_list = Elink_ressource_creator(ressource_name = "CID_PMID",
                                         primary_predicate = ("cito", "isDiscussedBy"),
                                         secondary_predicate = ("cito", "citeAsDataSource"),
                                         namespaces = namespaces)
-cid_pmid_from_ChEBI_list.create_ressource("data/", cid_list, 1000, query_builder, 5000000)
+cid_pmid_from_ChEBI_list.create_ressource("data/", cid_list, 1000, query_builder, 5000000, [rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"), rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06")])
 all_pmids = cid_pmid_from_ChEBI_list.all_linked_ids
 # Export list :
 out = open("data/CID_PMID/CID_FROM_CHEBI/pmid_list.txt", "w")
