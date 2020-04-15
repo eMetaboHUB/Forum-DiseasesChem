@@ -106,12 +106,12 @@ class Elink_ressource_creator:
         """
         for linked_id_index in range(0, len(linked_id_list)):
             linked_id = linked_id_list[linked_id_index]
-            link_name = ",".join(link_name_list[linked_id_index])
             subject = linking_id + "_" + linked_id
             # Add to graph
             self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["obo"]['IAO_0000136'], self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id]))
             self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces[self.secondary_predicate[0]][self.secondary_predicate[1]], self.namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
-            self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["dcterms"]['contributor'], rdflib.Literal(link_name)))
+            for link_name in link_name_list[linked_id_index]:
+                self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["dcterms"]['contributor'], rdflib.Literal(link_name)))
     
     def get_all_linked_ids(self):
         """this function allows to extract the union of all linked_ids, the objects of the g_linked_id graph"""
