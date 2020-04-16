@@ -170,7 +170,7 @@ class Elink_ressource_creator:
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
         - id_list: a list of input Entrez identifiers that will be used as linking ids
-        - pack_size: the size of the cids pack that have to be send as request
+        - pack_size: the size of the cids pack that have to be send as request, refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
         - max_size : the maximal number of pmids by files
         - uri_targeted_ressource: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list

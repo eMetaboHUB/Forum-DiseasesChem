@@ -80,11 +80,11 @@ smbl_compound_ids_features_list = [id + f for id in cid_list for f in feature_li
 
 
 # ====  TEST FROM PMID to CID === #
+
 g = rdflib.Graph()
 g.parse("data/PubChem_References/reference/2020-03-06/pc_reference_type.ttl", format='turtle')
 pmid_list = [pmid.split("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID")[1] for pmid in g.subjects()]
 g = None
-
 pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID", 
                                         version = None, 
                                         dbfrom = "pubmed",
@@ -96,9 +96,10 @@ pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID",
                                         secondary_predicate = ("cito", "isCitedAsDataSourceBy"),
                                         namespaces = namespaces)
 pmid_cid.create_ressource("data/", pmid_list, 10000, query_builder, 5000000)
-
-# TODO: for remains_ids in pmid_cid.request_failure refaire tourner create_ressource
-
+# while there are some ids for which the request fail causes of external errors, retry :
+while(len(pmid_cid.request_failure) != 0):
+    pmid_cid.create_ressource("data/", pmid_cid.request_failure, 10000, query_builder, 5000000)
+# Export ressource graph :
 pmid_cid.export_ressource_metatdata("data/", [rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"), rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06")])
 
 # === End === #
