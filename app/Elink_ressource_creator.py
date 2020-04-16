@@ -155,10 +155,8 @@ class Elink_ressource_creator:
         # Création des fichiers de sorties :
         if not os.path.exists("additional_files"):
             os.makedirs("additional_files")
-        f_all_linked_ids = open("additional_files/all_linked_ids.txt", 'w')
-        f_success = open("additional_files/successful_linking_ids.txt", 'w')
-        f_append_failure = open("additional_files/linking_ids_without_linked_ids.txt", 'w')
-        f_request_failure = open("additional_files/linking_ids_request_failed.txt", 'w')
+        else:
+            os.system("rm additional_files/*")
         # On ajoute les infos pour la première ressource:
         self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
         self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " RDF triples"))
@@ -183,8 +181,9 @@ class Elink_ressource_creator:
             test_append = self.append_linked_ids(id_packed_list[index_list], query_builder)
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
-                for id_fail in id_packed_list[index_list]:
-                    f_request_failure.write("%s\n" %(id_fail))
+                with open("additional_files/linking_ids_request_failed.txt", 'a') as f_request_failure:
+                    for id_fail in id_packed_list[index_list]:
+                        f_request_failure.write("%s\n" %(id_fail))
                 continue
             print(" Ok\n", end = '')
             if self.available_linked_ids > max_size or (index_list == len(id_packed_list) - 1):
@@ -208,12 +207,14 @@ class Elink_ressource_creator:
                 os.system("gzip " + path_out_1 + g_linked_id_name + ".trig" + " " + path_out_2 + g_linked_id_endpoint_name + ".trig")
                 # On export les cid successful :
                 print(" Ok\n\t\tTry tp export successful linking ids in additional_files/successful_linking_ids.txt ...", end = '')
-                for success_id in self.get_all_linking_ids():
-                    f_success.write("%s\n" %(success_id))
+                with open("additional_files/successful_linking_ids.txt", 'a') as f_success:
+                    for success_id in self.get_all_linking_ids():
+                        f_success.write("%s\n" %(success_id))
                 print(" Ok\n\t\tTry tp export linking ids without linked_ids in additional_files/linking_ids_without_linked_ids.txt ...", end = '')
                 # On export les append failures :
-                for append_failure_cid in self.append_failure:
-                    f_append_failure.write("%s\n" %(append_failure_cid))
+                with open("additional_files/linking_ids_without_linked_ids.txt", 'a') as f_append_failure:
+                    for append_failure_id in self.append_failure:
+                        f_append_failure.write("%s\n" %(append_failure_id))
                 print(" Ok\n\t\t Try to append new linked ids to the global set ...", end = '')
                 self.all_linked_ids = self.all_linked_ids.union(self.get_all_linked_ids())
                 print(" Ok\n\t\tTry to clear objects for next iteration ...", end = '')
@@ -238,9 +239,7 @@ class Elink_ressource_creator:
         self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
         self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
         print(" Ok\n Export all linked ids ...", end = '')
-        for linked_id in self.all_linked_ids:
-            f_all_linked_ids.write("%s\n" %(linked_id))
+        with open("additional_files/all_linked_ids.txt", 'a') as f_all_linked_ids:
+            for linked_id in self.all_linked_ids:
+                f_all_linked_ids.write("%s\n" %(linked_id))
         print(" Ok\n End !\n", end = '')
-        f_success.close()
-        f_append_failure.close()
-        f_request_failure.close()
