@@ -34,6 +34,7 @@ class Elink_ressource_creator:
     def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces):       
         self.dbfrom = dbfrom
         self.db = db
+        self.file_index = 1
         self.namespaces = namespaces
         self.ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
         self.ressource_version_endpoint = Database_ressource_version(ressource = ressource_name + "_endpoints", version = version)
@@ -45,6 +46,7 @@ class Elink_ressource_creator:
         self.g_linked_id = self.ressource_version.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.primary_predicate[0]], namespace_dict = self.namespaces)
         self.g_linked_id_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.secondary_predicate[0], self.ns_endpoint[0], "obo", "dcterms"], namespace_dict = self.namespaces)
         self.append_failure = list()
+        self.request_failure = list()
         self.available_linked_ids = 0
         self.all_linked_ids = set()
         self.n_subjects_g_linked_id = 0
@@ -142,7 +144,28 @@ class Elink_ressource_creator:
         self.append_failure = list()
         self.available_linked_ids = 0
     
-    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, uri_targeted_ressources):
+    def export_ressource_metatdata(self, out_dir, uri_targeted_ressources):
+        path_out_1 = out_dir + self.ressource_version.ressource + "/" + self.ressource_version.version + "/"
+        path_out_2 = out_dir + self.ressource_version_endpoint.ressource + "/" + self.ressource_version_endpoint.version + "/"
+        # On ajoute les infos pour la première ressource:
+        self.ressource_version.add_version_attribute(RDF["type"], VOID["Linkset"])
+        for uri_targeted_ressource in uri_targeted_ressources:
+            self.ressource_version.add_version_attribute(VOID["target"], uri_targeted_ressource)
+        self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
+        self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " RDF triples"))
+        # On ajoute les infos pour la seconde ressource, les endpoint:
+        self.ressource_version_endpoint.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains additionnal informations describing relations between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
+        self.ressource_version_endpoint.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " endpoint RDF triples"))
+        # On exporte le graph des metadata :
+        print(" Export version graph with metadata ...\n", end = '')
+        self.ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id, datatype=XSD.long ))
+        self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
+        self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
+        self.ressource_version_endpoint.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id_endpoint, datatype=XSD.long ))
+        self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
+        self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
+    
+    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
@@ -156,17 +179,9 @@ class Elink_ressource_creator:
         add_files_path = "additional_files/" + self.ressource_version.version + "/"
         if not os.path.exists(add_files_path):
             os.makedirs(add_files_path)
-        # On réinitialise le fichier request failure :
+        # On réinitialise le fichier request failure et l'attribut :
         open(add_files_path + "linking_ids_request_failed.txt", 'w').close()
-        # On ajoute les infos pour la première ressource:
-        self.ressource_version.add_version_attribute(RDF["type"], VOID["Linkset"])
-        for uri_targeted_ressource in uri_targeted_ressources:
-            self.ressource_version.add_version_attribute(VOID["target"], uri_targeted_ressource)
-        self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
-        self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " RDF triples"))
-        # On ajoute les infos pour la seconde ressource, les endpoint:
-        self.ressource_version_endpoint.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains additionnal informations describing relations between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
-        self.ressource_version_endpoint.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " endpoint RDF triples"))
+        self.request_failure = list()
         # On prépare les répertoire : 
         path_out_1 = out_dir + self.ressource_version.ressource + "/" + self.ressource_version.version + "/"
         path_out_2 = out_dir + self.ressource_version_endpoint.ressource + "/" + self.ressource_version_endpoint.version + "/"
@@ -176,15 +191,15 @@ class Elink_ressource_creator:
             os.makedirs(path_out_2)
         id_packed_list = [id_list[i * pack_size:(i + 1) * pack_size] for i in range((len(id_list) + pack_size - 1) // pack_size )]
         print("There are %d packed lists" %(len(id_packed_list)))
-        file_index = 1
         # On initialize les deux premières instances des graphs g_linked_id & g_linked_id_endpoint : 
-        g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(file_index), self.ressource_version_endpoint.ressource + "_" + str(file_index)
+        g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(self.file_index), self.ressource_version_endpoint.ressource + "_" + str(self.file_index)
         for index_list in range(0, len(id_packed_list)):
             print("-- Start getting pmids of list %d !\nTry to append compounds ..." %(index_list + 1), end = '')
             # On append les linked_ids: Si false est return c'est qu'il y a eu une erreur dans la requête, sinon on continue
             test_append = self.append_linked_ids(id_packed_list[index_list], query_builder)
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
+                self.request_failure.extend(id_packed_list[index_list])
                 with open(add_files_path + "linking_ids_request_failed.txt", 'a') as f_request_failure:
                     for id_fail in id_packed_list[index_list]:
                         f_request_failure.write("%s\n" %(id_fail))
@@ -224,21 +239,12 @@ class Elink_ressource_creator:
                 print(" Ok\n\t\tTry to clear objects for next iteration ...", end = '')
                 # On vide les graphs et les objects : 
                 self.clean()
+                # On incrémente le fichier :
+                self.file_index += 1
                 if index_list != len(id_packed_list) - 1:
                     print(" Ok\n\t\tTry to create new graphs ...", end = '')
-                    # On incrémente le fichier :
-                    file_index += 1
                     # On créée deux nouveaux graphs :
-                    g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(file_index), self.ressource_version_endpoint.ressource + "_" + str(file_index)
-                print(" Ok\n", end = '')
-        # On exporte le graph des metadata :
-        print(" Export version graph with metadata ...", end = '')
-        self.ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id, datatype=XSD.long ))
-        self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
-        self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
-        self.ressource_version_endpoint.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id_endpoint, datatype=XSD.long ))
-        self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
-        self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
+                    g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(self.file_index), self.ressource_version_endpoint.ressource + "_" + str(self.file_index)
         print(" Ok\n Export all linked ids ...", end = '')
         with open(add_files_path + "all_linked_ids.txt", 'a') as f_all_linked_ids:
             for linked_id in self.all_linked_ids:
