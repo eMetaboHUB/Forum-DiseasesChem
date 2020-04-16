@@ -3,6 +3,7 @@ import rdflib
 import numpy
 import sys
 import os
+import requests
 from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 from datetime import date
 import xml.etree.ElementTree as ET
@@ -60,6 +61,9 @@ class Elink_ressource_creator:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
         except eutils.EutilsError as fail_request:
             print("Request on Eutils for current compound pack has failed during process, with error name: %s \n -- Compound cids is added to request_failure list" % (fail_request))
+            return False
+        except (ValueError, requests.exceptions.RequestException) as e:
+            print("There was an request error: %s \n-- Compound cids is added to request_failure list" %(e))
             return False
         
         root = ET.fromstring(response)
