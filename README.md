@@ -11,69 +11,79 @@ This repository contains some usefull methods to provides links between PubChem 
 
 ![**Description of the versioning process**](SchemaVersioningRDF.png)
 
--   **The Ensemble_pccompound object:** 
+-   **The Elink_ressource_creator object:** 
 
-This objects provide a way to fetch the pmids associated to a list of PubChem compounds (CID). Two ressources are linked to this object: 
-- CID_PMID: is the ressource referencing all the cid - pmids associated using the cito:isDiscussedBy predicate.
-- CID_PMID_enpoint: is the ressources referencing all the additionnal information linked to each cid-pmid associations such as contributors
-
+From a set of Entrez identifiers from a NCBI Entrez database (such as *Pubmed*, *pccomound*, etc ...), named *linking identifiers*, this objects provide a way to extract all associations between those Entrez identifiers and others Entrez identifiers, named *linked identifiers*, from an other NCBI Entrez database, using the **Elink** function from **Eutils** 
 ```python
-Ensemble_pccompound()
+Elink_ressource_creator(ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces)
 ``` 
-Allow to create an empty Ensemble_pccompound object. Once this object is created, all the selected CID can integrated to this object using the *append_pccompound* method.
+- ```ressource_name```: The ressource name 
+- ```version```: The ressource version. If None, date is used
+- ```dbfrom```: The NCBI Entrez database for *linking identifiers*
+- ```db```: The NCBI Entrez database for *linked identifiers*
+- ```ns_linking_id```: a tuple representing namespace name and associated prefix (if one should be added next before the id) for *linking identifiers*
+- ```ns_linked_id```: a tuple representing namespace name and associated prefix (if one should be added next before the id) for *linked identifiers*
+- ```ns_endpoint```: a tuple representing namespace name and associated prefix (if one should be added next before the id) for endpoints ids
+- ```primary_predicate```: a tuple representing the primary predicate with namespace name and predicate name, that will be used to illutrate the relation between linking ids and linked ids
+- ```secondary_predicate```: a tuple representing the secondary predicate with namespace name and predicate name, that will be used to illutrate the additionnal relation between linking ids and linked ids in the endpoint graph
+- ```namespaces```: a dict containing namespace names as keys and associated rdflib.Namespace() objects as values
+
+Allow to create an empty Elink_ressource_creator object. Once this object is created, all the selected *linking identifiers* can be added to this object using the *append_linked_ids* method.
 
 ```python
-Ensemble_pccompound.append_pccompound(cid, query_builder)
+Elink_ressource_creator.append_linked_ids(id_pack, query_builder)
 ```
-- ```cid``` : a cid (PubChem compound CID ) or a list of CID to append to the Ensemble_pccompound object. Ex: 6036 for Galactose
+- ```id_pack``` : a list of *linking identifiers* to add to the Elink_ressource_creator object.
 - ```query_builder``` : a Eutils QueryService used to request to NCBI server, whcih can be created as :
 To build a Eutils QueryService, the following commands may be used :
 ```python
     apiKey = "0ddb3479f5079f21272578dc6e040278a508"
-    query_builder = eutils.QueryService(cache = False, default_args ={'retmax': 100000, 'retmode': 'xml', 'usehistory': 'y'}, api_key = apiKey)
+    query_builder = eutils.QueryService(cache = False,
+                                    default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'y'},
+                                    api_key = apiKey)
 ```    
 The Api_key can be found on the NCBI account.
-When an PubChem CID (or a list) is append to the Ensemble_pccompound objects, a *Eutils* (*Elink* function) request is send to get all the pmids associated to the current cid. If the request failed (serveur error, bad request, ...) concerned cids the function return False. However, if no literature is associated to the cid, it's added to the append_failure attribute.
-A cid-pmid association is describe with the contributor associated to this association. Contributors represent the three main sources of litterature annotation in the PubChem database: *NLM Mesh Curated association*, *Depositor provided association* and *Publisher provided association.* This information is reprsented in the endpoints files. Once all the selected CID have been added by the ```append_pccompound``` method, results can be exported. The *append_pccompound* is so used to fill the pccompound_list attribute with literature association from input cids.
+When an *linking identifier* is added to the Elink_ressource_creator object, a *Eutils* (*Elink* function) request is send to get all the *linked identifiers* associated to the current *linking identifier*. If the request failed (serveur error, bad request, ...) concerned *linking identifiers* are writed in a *linking_ids_request_failed* file, and the function return False.
+However, if no literature is associated to the *linking identifier*, it's added to the *linking_ids_without_linked_ids* file.
+A *linking identifier***-***linked identifiers* association is describe with the contributor associated to this association. Contributors represent the *link names* associated to the *Elink* results. 
+This information is represented in the endpoints files. Once all the selected *linking identifiers* have been added by the ```append_linked_ids``` method, results can be exported.
 
-```python
-Ensemble_pccompound.get_all_pmids()
-```
-Return union of all the pmids fetched for all the pmids appened to the Ensemble_pccompound object by extracting them from the pccompound_list attribute.
-```python
-Ensemble_pccompound.get_all_cids()
-```
-Return union of all the pmids fetched for all the cid appened to the Ensemble_pccompound object by extracting them from the pccompound_list attribute.
+This function can be used to retrive links for a few number of *linking identifiers*, but does not create RDF triples from this information. This step should be done after using RDFlib serializer applied to the *g_linked_id* and *g_linked_id_endpoint* graph attributes. 
+To formalize the *linking identifier***-***linked identifiers* associations in a Knowledge-Graph way, the function *create_CID_PMID_ressource* should be used.
 
-This function can be used to retrive litterature association for a few number of cids, but does not create RDF triples from this information. To formalize the cid - pmid associations in a Knowledge-Graph way, the function *create_CID_PMID_ressource* should be used.
-
-Also, if there is a large numnber of cid, the amount of retrived pmids may be really huge and to avoid overload the memory the function create_CID_PMID_ressource should also be used.
+Also, if there is a large numnber of cid, the amount of retrived pmids may be really huge and to avoid overload the memory the function *create_ressource* should also be used.
 
 
 ```python
-create_CID_PMID_ressource(self, namespace_dict, out_dir, version, cid_list, pack_size, query_builder, max_size)
+create_CID_PMID_ressource(out_dir, id_list, pack_size, query_builder, max_size)
 ```
-This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and named graph associated to from information contained in the object. If there was a server error during the fetching process, *append_pccompound* returned False, all the concerned cid are exported to the *cid_request_failed* file. For cid which don't have associated literature, those are exported n the *cids_without_literature* file. Finally on cid for which literature was associated are exported in the *successful_cids* file. All the feteched cid-pmid association are then exported in knowledge graphs at *out_dir*.
-  - *CID_PMID* ressource represente all the cid - pmid association describre by the attribute cito:isDiscussedBy. The namespace of cids and pmids are those used in the PubChem RDF compound:http://rdf.ncbi.nlm.nih.gov/pubchem/compound/ and reference:http://rdf.ncbi.nlm.nih.gov/pubchem/reference/.
-  - *CID_PMID_endpoint* ressource represent a description of the previous cid - pmid associations described in the *CID_PMID* ressource by adding information of contributors of this association *NLM Mesh Curated association*, *Depositor provided association* and *Publisher provided association.*.
+This function is used to create a new version of the *ressource* and *ressource_endpoints*, by creating all associated named graphs. Also, all *linking identifiers* for which *linked identifiers* was associated are exported in the *successful_linking_ids* file. All the feteched *linking identifier***-***linked identifiers* association are then exported in knowledge graphs at *out_dir*.
 
--   ```namespace_dict```: dict containing all the used namespaces.
 -   ```out_dir```: a path to an directory to write output files.
--   ```version```: the version name. If None, the date will be choose by default.
--   ```cid_list```: a the cid list
--   ```pack_size```: the cid packed size which will be send to the NCBI server. Pack size of 500 or 1000 can really improve computation time, but, there is a limit in the number of pmid that can be extracted at the same time. If selected pmids have a lot of associated literature, prefer small pack size to be sure to get all the information.
+-   ```id_list```: a list of *linking identifiers*
+-   ```pack_size```: the *linking identifier* packed size which will be send to the NCBI server. Pack size of 500 or 1000 can really improve computation time, but, there is a limit in the number of *linked identifiers* that can be extracted at the same time. If selected *linked identifiers* have a lot of associated, prefer small pack size to be sure to get all the information.
 -   ```query_builder```: a Eutils QueryService used to request to NCBI server
--   ```max_size```: the maximal number of cid - pmids associations in a RDF file. Formalize a huge amount of association in RDF can be really time and memory consuming. Keep also in mind that there will be 3 triples to build in *CID_PMID_endpoint* for one in *CID_PMID*
-
-This function will created two types of files for each ressource:
-
--   ```ressource_info_*``` files containing all the information associated to the new version of the ressources and the associated named-graphs
--   ```cid_pmid{_endpoint}.trig``` files containing all the triples in an associated named graph
+-   ```max_size```: the maximal number of *linking identifier***-***linked identifiers* associations in a RDF file. Formalize a huge amount of association in RDF can be really time and memory consuming. Keep also in mind that there will be 3 triples to build in *ressource_endpoint* graph for one in *ressource* graph.
+-	```uri_targeted_ressource```: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
 
 
 So as exemple, to get all the literature association of cids contains in the SBML graph:
 
 ```python
+
+namespaces = {
+    "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
+    "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
+    "reference": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"),
+    "endpoint":	rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/"),
+    "obo": rdflib.Namespace("http://purl.obolibrary.org/obo/"),
+    "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
+    "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
+    "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
+    "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
+    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core")
+}
+
 apiKey = "0ddb3479f5079f21272578dc6e040278a508"
 query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'y'},
@@ -83,10 +93,20 @@ smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonym
 # get CID list :
 cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # intialize object :
-sbml_cid_pmid = Ensemble_pccompound()
-# Fetch cid - pmid association : 
-sbml_cid_pmid.create_CID_PMID_ressource(namespaces, "data/", "SMBL_version", cid_list, 500, query_builder, 5000000)
-sbml_all_pmids = sbml_cid_pmid.all_pmids
+sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID", 
+                                        version = "SMBL_2020-15-04", 
+                                        dbfrom = "pccompound",
+                                        db = "pubmed",
+                                        ns_linking_id = ("compound", "CID"),
+                                        ns_linked_id = ("reference", "PMID"),
+                                        ns_endpoint = ("endpoint", ""),
+                                        primary_predicate = ("cito", "isDiscussedBy"),
+                                        secondary_predicate = ("cito", "citeAsDataSource"),
+                                        namespaces = namespaces)
+# Launch fetching
+sbml_cid_pmid.create_ressource("data/", cid_list, 1000, query_builder, 5000000)
+# get all pmids :
+sbml_all_pmids = sbml_cid_pmid.all_linked_ids
 ```
 * * *
 

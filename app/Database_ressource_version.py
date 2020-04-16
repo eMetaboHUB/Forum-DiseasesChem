@@ -2,7 +2,7 @@ import rdflib
 import sys
 import re
 from datetime import date
-from rdflib.namespace import XSD, DCTERMS, RDF
+from rdflib.namespace import XSD, DCTERMS, RDF, VOID
 
 class Database_ressource_version:
     """This class represent a ressource version in the database, represented in a RDF model. It is composed of:
@@ -22,6 +22,7 @@ class Database_ressource_version:
         """
         g_v = rdflib.Graph()
         g_v.bind("dcterms", rdflib.Namespace("http://purl.org/dc/terms/"))
+        g_v.bind("void", rdflib.Namespace("http://rdfs.org/ns/void#"))
         # Si une version a été donnée on l'utilise sinon par défault on met la date:
         if not self.version:
             self.version = date.today().isoformat()
@@ -62,3 +63,6 @@ class Database_ressource_version:
         for namespace in namespace_list:
             if namespace not in [ns[0] for ns in self.version_graph.namespace_manager.namespaces()]:
                 self.version_graph.bind(namespace, namespace_dict[namespace])
+    
+    def add_DataDump(self, graph_file):
+        self.version_graph.add((self.uri_version, VOID["dataDump"], rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version + "/" + graph_file)))
