@@ -153,11 +153,15 @@ class Elink_ressource_creator:
         - uri_targeted_ressource: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
         """
         # Création des fichiers de sorties :
-        if not os.path.exists("additional_files"):
-            os.makedirs("additional_files")
-        else:
-            os.system("rm additional_files/*")
+        add_files_path = "additional_files/" + self.ressource_version.version + "/"
+        if not os.path.exists(add_files_path):
+            os.makedirs(add_files_path)
+        # On réinitialise le fichier request failure :
+        open(add_files_path + "linking_ids_request_failed.txt", 'w').close()
         # On ajoute les infos pour la première ressource:
+        self.ressource_version.add_version_attribute(RDF["type"], VOID["Linkset"])
+        for uri_targeted_ressource in uri_targeted_ressources:
+            self.ressource_version.add_version_attribute(VOID["target"], uri_targeted_ressource)
         self.ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providind link between Entrez Ids from the NCBI database " + self.dbfrom + " to the " + self.db + " database"))
         self.ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(self.dbfrom + " to " + self.db + " RDF triples"))
         # On ajoute les infos pour la seconde ressource, les endpoint:
@@ -181,7 +185,7 @@ class Elink_ressource_creator:
             test_append = self.append_linked_ids(id_packed_list[index_list], query_builder)
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
-                with open("additional_files/linking_ids_request_failed.txt", 'a') as f_request_failure:
+                with open(add_files_path + "linking_ids_request_failed.txt", 'a') as f_request_failure:
                     for id_fail in id_packed_list[index_list]:
                         f_request_failure.write("%s\n" %(id_fail))
                 continue
@@ -206,13 +210,13 @@ class Elink_ressource_creator:
                 # On zip :
                 os.system("gzip " + path_out_1 + g_linked_id_name + ".trig" + " " + path_out_2 + g_linked_id_endpoint_name + ".trig")
                 # On export les cid successful :
-                print(" Ok\n\t\tTry tp export successful linking ids in additional_files/successful_linking_ids.txt ...", end = '')
-                with open("additional_files/successful_linking_ids.txt", 'a') as f_success:
+                print(" Ok\n\t\tTry tp export successful linking ids in " + add_files_path + "successful_linking_ids.txt ...", end = '')
+                with open(add_files_path + "successful_linking_ids.txt", 'a') as f_success:
                     for success_id in self.get_all_linking_ids():
                         f_success.write("%s\n" %(success_id))
-                print(" Ok\n\t\tTry tp export linking ids without linked_ids in additional_files/linking_ids_without_linked_ids.txt ...", end = '')
+                print(" Ok\n\t\tTry tp export linking ids without linked_ids in " + add_files_path + "/linking_ids_without_linked_ids.txt ...", end = '')
                 # On export les append failures :
-                with open("additional_files/linking_ids_without_linked_ids.txt", 'a') as f_append_failure:
+                with open(add_files_path + "linking_ids_without_linked_ids.txt", 'a') as f_append_failure:
                     for append_failure_id in self.append_failure:
                         f_append_failure.write("%s\n" %(append_failure_id))
                 print(" Ok\n\t\t Try to append new linked ids to the global set ...", end = '')
@@ -229,9 +233,6 @@ class Elink_ressource_creator:
                 print(" Ok\n", end = '')
         # On exporte le graph des metadata :
         print(" Export version graph with metadata ...", end = '')
-        self.ressource_version.add_version_attribute(RDF["type"], VOID["Linkset"])
-        for uri_targeted_ressource in uri_targeted_ressources:
-            self.ressource_version.add_version_attribute(VOID["target"], uri_targeted_ressource)
         self.ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id, datatype=XSD.long ))
         self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
         self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
@@ -239,7 +240,7 @@ class Elink_ressource_creator:
         self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
         self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
         print(" Ok\n Export all linked ids ...", end = '')
-        with open("additional_files/all_linked_ids.txt", 'a') as f_all_linked_ids:
+        with open(add_files_path + "all_linked_ids.txt", 'a') as f_all_linked_ids:
             for linked_id in self.all_linked_ids:
                 f_all_linked_ids.write("%s\n" %(linked_id))
         print(" Ok\n End !\n", end = '')
