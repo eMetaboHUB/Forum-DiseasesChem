@@ -179,9 +179,6 @@ class Elink_ressource_creator:
         add_files_path = "additional_files/" + self.ressource_version.version + "/"
         if not os.path.exists(add_files_path):
             os.makedirs(add_files_path)
-        # On réinitialise le fichier request failure et l'attribut :
-        open(add_files_path + "linking_ids_request_failed.txt", 'w').close()
-        self.request_failure = list()
         # On prépare les répertoire : 
         path_out_1 = out_dir + self.ressource_version.ressource + "/" + self.ressource_version.version + "/"
         path_out_2 = out_dir + self.ressource_version_endpoint.ressource + "/" + self.ressource_version_endpoint.version + "/"
@@ -191,6 +188,9 @@ class Elink_ressource_creator:
             os.makedirs(path_out_2)
         id_packed_list = [id_list[i * pack_size:(i + 1) * pack_size] for i in range((len(id_list) + pack_size - 1) // pack_size )]
         print("There are %d packed lists" %(len(id_packed_list)))
+        # On réinitialise le fichier request failure et l'attribut (après avoir init packed_list au cas où on est sur un run à partir de self.request_failure):
+        open(add_files_path + "linking_ids_request_failed.txt", 'w').close()
+        self.request_failure = list()
         # On initialize les deux premières instances des graphs g_linked_id & g_linked_id_endpoint : 
         g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(self.file_index), self.ressource_version_endpoint.ressource + "_" + str(self.file_index)
         for index_list in range(0, len(id_packed_list)):
