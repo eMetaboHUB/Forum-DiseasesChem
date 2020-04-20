@@ -162,6 +162,21 @@ def create_graph(path_to_graph, ressources_ids, ressource_uris, namespaces, path
     ressource_version.add_version_attribute(namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
     ressource_version.version_graph.serialize(destination=path_out + "ressource_info_ids_correspondance" + ressource_version.version + ".ttl", format = 'turtle')
 
+def import_config(config_file):
+    ressource_uris = dict()
+    ressources_ids = dict()
+    graph_original_uri_prefix = dict()
+    with open(config_file, "r") as config:
+        for l in config:
+            columns = l.split("\t")
+            ressources_ids[str(columns[0])] = str(columns[1])
+            ressource_uris[str(columns[0])] = str(columns[2]).split(',')
+            # Use rstrip because it's the last column
+            graph_original_uri_prefix[str(columns[0])] = str(columns[3]).rstrip()
+    print(ressource_uris)
+    print(ressources_ids)
+    print(graph_original_uri_prefix)
+            
 
 def create_annotation_graph_version(path_to_annot_graphs_dir, version):
     """
