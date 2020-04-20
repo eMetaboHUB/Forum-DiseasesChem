@@ -246,7 +246,8 @@ class Elink_ressource_creator:
                     # On créée deux nouveaux graphs :
                     g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(self.file_index), self.ressource_version_endpoint.ressource + "_" + str(self.file_index)
         print(" Ok\n Export all linked ids ...", end = '')
-        with open(add_files_path + "all_linked_ids.txt", 'a') as f_all_linked_ids:
+        # Use write instead of append ('a') to overwrite the file at each new callon the function because only union of linked_ids shouls be mapped, and with append it may have duplicates if there are supplementary trys for request failures
+        with open(add_files_path + "all_linked_ids.txt", 'w') as f_all_linked_ids:
             for linked_id in self.all_linked_ids:
                 f_all_linked_ids.write("%s\n" %(linked_id))
         print(" Ok\n End !\n", end = '')

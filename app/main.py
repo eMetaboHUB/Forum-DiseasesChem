@@ -55,7 +55,7 @@ feature_list = ["_Canonical_SMILES",
 apiKey = "0ddb3479f5079f21272578dc6e040278a508"
 # Building requests
 query_builder = eutils.QueryService(cache = False,
-                                    default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'y'},
+                                    default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
                                     api_key = apiKey)
 # On crée le graph SBML mergé :
 smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
@@ -95,12 +95,20 @@ pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID",
                                         primary_predicate = ("cito", "discusses"),
                                         secondary_predicate = ("cito", "isCitedAsDataSourceBy"),
                                         namespaces = namespaces)
+
 pmid_cid.create_ressource("data/", pmid_list, 10000, query_builder, 5000000)
+
 # while there are some ids for which the request fail causes of external errors, retry :
 while(len(pmid_cid.request_failure) != 0):
     pmid_cid.create_ressource("data/", pmid_cid.request_failure, 10000, query_builder, 5000000)
+
 # Export ressource graph :
 pmid_cid.export_ressource_metatdata("data/", [rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"), rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06")])
+
+all_new_pmids = list()
+with open("additional_files/2020-04-18/successful_linking_ids.txt", "r") as success_pmids:
+    for pmid in success_pmids:
+        all_new_pmids.append(pmid.rstrip())
 
 # === End === #
 
@@ -131,30 +139,34 @@ requests_failed = REST_ful_bulk_download(graph = 'reference', predicate = 'fabio
 
 
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/reference/2020-03-06/", 
-                  all_ids = sbml_all_pmids,
+                  all_ids = all_new_pmids,
                   prefix = "reference:PMID", 
                   out_dir = "data/PubChem_References/",
                   input_ressource_file = "data/PubChem_References/reference/ressource_info_reference_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/reference/2020-03-06"),
                   filtered_ressource_name = "referenceFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/CID_FROM_CHEBI"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "CID_FROM_CHEBI",
+                  version = None,
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySubjectTerm/2020-03-20/",
-                  all_ids = sbml_all_pmids,
+                  all_ids = all_new_pmids,
                   prefix = "reference:PMID",
                   out_dir = "data/PubChem_References/",
                   input_ressource_file = "data/PubChem_References/PrimarySubjectTerm/ressource_info_PrimarySubjectTerm_2020-03-20.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PrimarySubjectTerm/2020-03-20"),
                   filtered_ressource_name = "PrimarySubjectTermFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "TEST",
+                  version = None,
                   separator = ' ')
+
+
+
+
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
                   all_ids = cid_list,
