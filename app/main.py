@@ -7,6 +7,7 @@ from parse_pubchem_RDF import parse_pubchem_RDF
 from Request_RESTful_PubChem import REST_ful_bulk_download
 from download_functions import download_MeSH, download_pubChem
 from process_SMBL import extract_ids_from_SMBL_by_URI_prefix, merge_SMBL_and_annot_graphs
+from get_info_from_UniChem import Id_mapping
 # The Api_key can be found on the NCBI account.
 # Creating the directory of all namespaces
 namespaces = {
@@ -19,7 +20,7 @@ namespaces = {
     "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
     "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
     "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
-    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core")
+    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 }
 
 # Listes des features Compounds - Descriptors que l'on souhaite récupérées : 
@@ -193,3 +194,10 @@ parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_ma
                   namespace_dict = namespaces,
                   version = "SMBL_2020-04-06",
                   separator = '\t')
+
+
+## Ids - Mapping ##
+map_ids = Id_mapping("TEST", namespaces)
+map_ids.import_config("data/UniChem/config.csv")
+map_ids.get_graph_ids_set("data/HumanGEM/HumanGEM.ttl")
+map_ids.create_graph_from_UniChem("data/UniChem/")
