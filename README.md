@@ -384,7 +384,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	 GRAPH <http://database/ressources/annotation_graph/version/synonyms> { ?specie bqbiol:is ?ref_syn . }
+	 GRAPH <http://database/ressources/annotation_graph/version> { ?specie bqbiol:is ?ref_syn . }
 }where {
 	?specie a SBMLrdf:Species ;
 		bqbiol:is ?ref .
@@ -406,7 +406,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	GRAPH <http://database/ressources/annotation_graph/version/infered_uris> { ?specie bqbiol:is ?otherRef . }
+	GRAPH <http://database/ressources/annotation_graph/version> { ?specie bqbiol:is ?otherRef . }
 }where {
 		?specie a SBMLrdf:Species ;
 			bqbiol:is ?ref .
@@ -433,7 +433,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	GRAPH <http://database/ressources/annotation_graph/version/infered_uris_synonyms> { ?specie bqbiol:is ?otherRef_syn . }
+	GRAPH <http://database/ressources/annotation_graph/version> { ?specie bqbiol:is ?otherRef_syn . }
 }where {
 	?otherRef skos:exactMatch ?otherRef_syn option(t_distinct) .
 	FILTER (
