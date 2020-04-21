@@ -16,6 +16,8 @@ class Id_mapping:
         self.ressources_ids = dict()
         self.graph_original_uri_prefix = dict()
         self.intra_ids_dict = dict()
+        self.uri_MetaNetX = dict()
+        self.g_metaNetX = None
         self.namespaces = namespaces
         self.version = version
     
@@ -132,7 +134,7 @@ class Id_mapping:
         ressource_version_UniChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from UniChem"))
         ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_UniChem.version_graph.serialize(destination=path_out + "ressource_info_ids_correspondance" + ressource_version_UniChem.version + ".ttl", format = 'turtle')
+        ressource_version_UniChem.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_UniChem" + ressource_version_UniChem.version + ".ttl", format = 'turtle')
     
     def export_intra_eq(self, path_out):
         ressource_version_intra = Database_ressource_version(ressource = "ressources_id_mapping/Intra", version = self.version)
@@ -155,6 +157,63 @@ class Id_mapping:
                 columns = l.split("\t")
                 self.ressources_ids[str(columns[0])] = str(columns[1])
                 self.ressource_uris[str(columns[0])] = str(columns[2]).split(',')
+                self.graph_original_uri_prefix[str(columns[0])] = str(columns[3])
                 # Use rstrip because it's the last column
-                self.graph_original_uri_prefix[str(columns[0])] = str(columns[3]).rstrip()
+                self.uri_MetaNetX[str(columns[0])] = str(columns[4]).rstrip()
         self.intra_ids_dict = {key: set() for key in self.ressource_uris.keys() if len(self.ressource_uris[key]) > 1 }
+    
+    def get_mapping_from_MetanetX(self, graph_metaNetX, ressource):
+        requested_uri = self.uri_MetaNetX[ressource]
+        metaNetX_prefix = "https://rdf.metanetx.org/chem/"
+        query = graph_metaNetX.query(
+        """
+        SELECT (strafter(STR(?metabolite),\"""" + metaNetX_prefix + """\") as ?metaNetX_ids) (strafter(STR(?xref),\"""" + requested_uri + """\") as ?ressource_ids)
+        WHERE {
+            ?metabolite a mnx:CHEM .
+            ?metabolite mnx:chemXref ?xref
+            FILTER(STRSTARTS(STR(?xref), \"""" + requested_uri + """\"))
+        }
+        """)
+        metaNetX_ids = [id[0].toPython() for id in query]
+        ressource_ids = [id[1].toPython() for id in query]
+        return metaNetX_ids, ressource_ids
+    
+    def create_graph_from_MetaNetX(self, graph_metaNetX, path_out):
+        ressource_version_MetaNetX = Database_ressource_version(ressource = "ressources_id_mapping/MetaNetX", version = self.version)
+        n_triples = 0
+        subjects = set()
+        path_out = path_out + ressource_version_MetaNetX.version + "/"
+        if not os.path.exists(path_out):
+            os.makedirs(path_out)
+        selected_ressource = [r for r in self.uri_MetaNetX.keys() if len(self.uri_MetaNetX[r]) > 0]
+        for ressource in selected_ressource:
+            print("Treating ressource: " + ressource + " ...")
+            g_name = ("MetaNetX_" + ressource)
+            current_graph = ressource_version_MetaNetX.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
+            metaNetX_ids, ressource_ids = self.get_mapping_from_MetanetX(graph_metaNetX, ressource)
+            if metaNetX_ids is None or ressource_ids is None:
+                print("Impossible to process information for identifiers equivalence between MetaNetX and " + ressource + "\n")
+                continue
+            n_ids = len(metaNetX_ids)
+            for id_index in range(n_ids):
+                #  On écrit les équivalence inter-ressource seulement pour une URI de chaque ressource, le liens avec les autres se fera par le biais des équivalence intra-ressource
+                all_uris = [rdflib.URIRef(self.ressource_uris["metanetx"][0] + metaNetX_ids[id_index])] + [rdflib.URIRef(self.ressource_uris[ressource][0] + ressource_ids[id_index])]
+                for current_uri, next_uri in zip(all_uris, all_uris[1:]):
+                    current_graph.add((current_uri, self.namespaces["skos"]['closeMatch'], next_uri))
+            # On écrit le graph :
+            ressource_version_MetaNetX.add_DataDump(g_name + ".trig")
+            current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
+            n_triples += len(current_graph)
+            subjects = subjects.union(set([s for s in current_graph.subjects()]))
+            # Si il y a plusieurs URI pour la ressource, il faut préparer les identifiants pour les correspondances intra-ressource
+            if len(self.ressource_uris["metanetx"]) > 1:
+                self.intra_ids_dict["metanetx"] = self.intra_ids_dict["metanetx"].union(metaNetX_ids)
+            if len(self.ressource_uris[ressource]) > 1:
+                self.intra_ids_dict[ressource] = self.intra_ids_dict[ressource].union(ressource_ids)
+            # On annote le graph :
+        ressource_version_MetaNetX.add_version_namespaces(["void"], self.namespaces)
+        ressource_version_MetaNetX.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from MetaNetX"))
+        ressource_version_MetaNetX.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from MetaNetX"))
+        ressource_version_MetaNetX.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
+        ressource_version_MetaNetX.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
+        ressource_version_MetaNetX.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_MetaNetX" + ressource_version_MetaNetX.version + ".ttl", format = 'turtle')

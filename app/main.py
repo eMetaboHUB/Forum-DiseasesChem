@@ -201,3 +201,7 @@ map_ids = Id_mapping("TEST", namespaces)
 map_ids.import_config("data/UniChem/config.csv")
 map_ids.get_graph_ids_set("data/HumanGEM/HumanGEM.ttl")
 map_ids.create_graph_from_UniChem("data/UniChem/")
+
+graph_metaNetX = rdflib.Graph()
+graph_metaNetX.parse("data/MetaNetX/metanetx.ttl", format = "turtle")
+map_ids.create_graph_from_MetaNetX(graph_metaNetX, "data/MetaNetX/")
