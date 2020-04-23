@@ -6,8 +6,8 @@ services:
               VIRT_Parameters_NumberOfBuffers: 2800000   # See virtuoso/README.md to adapt value of this line
               VIRT_Parameters_MaxDirtyBuffers: 2000000    # See virtuoso/README.md to adapt value of this line
               VIRT_Parameters_TN_MAX_memory: 4000000000
-              VIRT_SPARQL_ResultSetMaxRows: 100000000
-              VIRT_SPARQL_MaxDataSourceSize: 1000000000
+              VIRT_SPARQL_ResultSetMaxRows: 10000000000
+              VIRT_SPARQL_MaxDataSourceSize: 10000000000
               VIRT_Flags_TN_MAX_memory: 4000000000
               VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
               VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation

@@ -207,6 +207,22 @@ class Id_mapping:
         ressource_ids = [id[1].toPython() for id in query]
         return metaNetX_ids, ressource_ids
     
+    def get_mapping_from_MetanetX_inter_ressource(self, graph_metaNetX, uri_r1, uri_r2):
+        query = graph_metaNetX.query(
+        """    
+        SELECT (strafter(STR(?xref),\"""" + uri_r1 + """\") as ?uri_r1) (strafter(STR(?xref2),\"""" + uri_r2 + """\") as ?uri_r2) 
+        WHERE {
+            ?metabolite a mnx:CHEM .
+            ?metabolite mnx:chemXref ?xref
+            FILTER(STRSTARTS(str(?xref), \"""" + uri_r1 + """\"))
+            ?metabolite mnx:chemXref ?xref2
+            FILTER(STRSTARTS(str(?xref2), \"""" + uri_r2 + """\"))
+        }
+        """)
+        ids_ressource_1 = [id[0].toPython() for id in query]
+        ids_ressource_2 = [id[1].toPython() for id in query]
+        return ids_ressource_1, ids_ressource_2
+    
     def create_graph_from_MetaNetX(self, graph_metaNetX, path_out):
         """
         This function is used to create a graph or uri equivalences between MetaNetX identifiers and other ressources. Equivalence information are fetch from the MetaNetX RDF graph. 
@@ -219,9 +235,10 @@ class Id_mapping:
         path_out = path_out + ressource_version_MetaNetX.version + "/"
         if not os.path.exists(path_out):
             os.makedirs(path_out)
-        selected_ressource = [r for r in self.uri_MetaNetX.keys() if len(self.uri_MetaNetX[r]) > 0]
+        selected_ressource = [r for r in self.uri_MetaNetX.keys() if len(self.uri_MetaNetX[r]) > 0 and r != "metanetx"]
         for ressource in selected_ressource:
-            print("Treating ressource: " + ressource + " ...")
+            # On crée le graph MetaNetX .vs. ressource
+            print("Treating ressource: " + ressource + " with MetaNetX ...")
             g_name = ("MetaNetX_" + ressource)
             current_graph = ressource_version_MetaNetX.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
             metaNetX_ids, ressource_ids = self.get_mapping_from_MetanetX(graph_metaNetX, ressource)
@@ -243,7 +260,31 @@ class Id_mapping:
                 self.intra_ids_dict["metanetx"] = self.intra_ids_dict["metanetx"].union(metaNetX_ids)
             if len(self.ressource_uris[ressource]) > 1:
                 self.intra_ids_dict[ressource] = self.intra_ids_dict[ressource].union(ressource_ids)
-            # On annote le graph :
+        # On crée les graph inter ressource à partir des infos de MetaNetX :
+        print("Creating inter-ressource equivalences from MetaNetX: ")
+        cbn_resource = itertools.combinations(selected_ressource, 2)
+        for ressource_pair in cbn_resource:
+            r1 = ressource_pair[0]
+            r2 = ressource_pair[1]
+            g_name = ("metanetx_" + r1 + "_" + r2)
+            print("Treating : " + r1 + " - " + r2 + " with MetaNetX ...")
+            current_graph = ressource_version_MetaNetX.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
+            # Le WevService semble mal fonctionner ... donc je suis passer par une nouvelle méthode où de download depuis le ftp :
+            ids_r1, ids_r2 = self.get_mapping_from_MetanetX_inter_ressource(graph_metaNetX, self.uri_MetaNetX[r1], self.uri_MetaNetX[r2])
+            if ids_r1 is None or ids_r2 is None:
+                print("Impossible to process information for identifiers equivalence between ressource " + r1 + " and " + r2 + " with MetaNetX\n")
+                continue
+            n_ids = len(ids_r1)
+            for id_index in range(n_ids):
+                #  On écrit les équivalence inter-ressource seulement pour une URI de chaque ressource, le liens avec les autres se fera par le biais des équivalence intra-ressource
+                uri_1, uri_2 = rdflib.URIRef(self.ressource_uris[r1][0] + ids_r1[id_index]), rdflib.URIRef(self.ressource_uris[r2][0] + ids_r2[id_index])
+                current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
+            # On écrit le graph :
+            ressource_version_MetaNetX.add_DataDump(g_name + ".trig")
+            current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
+            n_triples += len(current_graph)
+            subjects = subjects.union(set([s for s in current_graph.subjects()]))
+            # Pas besoin de savoir s'il faut les ajouter dans l'intra-dict, car ils y ont nécéssairement été ajouté par le run MetaNetX .vs. ressource  
         ressource_version_MetaNetX.add_version_namespaces(["void"], self.namespaces)
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from MetaNetX"))

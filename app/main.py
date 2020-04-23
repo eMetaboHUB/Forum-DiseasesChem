@@ -200,7 +200,7 @@ parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_ma
 graph_metaNetX = rdflib.Graph()
 graph_metaNetX.parse("data/MetaNetX/metanetx.ttl", format = "turtle")
 ## Ids - Mapping ##
-map_ids = Id_mapping("TEST", namespaces)
+map_ids = Id_mapping(None, namespaces)
 map_ids.import_config("data/Id_mapping/config.csv")
 map_ids.get_graph_ids_set("data/HumanGEM/HumanGEM.ttl")
 map_ids.create_graph_from_UniChem("data/Id_mapping/UniChem/")
@@ -210,3 +210,4 @@ map_ids.create_graph_from_MetaNetX(graph_metaNetX, "data/Id_mapping/MetaNetX/")
 map_ids.create_graph_from_tab(tab_name = "BiGG", path_tab = "data/Recon3D/ids_table.csv", path_out = "data/Id_mapping/BiGG/")
 
 map_ids.export_intra_eq("data/Id_mapping/Intra/")
+
