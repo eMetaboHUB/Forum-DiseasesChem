@@ -21,25 +21,16 @@ prefix fabio:	<http://purl.org/spar/fabio/>
 prefix owl: <http://www.w3.org/2002/07/owl#> 
 prefix void: <http://rdfs.org/ns/void#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-delete
-{
- GRAPH <http://database/ressources/metab2mesh> { ?id <http://database/ressources/metab2mesh/hasCount> ?count}
-}
-where
-{
-    {
-        select (strafter(STR(?cid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\") as ?CID) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) where {
-            ?cid cito:isDiscussedBy ?pmid .
-            ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
-            ?mesh a meshv:TopicalDescriptor .
-            ?mesh meshv:treeNumber ?tn .
-            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-        }
-        group by ?cid ?mesh
-    } 
-bind(uri(concat(\"http://database/ressources/metab2mesh/\", ?CID, \"_\", ?MESH)) as ?id)
-}
-;
-"'
 
-echo "Need to dump graph"
+select (strafter(STR(?cid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\") as ?CID) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) where {
+    ?cid cito:isDiscussedBy ?pmid .
+    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+    ?mesh a meshv:TopicalDescriptor .
+    ?mesh meshv:treeNumber ?tn .
+    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+}
+group by ?cid ?mesh 
+;
+" > ./dumps/pre_metab2mesh.csv '
+docker exec -t $dockvirtuoso bash -c 'tail -n +10 ./dumps/pre_metab2mesh.csv | head -n -3 > ./dumps/metab2mesh.csv '
+
