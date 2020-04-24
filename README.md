@@ -326,19 +326,14 @@ prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix void: <http://rdfs.org/ns/void#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 
-select (strafter(STR(?cid),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?CID) (strafter(STR(?mesh),"http://id.nlm.nih.gov/mesh/") as ?MESH) (str(?name) as ?MESH_NAME) ?count where {
-  ?mesh rdfs:label ?name .	
-	{
-  select ?cid ?mesh (count(distinct ?pmid) as ?count) where {
+select (strafter(STR(?cid),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?CID) (strafter(STR(?mesh),"http://id.nlm.nih.gov/mesh/") as ?MESH) (count(distinct ?pmid) as ?count) where {
     ?cid cito:isDiscussedBy ?pmid .
     ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
     ?mesh a meshv:TopicalDescriptor .
     ?mesh meshv:treeNumber ?tn .
     FILTER(REGEX(?tn,"(C|A|D|G|B|F|I|J)"))
-    }
-    group by ?cid ?mesh 
-  }
 }
+group by ?cid ?mesh 
 ```
 Quelques explications :
     - Si on découpe la requête en deux partie c'est parce que sinon on ne peut pas groupby ?mesh ?cid et aussi affichier directement le name associé car il ne s'agit pas d'un élément d'aggrégation.
