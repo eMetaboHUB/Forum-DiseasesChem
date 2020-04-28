@@ -300,5 +300,5 @@ data["query"] = prefix + distinct_all_pmids
 count_pmids_res = requests.post(url = url, headers = header, data = data)
 count_pmids = int(count_pmids_res.text.splitlines().pop(1))
 
-test = prepare_data_frame("data/metab2mesh/CID_MESH/res_full.csv", "data/metab2mesh/CID_PMID/res_full.csv", "data/metab2mesh/MESH_PMID/res_full.csv", count_pmids, "data/metab2mesh/res/", 10000)
+df_metab2mesh = prepare_data_frame("data/metab2mesh/CID_MESH/res_full.csv", "data/metab2mesh/CID_PMID/res_full.csv", "data/metab2mesh/MESH_PMID/res_full.csv", count_pmids, "data/metab2mesh/res/", 10000)
 
