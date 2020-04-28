@@ -1,5 +1,6 @@
 import requests
 import os
+import multiprocessing as mp
 
 header = {
     "Content-Type": "application/x-www-form-urlencoded",
@@ -69,59 +70,114 @@ distinct_all_pmids = """
 """
 
 distinct_pmid_by_CID_MeSH = """
-select ?CID ?MeSH ?count
-where {
+select ?CID ?MESH ?count
+where
+{
     {
-    select (strbefore(strafter(STR(?CID_MeSH),\"http://database/ressources/metab2mesh/\"), \"_\") as ?CID) (strafter(STR(?CID_MeSH),\"_\") as ?MeSH) ?count where {
-            ?CID_MeSH <http://database/ressources/metab2mesh/hasCount> ?count
+        select ?CID ?MESH ?count
+        where 
+        {
+                {
+                    select (strafter(STR(?cid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\") as ?CID) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
+                    where {
+                        {
+                            select ?cid where {
+                                {
+                                    select distinct ?cid where {
+                                        ?cid cito:isDiscussedBy ?pmid .
+                                    }
+                                    order by ?cid
+                                }
+                            }
+                            limit %d
+                            offset %d
+                        }
+                        ?cid cito:isDiscussedBy ?pmid .
+                        ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                        ?mesh a meshv:TopicalDescriptor .
+                        ?mesh meshv:treeNumber ?tn .
+                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    }
+                    group by ?cid ?mesh
+                } 
+            bind(uri(concat(\"http://database/ressources/metab2mesh/\", ?CID, \"_\", ?MESH)) as ?id)
         }
-        order by ?CID_MeSH
+        order by ?id
     }
 }
+limit %d
+offset %d
 """
 
 url = "http://localhost:9980/sparql/"
 
 
-def write_request(res, out_path, out_name, n_f, write_header):
-    if res.status_code != 200:
-        print("Request seems to failed !")
-        return False
-    lines = res.text.splitlines()
-    if not write_header:
-        lines.pop(0)
-    with open(out_path + out_name + "_" + str(n_f) + ".csv", "w") as out:
-        for l in lines:
-            out.write(l + "\n")
-    return True
-
-def send_request(url, prefix, str_request, data, header, out_path, out_name, limit):
+def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limit_pack_ids, limit_selected_ids, out_path, n_processes):
+    pool = mp.Pool(processes=n_processes)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    offset = 0
+    # First step is to get the total number of cid: 
+    # Getting the number of CID, we can prepare the pack of cids respecting limit_size
+    n_offset = count_id // limit_pack_ids
+    offset_list = [i * limit_pack_ids for i in range(0, n_offset + 1)]
+    print(offset_list)
+    results = [pool.apply_async(send_query_by_offset, args=(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, 0, out_path)) for offset_pack_ids in offset_list]
+    output = [p.get() for p in results]
+    os.system("cat " + out_path + "* >> " + out_path + "res_full.csv")
+
+def write_request(lines, out_name):
+    if len(lines) > 0:
+        lines.pop(0)
+        with open(out_name, "w") as out:
+            for l in lines:
+                out.write(l + "\n")
+
+def send_query(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids):
+    formated_query = prefix + query % (limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
+    data["query"] = formated_query
+    r = requests.post(url = url, headers = header, data = data)
+    return r
+
+def send_query_by_offset(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, out_path):
+    """
+    In this function limit_pack_ids, offset_pack_ids are fixed and only offset_selected_ids is increased if needed
+    """
     n_f = 1
-    data["query"] = prefix + str_request + "\nLIMIT " + str(limit) + "\nOFFSET " + str(offset)
-    print("Send request at offset: " + str(offset))
-    res = requests.post(url = url, headers = header, data = data)
-    print("write results for file " + out_path + out_name + str(n_f))
-    write_request(res, out_path, out_name, n_f, True)
-    while len(res.text.splitlines()) == limit + 1:
-        offset += limit
+    out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
+    r = send_query(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
+    if r.status_code != 200:
+        with open(out_path + "fail.log", "a") as log_fail:
+            log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
+        # If the first request fail, we fake it succed so the will still check the superior offset
+        test = True
+    else:
+        print("Request succed !")
+        lines = r.text.splitlines()
+        write_request(lines, out_name)
+        test = (len(lines) == limit_selected_ids)
+    while test:
+        print("Limit reach, trying next offset ... ")
+        offset_selected_ids += limit_selected_ids
         n_f += 1
-        data["query"] = prefix + str_request + "\nLIMIT " + str(limit) + "\nOFFSET " + str(offset)
-        print("Send request at offset: " + str(offset))
-        res = requests.post(url = url, headers = header, data = data)
-        print("write results for file " + out_path + out_name + str(n_f))
-        write_request(res, out_path, out_name, n_f, False)
+        out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
+        r = send_query(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
+        if r.status_code != 200:
+            with open(out_path + "fail.log", "a") as log_fail:
+                log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
+            # If the first request fail, we fake it succed so the will still check the superior offset
+            test = True
+            continue
+        lines = r.text.splitlines()
+        write_request(lines, out_name)
+        test = (len(lines) == limit_selected_ids + 1)
+    return True
 
 
-# Extraction des CID - MESH
-print("Extraction des CID - MESH ...")
-send_request(url, prefix, distinct_pmid_by_CID_MeSH, data, header, "../data/metab2mesh/CID_MESH/", "metab2mesh_cid_mesh", 1000000)
-print("Extraction des distincts pmids associés à chaque CID ...")
-send_request(url, prefix, distinct_pmid_by_CID, data, header, "../data/metab2mesh/CID_PMID/", "metab2mesh_cid", 1000000)
-print("Extraction des distincts pmids associés à chaque MeSH ...")
-send_request(url, prefix, distinct_pmid_by_MeSH, data, header, "../data/metab2mesh/MeSH_PMID/", "metab2mesh_mesh", 1000000)
-print("Extraction du nombre totals de distinct PMIDs ...")
-send_request(url, prefix, distinct_all_pmids, data, header, "../data/metab2mesh/PMID/", "metab2mesh_tt", 1000000)
-
+count_cid_query = prefix + """
+    select (count(distinct ?cid) as ?count_CID) where {
+    ?cid cito:isDiscussedBy ?pmid .
+}
+"""
+data["query"] = count_cid_query
+count_cid_res = requests.post(url = url, headers = header, data = data)
+count_cid = int(count_cid_res.text.splitlines().pop(1))
