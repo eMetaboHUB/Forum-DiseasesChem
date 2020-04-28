@@ -278,7 +278,7 @@ CID_PMID: contains all *.trig* RDF files the corresponding metadata *.ttl* files
 During the loading of the service it's important to check the result of the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;* which is checking about import errors.
 the service will be available at *http://localhost:9980/sparql* 
 
-The query which may be used to get all the cid - MeSH diseases assocaition with the number of associated pmid is :  
+The query which may be used to get all the cid - MeSH diseases assocaition with the number of associated pmid is, to test with only CID3036 and CID9554:
 
 ```
 DEFINE input:inference 'schema-inference-rules'
@@ -293,24 +293,47 @@ prefix cito: <http://purl.org/spar/cito/>
 prefix fabio:	<http://purl.org/spar/fabio/> 
 prefix owl: <http://www.w3.org/2002/07/owl#> 
 prefix void: <http://rdfs.org/ns/void#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 
-select ?cid ?mesh ?name ?countdist where {
-	
-	?mesh rdfs:label ?name .	
+select (strafter(STR(?cid),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?CID) (strafter(STR(?mesh),"http://id.nlm.nih.gov/mesh/") as ?MESH) (str(?name) as ?MESH_NAME) ?count where {
+  ?mesh rdfs:label ?name .	
 	{
-		select ?mesh ?cid (count(distinct ?pmid) as ?countdist) where {
-		?cid cito:isDiscussedBy ?pmid .
-		?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
-		?mesh a meshv:TopicalDescriptor .
-		
-		?mesh meshv:treeNumber ?tn .
-		FILTER(REGEX(?tn,"C"))
-		}
-		group by ?mesh ?cid
-		
-	}
-}ORDER BY DESC(?countdist)
+  select ?cid ?mesh (count(distinct ?pmid) as ?count) where {
+    VALUES ?cid { cid:CID9554 cid:CID6036 } .
+    ?cid cito:isDiscussedBy ?pmid .
+    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+    ?mesh a meshv:TopicalDescriptor .
+    ?mesh meshv:treeNumber ?tn .
+    FILTER(REGEX(?tn,"(C|A|D|G|B|F|I|J)"))
+    }
+    group by ?cid ?mesh 
+  }
+}ORDER BY DESC(?count)
+```
+To compute global:
+```
+DEFINE input:inference 'schema-inference-rules'
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+prefix cito: <http://purl.org/spar/cito/>
+prefix fabio:	<http://purl.org/spar/fabio/> 
+prefix owl: <http://www.w3.org/2002/07/owl#> 
+prefix void: <http://rdfs.org/ns/void#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 
+select (strafter(STR(?cid),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?CID) (strafter(STR(?mesh),"http://id.nlm.nih.gov/mesh/") as ?MESH) (count(distinct ?pmid) as ?count) where {
+    ?cid cito:isDiscussedBy ?pmid .
+    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+    ?mesh a meshv:TopicalDescriptor .
+    ?mesh meshv:treeNumber ?tn .
+    FILTER(REGEX(?tn,"(C|A|D|G|B|F|I|J)"))
+}
+group by ?cid ?mesh 
 ```
 Quelques explications :
     - Si on découpe la requête en deux partie c'est parce que sinon on ne peut pas groupby ?mesh ?cid et aussi affichier directement le name associé car il ne s'agit pas d'un élément d'aggrégation.
@@ -384,7 +407,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	 GRAPH <http://database/ressources/annotation_graph/version/synonyms> { ?specie bqbiol:is ?ref_syn . }
+	 GRAPH <http://database/ressources/annotation_graph/version> { ?specie bqbiol:is ?ref_syn . }
 }where {
 	?specie a SBMLrdf:Species ;
 		bqbiol:is ?ref .
@@ -406,7 +429,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	GRAPH <http://database/ressources/annotation_graph/version/infered_uris> { ?specie bqbiol:is ?otherRef . }
+	GRAPH <http://database/ressources/annotation_graph/version> { ?specie bqbiol:is ?otherRef . }
 }where {
 		?specie a SBMLrdf:Species ;
 			bqbiol:is ?ref .
@@ -433,7 +456,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 construct {
-	GRAPH <http://database/ressources/annotation_graph/version/infered_uris_synonyms> { ?specie bqbiol:is ?otherRef_syn . }
+	GRAPH <http://database/ressources/annotation_graph/version> { ?specie bqbiol:is ?otherRef_syn . }
 }where {
 	?otherRef skos:exactMatch ?otherRef_syn option(t_distinct) .
 	FILTER (
