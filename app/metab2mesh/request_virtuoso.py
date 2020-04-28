@@ -164,6 +164,7 @@ url = "http://localhost:9980/sparql/"
 
 
 def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limit_pack_ids, limit_selected_ids, out_path, n_processes):
+    # Initialyze the pool
     pool = mp.Pool(processes=n_processes)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -171,20 +172,26 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
     # Getting the number of CID, we can prepare the pack of cids respecting limit_size
     n_offset = count_id // limit_pack_ids
     offset_list = [i * limit_pack_ids for i in range(0, n_offset + 1)]
-    print(offset_list)
+    # Apply send_query_by_offset in parallel respecting the number of processes fixed
     results = [pool.apply_async(send_query_by_offset, args=(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, 0, out_path)) for offset_pack_ids in offset_list]
     output = [p.get() for p in results]
+    # Ended
+    pool.terminate()
+    pool.join()
+    # Merge files
     os.system("cat " + out_path + "* >> " + out_path + "res_full.csv")
 
 
 def write_request(lines, out_name):
     if len(lines) > 0:
+        # Remove the header 
         lines.pop(0)
         with open(out_name, "w") as out:
             for l in lines:
                 out.write(l + "\n")
 
 def send_query(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids):
+    # Fill the query string with the associated parameters
     formated_query = prefix + query % (limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
     data["query"] = formated_query
     r = requests.post(url = url, headers = header, data = data)
@@ -198,6 +205,7 @@ def send_query_by_offset(query, prefix, header, data, limit_pack_ids, offset_pac
     out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
     # Send the query at defined pack_id offset, and with intial selected_id offset, 0.
     r = send_query(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
+    # Test if request successed
     if r.status_code != 200:
         with open(out_path + "fail.log", "a") as log_fail:
             log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
@@ -205,15 +213,18 @@ def send_query_by_offset(query, prefix, header, data, limit_pack_ids, offset_pac
         test = True
     else:
         print("Request succed !")
+        # Parse and write lines
         lines = r.text.splitlines()
         write_request(lines, out_name)
         # When writing, the header is remove so the number of lines to check is exactly limit_selected_ids
         test = (len(lines) == limit_selected_ids)
     while test:
+        # If the number of lines equals the setted limit, it may reveals that there are remaining lines, increase offset by limit to get them.
         print("Limit reach, trying next offset ... ")
         offset_selected_ids += limit_selected_ids
         n_f += 1
         out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
+        # Send request
         r = send_query(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
         if r.status_code != 200:
             with open(out_path + "fail.log", "a") as log_fail:
@@ -222,11 +233,15 @@ def send_query_by_offset(query, prefix, header, data, limit_pack_ids, offset_pac
             test = True
             continue
         lines = r.text.splitlines()
+        # Export files
         write_request(lines, out_name)
+        # Test if it was the last
         test = (len(lines) == limit_selected_ids)
     return True
 
-def prepare_data_frame(path_to_CID_MESH, path_to_CID_PMID, path_to_MESH_PMID, nbTotal_PMID, out):
+def prepare_data_frame(path_to_CID_MESH, path_to_CID_PMID, path_to_MESH_PMID, nbTotal_PMID, out_path, file_size):
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
     cid_mesh = pd.read_csv(path_to_CID_MESH, sep = ",", names=["CID", "MESH", "COOC"])
     cid_pmid = pd.read_csv(path_to_CID_PMID, sep = ",", names=["CID", "TOTAL_PMID_CID"])
     mesh_pmid = pd.read_csv(path_to_MESH_PMID, sep = ",", names=["MESH", "TOTAL_PMID_MESH"])
@@ -236,7 +251,9 @@ def prepare_data_frame(path_to_CID_MESH, path_to_CID_PMID, path_to_MESH_PMID, nb
     data = data.merge(mesh_pmid, on = "MESH", how = "left")
     # Step 3: Add total number of PMID
     data["TOTAL_PMID"] = nbTotal_PMID
-    data.to_csv(out, index = False)
+    df_size=len(data)
+    for i, start in enumerate(range(0, df_size, file_size)):
+        data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i))
     return data
 
 
@@ -283,5 +300,5 @@ data["query"] = prefix + distinct_all_pmids
 count_pmids_res = requests.post(url = url, headers = header, data = data)
 count_pmids = int(count_pmids_res.text.splitlines().pop(1))
 
-test = prepare_data_frame("data/metab2mesh/CID_MESH/res_full.csv", "data/metab2mesh/CID_PMID/res_full.csv", "data/metab2mesh/MESH_PMID/res_full.csv", count_pmids, "data/metab2mesh/metab2mesh_to_test.csv")
+test = prepare_data_frame("data/metab2mesh/CID_MESH/res_full.csv", "data/metab2mesh/CID_PMID/res_full.csv", "data/metab2mesh/MESH_PMID/res_full.csv", count_pmids, "data/metab2mesh/res/", 10000)
 
