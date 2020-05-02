@@ -167,27 +167,33 @@ select ?id (group_concat(distinct ?str_pmid;separator=\";\") as ?list_pmid)
 where
 {
     {
-        select (concat(strafter(STR(?cid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
-        where {
+        select ?id ?str_pmid
+        where
+        {
             {
-                select ?cid where {
+                select (concat(strafter(STR(?cid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
+                where {
                     {
-                        select distinct ?cid where {
-                            ?cid cito:isDiscussedBy ?pmid .
+                        select ?cid where {
+                            {
+                                select distinct ?cid where {
+                                    ?cid cito:isDiscussedBy ?pmid .
+                                }
+                                order by ?cid
+                            }
                         }
-                        order by ?cid
+                        limit %d
+                        offset %d
                     }
+                    ?cid cito:isDiscussedBy ?pmid .
+                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:treeNumber ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                 }
-                limit %d
-                offset %d
+                group by ?cid ?mesh
             }
-            ?cid cito:isDiscussedBy ?pmid .
-            ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
-            ?mesh a meshv:TopicalDescriptor .
-            ?mesh meshv:treeNumber ?tn .
-            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
         }
-        group by ?cid ?mesh
         order by ?id
     } 
 }
@@ -383,6 +389,7 @@ parallelize_query_by_offset(count_mesh, MESH_name, prefix, header, data, url, 30
 # Extract list of pmids associated to a CID - MeSH co-occurence, separated by ";". WARNING: In the request, the group concat term must be in the last select because of large string can't be handeling by sub-queries ans link to a superior select. 
 # However, to handle offset with large "order by", the order by term must be placed in a sub query, before output all results, but the group_concat muste be in the firs select so ... problem !
 # So the order provided in this query is the same as in the others
+
 parallelize_query_by_offset(count_cid, list_of_distinct_pmid_by_CID_MeSH, prefix, header, data, url, 1000, 1000000, "data/metab2mesh/CID_MESH_PMID_LISt/", 8)
 
 
