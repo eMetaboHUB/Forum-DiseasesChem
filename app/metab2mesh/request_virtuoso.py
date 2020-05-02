@@ -243,7 +243,7 @@ url = "http://localhost:9980/sparql/"
 
 def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limit_pack_ids, limit_selected_ids, out_path, n_processes):
     # Initialyze the pool
-    pool = mp.Pool(processes=n_processes)
+    pool = mp.Pool(processes=n_processes, maxtasksperchild=20)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     # First step is to get the total number of cid: 
@@ -254,7 +254,7 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
     results = [pool.apply_async(send_query_by_offset, args=(query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, 0, out_path)) for offset_pack_ids in offset_list]
     output = [p.get() for p in results]
     # Ended
-    pool.terminate()
+    pool.close()
     pool.join()
     # Merge files
     os.system("cat " + out_path + "* >> " + out_path + "res_full.csv")
@@ -293,9 +293,13 @@ def send_query_by_offset(query, prefix, header, data, limit_pack_ids, offset_pac
         print("Request succed !")
         # Parse and write lines
         lines = r.text.splitlines()
+        # After parsing, r is clean
+        r = None
         write_request(lines, out_name)
         # When writing, the header is remove so the number of lines to check is exactly limit_selected_ids
         test = (len(lines) == limit_selected_ids)
+        # After testing, lines are clean:
+        lines = None
     while test:
         # If the number of lines equals the setted limit, it may reveals that there are remaining lines, increase offset by limit to get them.
         print("Limit reach, trying next offset ... ")
@@ -311,10 +315,14 @@ def send_query_by_offset(query, prefix, header, data, limit_pack_ids, offset_pac
             test = True
             continue
         lines = r.text.splitlines()
+        # After testing, lines are clean:
+        r = None
         # Export files
         write_request(lines, out_name)
         # Test if it was the last
         test = (len(lines) == limit_selected_ids)
+        # After testing, lines are clean:
+        lines = None
     return True
 
 def prepare_data_frame(path_to_CID_MESH, path_to_CID_PMID, path_to_MESH_PMID, nbTotal_PMID, out_path, file_size):
@@ -390,7 +398,7 @@ parallelize_query_by_offset(count_mesh, MESH_name, prefix, header, data, url, 30
 # However, to handle offset with large "order by", the order by term must be placed in a sub query, before output all results, but the group_concat muste be in the firs select so ... problem !
 # So the order provided in this query is the same as in the others
 
-parallelize_query_by_offset(count_cid, list_of_distinct_pmid_by_CID_MeSH, prefix, header, data, url, 1000, 1000000, "data/metab2mesh/CID_MESH_PMID_LISt/", 8)
+parallelize_query_by_offset(count_cid, list_of_distinct_pmid_by_CID_MeSH, prefix, header, data, url, 100, 1000000, "data/metab2mesh/CID_MESH_PMID_LIST/", 6)
 
 
 df_metab2mesh = prepare_data_frame("data/metab2mesh/CID_MESH/res_full.csv", "data/metab2mesh/CID_PMID/res_full.csv", "data/metab2mesh/MESH_PMID/res_full.csv", count_pmids, "data/metab2mesh/res2/", 30000)
