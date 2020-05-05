@@ -113,11 +113,16 @@ offset %d
 
 distinct_all_pmids = """
     select (count(distinct ?pmid) as ?count) where {
+        {
+            select ?mesh 
+            where {
+                ?mesh a meshv:TopicalDescriptor .
+                ?mesh meshv:treeNumber ?tn .
+                FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+            }
+        }
         ?cid cito:isDiscussedBy ?pmid .
         ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
-        ?mesh a meshv:TopicalDescriptor .
-        ?mesh meshv:treeNumber ?tn .
-        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
     }
 """
 
