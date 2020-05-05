@@ -499,3 +499,19 @@ FILTER(str(?smiles) in (?str_smiles))
 }
 
 ```
+
+
+## CONFIG VIRTUOSO:
+* For Buffers:
+SYS.RAM	NumberOfBuffers	MaxDirtyBuffers
+2 GB 	170000 			130000
+4 GB 	340000 			250000
+8 GB 	680000 			500000
+16 GB 	1360000 		1000000
+32 GB 	2720000 		2000000
+48 GB 	4000000 		3000000
+64 GB 	5450000 		4000000 
+
+* MaxCheckpointRemap:  1/4th of the database size is recommended
+
+* For other important parameters like ThreadsPerQuery, AsyncQueueMaxthreads, ... see http://docs.openlinksw.com/virtuoso/vexqrparlconfp/
