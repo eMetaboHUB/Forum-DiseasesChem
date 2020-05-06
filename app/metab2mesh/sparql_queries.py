@@ -15,7 +15,7 @@ prefix = """
     PREFIX sio: <http://semanticscience.org/resource/>
 """
 
-Request_Set_X = """
+count_distinct_pmids_by_CID = """
 select ?CID ?count
 where
 {
@@ -58,7 +58,7 @@ limit %d
 offset %d
 """
 
-Request_Set_Y = """
+count_distinct_pmids_by_MESH = """
 select ?MESH ?count
 where
 {
@@ -101,7 +101,7 @@ limit %d
 offset %d
 """
 
-Request_Univers = """
+count_all_distinct_pmids = """
     select (count(distinct ?pmid) as ?count) where {
         {
             select ?mesh 
@@ -116,7 +116,7 @@ Request_Univers = """
     }
 """
 
-Request_X_Y_COOC = """
+count_distinct_pmids_by_CID_MESH = """
 select ?CID ?MESH ?count
 where
 {
@@ -233,7 +233,7 @@ limit %d
 offset %d
 """
 
-Request_Count_Set_X = """
+count_number_of_CID = """
     select (count(distinct ?cid) as ?count_CID)
     where 
     {
@@ -241,7 +241,7 @@ Request_Count_Set_X = """
     }
 """
 
-Request_Count_Set_Y = """
+count_number_of_MESH = """
     select (count(distinct ?mesh) as ?count_MESH) 
     where 
     {

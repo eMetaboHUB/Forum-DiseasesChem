@@ -29,18 +29,19 @@ header = {
 data = {
     "format": "csv",
 }
-# Start data Extraction : 
-print(url)
 
-print("Counting total number of CID ...")
+# Start data Extraction : 
+R1_name = config['MESH_NAMES'].get('name')
+R2_name = config['CID_MESH_PMID_LIST'].get('name')
+print("Counting total number of " + R1_name + " ...")
 # Count distinct CID
-data["query"] = prefix + count_cid_query
+data["query"] = prefix + eval(config['CID_MESH_PMID_LIST'].get('Size_Request_name'))
 count_cid_res = requests.post(url = url, headers = header, data = data)
 count_cid = int(count_cid_res.text.splitlines().pop(1))
 
 print("Counting total number of MESH ...")
 # Count distinct MESH
-data["query"] = prefix + count_mesh_query
+data["query"] = prefix + eval(config['MESH_NAMES'].get('Size_Request_name'))
 count_mesh_res = requests.post(url = url, headers = header, data = data)
 count_mesh = int(count_mesh_res.text.splitlines().pop(1))
 print("There are " + str(count_mesh) + " distinct MESH in the graph")

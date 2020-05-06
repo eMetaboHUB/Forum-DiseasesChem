@@ -110,6 +110,12 @@ def aggregate_pmids_by_id(path_in, offset):
     agg = df_global.groupby('ID')['PMID'].agg(';'.join).reset_index(name='list_pmids')
     agg.to_csv(path_in + "res_offset_aggregate_" + offset + ".csv", index = False, header = False)
 
+def send_counting_request(request, prefix, header, data, url, config, key):
+    data["query"] = prefix + eval(config[key].get('Size_Request_name'))
+    count_res = requests.post(url = url, headers = header, data = data)
+    count = int(count_res.text.splitlines().pop(1))
+    return count
+
 def launch_from_config(count, request, prefix, header, data, url, config, key, out_path):
     out_path_dir = out_path + config[key].get('out_dir') + "/"
     print("Exporting in " + out_path_dir + " ...")

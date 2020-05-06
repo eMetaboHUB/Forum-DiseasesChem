@@ -35,33 +35,32 @@ print("Prepare data Extraction for contingency table using Set X as " + X_name +
 
 print("Counting total number of " + X_name + " ...")
 # Count distinct CID
-# data["query"] = prefix + Request_Count_Set_X
-# count_X_res = requests.post(url = url, headers = header, data = data)
-# count_X = int(count_X_res.text.splitlines().pop(1))
-count_X = 20000
+data["query"] = prefix + eval(config['X'].get('Size_Request_name'))
+count_X_res = requests.post(url = url, headers = header, data = data)
+count_X = int(count_X_res.text.splitlines().pop(1))
 print("There are " + str(count_X) + " " + X_name)
 
 print("Start getting " + X_name + "_" + Y_name +" coocurences")
-launch_from_config(count_X, Request_X_Y_COOC, prefix, header, data, url, config, 'X_Y', out_path)
+launch_from_config(count_X, eval(config['X_Y'].get('Request_name')), prefix, header, data, url, config, 'X_Y', out_path)
 
 # Get CID distinct PMID :
 print("Start getting " + X_name + " sets size") 
-launch_from_config(count_X, Request_Set_X, prefix, header, data, url, config, 'X', out_path)
+launch_from_config(count_X, eval(config['X'].get('Request_name')), prefix, header, data, url, config, 'X', out_path)
 
 print("Counting total number of " + Y_name + " ...")
 # Count distinct MESH
-data["query"] = prefix + Request_Count_Set_Y
+data["query"] = prefix + eval(config['Y'].get('Size_Request_name'))
 count_Y_res = requests.post(url = url, headers = header, data = data)
 count_Y = int(count_Y_res.text.splitlines().pop(1))
 print("There are " + str(count_Y) + " " + Y_name)
 
 # Get MeSH distinct PMID :
 print("Start getting " + Y_name + " sets size")
-launch_from_config(count_Y, Request_Set_Y, prefix, header, data, url, config, 'Y', out_path)
+launch_from_config(count_Y, eval(config['Y'].get('Request_name')), prefix, header, data, url, config, 'Y', out_path)
 
 # On compte le nombre total de distinct pmids qui ont un CID et un MeSH
 print("Start getting Univers size")
-data["query"] = prefix + Request_Univers
+data["query"] = prefix + eval(config['U'].get('Request_name'))
 count_U_res = requests.post(url = url, headers = header, data = data)
 count_U = int(count_U_res.text.splitlines().pop(1))
 print("There are a total number of " + str(count_U) + " elements")
