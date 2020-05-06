@@ -24,7 +24,7 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
         if (count_id % limit_pack_ids) > 0:
             n_offset += 1
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
-    print(offset_list)
+    print(str(len(offset_list)) + " offset(s) will be computed using " + str(n_processes) + " processes")
     # Apply send_query_by_offset in parallel respecting the number of processes fixed
     results = [pool.apply_async(send_query_by_offset, args=(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, 0, out_path)) for offset_pack_ids in offset_list]
     output = [p.get() for p in results]
@@ -126,7 +126,6 @@ def aggregate_pmids_by_id(path_in, offset):
 
 def send_counting_request(prefix, header, data, url, config, key):
     r_data = data
-    print(config[key].get('Size_Request_name'))
     name = config[key].get('name')
     r_data["query"] = prefix + eval(config[key].get('Size_Request_name'))
     print("Counting total number of " + name + " ...")
