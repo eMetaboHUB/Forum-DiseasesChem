@@ -1,5 +1,5 @@
 from sparql_queries import *
-from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame
+from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request
 import configparser
 import argparse, sys, os, requests, json
 
@@ -33,37 +33,20 @@ X_name = config['X'].get('name')
 Y_name = config['Y'].get('name')
 print("Prepare data Extraction for contingency table using Set X as " + X_name + " and Set Y as : " + Y_name)
 
-print("Counting total number of " + X_name + " ...")
 # Count distinct CID
-data["query"] = prefix + eval(config['X'].get('Size_Request_name'))
-count_X_res = requests.post(url = url, headers = header, data = data)
-count_X = int(count_X_res.text.splitlines().pop(1))
-print("There are " + str(count_X) + " " + X_name)
-
 print("Start getting " + X_name + "_" + Y_name +" coocurences")
-launch_from_config(count_X, eval(config['X_Y'].get('Request_name')), prefix, header, data, url, config, 'X_Y', out_path)
+launch_from_config(prefix, header, data, url, config, 'X_Y', out_path)
 
 # Get CID distinct PMID :
 print("Start getting " + X_name + " sets size") 
-launch_from_config(count_X, eval(config['X'].get('Request_name')), prefix, header, data, url, config, 'X', out_path)
-
-print("Counting total number of " + Y_name + " ...")
-# Count distinct MESH
-data["query"] = prefix + eval(config['Y'].get('Size_Request_name'))
-count_Y_res = requests.post(url = url, headers = header, data = data)
-count_Y = int(count_Y_res.text.splitlines().pop(1))
-print("There are " + str(count_Y) + " " + Y_name)
+launch_from_config(prefix, header, data, url, config, 'X', out_path)
 
 # Get MeSH distinct PMID :
 print("Start getting " + Y_name + " sets size")
-launch_from_config(count_Y, eval(config['Y'].get('Request_name')), prefix, header, data, url, config, 'Y', out_path)
+launch_from_config(prefix, header, data, url, config, 'Y', out_path)
 
 # On compte le nombre total de distinct pmids qui ont un CID et un MeSH
-print("Start getting Univers size")
-data["query"] = prefix + eval(config['U'].get('Request_name'))
-count_U_res = requests.post(url = url, headers = header, data = data)
-count_U = int(count_U_res.text.splitlines().pop(1))
-print("There are a total number of " + str(count_U) + " elements")
+count_U = send_counting_request(prefix, header, data, url, config, 'U')
 # Nb. total pmids = 8754160
 
 print("Start merge files and create data.frame")

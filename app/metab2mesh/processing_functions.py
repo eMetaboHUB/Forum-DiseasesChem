@@ -3,6 +3,7 @@ import os
 import glob
 import multiprocessing as mp
 import pandas as pd
+from sparql_queries import *
 
 
 
@@ -36,8 +37,9 @@ def write_request(lines, out_name):
 def send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids):
     # Fill the query string with the associated parameters
     formated_query = prefix + query % (limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
-    data["query"] = formated_query
-    r = requests.post(url = url, headers = header, data = data)
+    r_data = data
+    r_data["query"] = formated_query
+    r = requests.post(url = url, headers = header, data = r_data)
     return r
 
 def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, out_path):
@@ -110,15 +112,24 @@ def aggregate_pmids_by_id(path_in, offset):
     agg = df_global.groupby('ID')['PMID'].agg(';'.join).reset_index(name='list_pmids')
     agg.to_csv(path_in + "res_offset_aggregate_" + offset + ".csv", index = False, header = False)
 
-def send_counting_request(request, prefix, header, data, url, config, key):
-    data["query"] = prefix + eval(config[key].get('Size_Request_name'))
-    count_res = requests.post(url = url, headers = header, data = data)
+def send_counting_request(prefix, header, data, url, config, key):
+    r_data = data
+    print(config[key].get('Size_Request_name'))
+    name = config[key].get('name')
+    r_data["query"] = prefix + eval(config[key].get('Size_Request_name'))
+    print("Counting total number of " + name + " ...")
+    count_res = requests.post(url = url, headers = header, data = r_data)
     count = int(count_res.text.splitlines().pop(1))
+    print("There are " + str(count) + " " + name)
     return count
 
-def launch_from_config(count, request, prefix, header, data, url, config, key, out_path):
+def launch_from_config(prefix, header, data, url, config, key, out_path):
+    # Get count:
+    count = send_counting_request(prefix, header, data, url, config, key)
+    count = 20000
     out_path_dir = out_path + config[key].get('out_dir') + "/"
     print("Exporting in " + out_path_dir + " ...")
+    request = eval(config[key].get('Request_name'))
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'))
 
 def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_path, file_size):
