@@ -16,8 +16,15 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
         os.makedirs(out_path)
     # First step is to get the total number of cid: 
     # Getting the number of CID, we can prepare the pack of cids respecting limit_size
-    n_offset = count_id // limit_pack_ids
-    offset_list = [i * limit_pack_ids for i in range(0, n_offset + 1)]
+    if limit_pack_ids > count_id:
+        print("limit_pack_ids is bigger than the total number of individuals (" + str(count_id) + "), query will not be send in parallel !")
+        n_offset = 1
+    else:
+        n_offset = count_id // limit_pack_ids
+        if (count_id % limit_pack_ids) > 0:
+            n_offset += 1
+    offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
+    print(offset_list)
     # Apply send_query_by_offset in parallel respecting the number of processes fixed
     results = [pool.apply_async(send_query_by_offset, args=(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, 0, out_path)) for offset_pack_ids in offset_list]
     output = [p.get() for p in results]
@@ -94,8 +101,13 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
 
 def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
     # get all offset
-    n_offset = count_id // limit_pack_ids
-    offset_list = [i * limit_pack_ids for i in range(0, n_offset + 1)]
+    if limit_pack_ids > count_id:
+        n_offset = 1
+    else:
+        n_offset = count_id // limit_pack_ids
+        if (count_id % limit_pack_ids) > 0:
+            n_offset += 1
+    offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     results = [pool.apply_async(aggregate_pmids_by_id, args=(path_in, str(offset))) for offset in offset_list]
     output = [p.get() for p in results]
@@ -126,7 +138,6 @@ def send_counting_request(prefix, header, data, url, config, key):
 def launch_from_config(prefix, header, data, url, config, key, out_path):
     # Get count:
     count = send_counting_request(prefix, header, data, url, config, key)
-    count = 20000
     out_path_dir = out_path + config[key].get('out_dir') + "/"
     print("Exporting in " + out_path_dir + " ...")
     request = eval(config[key].get('Request_name'))
