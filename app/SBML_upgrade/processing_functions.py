@@ -34,3 +34,11 @@ def test_if_graph_exists(url, graph_uri):
     if r.text == "true":
         return True
     return False
+
+def request_annotation(url, query, sbml_uri, annot_graph_uri, version, header, data):
+    data["query"] = query %(version, sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
+    r = requests.post(url = url, headers = header, data = data)
+    print(r.text)
+    if r.status_code != 200:
+        return False
+    return True

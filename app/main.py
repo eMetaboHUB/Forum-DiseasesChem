@@ -7,7 +7,8 @@ from parse_pubchem_RDF import parse_pubchem_RDF
 from Request_RESTful_PubChem import REST_ful_bulk_download
 from download_functions import download_MeSH, download_pubChem
 from process_SMBL import extract_ids_from_SMBL_by_URI_prefix, merge_SMBL_and_annot_graphs
-from get_info_from_UniChem import Id_mapping
+
+
 # The Api_key can be found on the NCBI account.
 # Creating the directory of all namespaces
 namespaces = {
@@ -200,20 +201,3 @@ parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_ma
                   namespace_dict = namespaces,
                   version = "2020-04-29",
                   separator = '\t')
-
-
-
-graph_metaNetX = rdflib.Graph()
-graph_metaNetX.parse("data/MetaNetX/metanetx.ttl", format = "turtle")
-## Ids - Mapping ##
-map_ids = Id_mapping(None, namespaces)
-map_ids.import_table_infos("data/Id_mapping/config.csv")
-map_ids.get_graph_ids_set("data/HumanGEM/HumanGEM.ttl")
-map_ids.create_graph_from_UniChem("data/Id_mapping/UniChem/")
-
-map_ids.create_graph_from_MetaNetX(graph_metaNetX, "data/Id_mapping/MetaNetX/")
-
-map_ids.create_graph_from_tab(tab_name = "BiGG", path_tab = "data/Recon3D/ids_table.csv", path_out = "data/Id_mapping/BiGG/")
-
-map_ids.export_intra_eq("data/Id_mapping/Intra/")
-

@@ -1,9 +1,9 @@
-import argparse, sys, os, requests, json
-import rdflib
+import argparse, sys, os
 import configparser
 import subprocess
-
+import rdflib
 from processing_functions import *
+from Id_mapping import Id_mapping
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
@@ -20,6 +20,9 @@ except configparser.Error as e:
     print(e)
     sys.exit(3)
 
+
+# Intialyze attributes and paths: 
+
 namespaces = {
     "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
     "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
@@ -33,25 +36,59 @@ namespaces = {
     "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 }
 
-# Intialyze attributes and paths: 
 # Virtuoso:
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
 path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
 db_password = config['VIRTUOSO'].get('db_password')
-
+url = config['VIRTUOSO'].get('url')
+# SBML
 path_to_g_SBML = config['SBML'].get('g_path')
 path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
+sbml_version = config['SBML'].get('version')
+path_to_dir_Intra = config['SBML'].get('path_to_dir_intra_from_dumps')
 
-# Move SBML RDF file to Virtuoso shared directory:
+# Test if .graph file exists
 if not os.path.exists(path_to_g_SBML + ".graph"):
     print("There is no .graph file attached to the SBML file.\nPlease create a <source-file>.ttl.graph containing the URI of the graph to load it.")
     sys.exit(3)
+# test if graph already exists
+with open(path_to_g_SBML + ".graph", "r") as f_uri:
+    uri = f_uri.readline().rstrip()
+if test_if_graph_exists(url, uri):
+    print("SMBL graph " + uri + " already exists")
+    sys.exit(3)
+
+# Move SBML RDF file to Virtuoso shared directory:
 print("Try to move SMBL files to Virtuoso shared directory ...")
 if not os.path.exists(path_to_dumps + path_to_dir_SMBL):
     os.makedirs(path_to_dumps + path_to_dir_SMBL)
-subprocess.run("cp " + path_to_g_SBML + " " + path_to_g_SBML + ".graph " + path_to_dumps + path_to_dir_SMBL, shell = True, stderr=subprocess.STDOUT)
-
+try:
+    subprocess.run("cp " + path_to_g_SBML + " " + path_to_g_SBML + ".graph " + path_to_dumps + path_to_dir_SMBL, shell = True, stderr=subprocess.STDOUT)
+except subprocess.SubprocessError as e:
+    print("There was an error when trying to move SBML files : " + e)
+    sys.exit(3)
+# Load graph
 print("Try to load SMBL graph in Virtuoso ...")
-dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.STDOUT).rstrip()
-create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL)
-subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
+try:
+    dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.STDOUT).rstrip()
+    create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL)
+    subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
+except subprocess.SubprocessError as e:
+    print("There was an error when trying to load SBML files in virtusoso: " + e)
+    sys.exit(3)
+
+print("Import identifiers from Graph to create SBML URIs intra equivalences")
+# Intialyze Object:
+map_ids = Id_mapping("SBML_" + sbml_version, namespaces)
+print("Import configuration table", end = '')
+map_ids.import_table_infos(config['SBML'].get('path_to_table_infos'))
+map_ids.get_graph_ids_set(path_to_g_SBML)
+print("Export SBML Uris intra equivalences ")
+map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra)
+print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
+try:
+    create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML_" + sbml_version + "/")
+    subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
+except subprocess.SubprocessError as e:
+    print("There was an error when trying to load files in virtusoso: " + e)
+    sys.exit(3)
