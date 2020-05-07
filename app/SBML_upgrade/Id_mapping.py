@@ -8,7 +8,8 @@ import gzip
 import itertools
 import csv
 from rdflib.namespace import XSD, DCTERMS, OWL
-from app.Database_ressource_version import Database_ressource_version
+sys.path.insert(1, 'app/')
+from Database_ressource_version import Database_ressource_version
 
 
 class Id_mapping:

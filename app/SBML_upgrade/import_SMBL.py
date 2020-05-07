@@ -3,7 +3,6 @@ import rdflib
 import configparser
 import subprocess
 
-from Id_mapping import Id_mapping
 from processing_functions import *
 
 parser = argparse.ArgumentParser()
@@ -35,29 +34,24 @@ namespaces = {
 }
 
 # Intialyze attributes and paths: 
-# Default:
-v = config['DEFAULT'].get('version')
 # Virtuoso:
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
 path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
 db_password = config['VIRTUOSO'].get('db_password')
-# MetaNetX:
-path_to_dir_MetaNetX = config['METANETX'].get('path_to_dir_MetaNetX')
 
+path_to_g_SBML = config['SBML'].get('g_path')
+path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
 
-# Intialyze Object:
-map_ids = Id_mapping(v, namespaces)
-print("Import configuration table ...", end = '')
-map_ids.import_table_infos(config['DEFAULT'].get('path_to_table_infos'))
-# Import graph :
-print("Ok\nTry to load MetanetX graph from " + config['METANETX'].get('g_path') + " ...", end = '')
-graph_metaNetX = rdflib.Graph()
-graph_metaNetX.parse(config['METANETX'].get('g_path'), format = "turtle")
-print("Ok\nTry de create URIs equivalences from MetaNetX graph ...")
-# Create graphs :
-map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_MetaNetX)
-# Create file to export
-print("Try to load mapping graph in Virtuoso ...", end = '')
-create_update_file(path_to_dumps, path_to_dir_MetaNetX + v + "/")
+# Move SBML RDF file to Virtuoso shared directory:
+if not os.path.exists(path_to_g_SBML + ".graph"):
+    print("There is no .graph file attached to the SBML file.\nPlease create a <source-file>.ttl.graph containing the URI of the graph to load it.")
+    sys.exit(3)
+print("Try to move SMBL files to Virtuoso shared directory ...")
+if not os.path.exists(path_to_dumps + path_to_dir_SMBL):
+    os.makedirs(path_to_dumps + path_to_dir_SMBL)
+subprocess.run("cp " + path_to_g_SBML + " " + path_to_g_SBML + ".graph " + path_to_dumps + path_to_dir_SMBL, shell = True, stderr=subprocess.STDOUT)
+
+print("Try to load SMBL graph in Virtuoso ...")
 dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.STDOUT).rstrip()
+create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL)
 subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
