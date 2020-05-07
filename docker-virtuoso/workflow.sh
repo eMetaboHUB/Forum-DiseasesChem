@@ -71,14 +71,14 @@ echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 echo "ld_dir_all ('./dumps/PMID_CID/2020-04-18/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/PMID_CID/2020-04-18/', '*.trig.gz', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PMID_CID_endpoints/2020-04-18/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PMID_CID_endpoints/2020-04-18/', '*.trig.gz', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PMID_CID_endpoints/2020-04-18/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PMID_CID_endpoints/2020-04-18/', '*.trig.gz', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/2020-04-29/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/2020-04-29/', '*.trig', '');" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-04-06/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
-# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SMBL_2020-04-06/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/2020-04-29/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/2020-04-29/', '*.trig', '');" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/2020-04-20/', '*.ttl', 'http://database/ressources/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/2020-04-20/', '*.trig.gz', '');" >> share/upload.sh

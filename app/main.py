@@ -111,6 +111,12 @@ with open("additional_files/2020-04-18/successful_linking_ids.txt", "r") as succ
     for pmid in success_pmids:
         all_new_pmids.append(pmid.rstrip())
 
+all_new_cids = list()
+with open("additional_files/2020-04-18/all_linked_ids.txt", "r") as cids:
+    for cid in cids:
+        all_new_cids.append(cid.rstrip())
+all_new_cids_features_list = [id + f for id in all_new_cids for f in feature_list]
+
 # === End === #
 
 
@@ -170,29 +176,29 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
 
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
-                  all_ids = cid_list,
+                  all_ids = all_new_cids,
                   prefix = "compound:CID",
                   out_dir = "data/PubChem_Compound/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
                   filtered_ressource_name = "CompoundFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-04-06",
+                  version = "2020-04-29",
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/2020-03-06/",
-                  all_ids = smbl_compound_ids_features_list,
+                  all_ids = all_new_cids_features_list,
                   prefix = "descriptor:CID",
                   out_dir = "data/PubChem_Descriptor/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/ressource_info_descriptor_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/descriptor/2020-03-06"),
                   filtered_ressource_name = "DescriptorFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/CID_PMID/SMBL_2020-04-06"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "SMBL_2020-04-06",
+                  version = "2020-04-29",
                   separator = '\t')
 
 
