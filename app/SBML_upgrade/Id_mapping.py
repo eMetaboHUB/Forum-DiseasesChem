@@ -2,13 +2,13 @@ import rdflib
 import requests
 import io
 import re
-from rdflib.namespace import XSD, DCTERMS, OWL
-import os
+import os, sys
 import json
 import gzip
 import itertools
 import csv
-from Database_ressource_version import Database_ressource_version
+from rdflib.namespace import XSD, DCTERMS, OWL
+from app.Database_ressource_version import Database_ressource_version
 
 
 class Id_mapping:
@@ -171,7 +171,7 @@ class Id_mapping:
         ressource_version_intra.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_intra.version_graph.serialize(destination=path_out + "ressource_info_intra_ids_equivalence_" + ressource_version_intra.version + ".ttl", format = 'turtle')
     
-    def import_config(self, config_file):
+    def import_table_infos(self, config_file):
         """
         This function is used to import the configuration file. The configuration file is a tabulated file with columns containing information of each ressource in this order:
         ressource name, ressource UniChem id, all ressource URIs (comma separated), URI used on SBML, URI used in MetaNetX 
