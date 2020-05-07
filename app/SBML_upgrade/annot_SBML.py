@@ -151,7 +151,7 @@ where {
         ?ref_pc_desc a sio:CHEMINF_000396 ;
                 sio:has-value ?inchi
         }
-BIND(str(?inchi) as ?selected_inchi)
+BIND(URI(str(?inchi)) as ?selected_inchi)
 }
 """
 
@@ -186,7 +186,7 @@ where {
         ?ref_pc_desc a sio:CHEMINF_000376 ;
                 sio:has-value ?smiles
         }
-BIND(str(?smiles) as ?selected_smiles)
+BIND(URI(str(?smiles)) as ?selected_smiles)
 }
 """
 
@@ -221,7 +221,7 @@ if config['ANNOTATION_TYPE'].getboolean('id_mapping'):
 # Add annotation graph URI from computed Synonyms and infered URIs:
 annot_graph_uri.append("http://database/ressources/annotation_graph/" + version)
 # Add annotation graph from external sources containing additional informatio
-annot_graph_uri.append(sources_uris)
+annot_graph_uri = annot_graph_uri + sources_uris
 
 if config['ANNOTATION_TYPE'].getboolean('inchi'):
     test_inchi = request_annotation(url, inchi_annotation_request, SBML_graph_uri, annot_graph_uri, version, header, data)
