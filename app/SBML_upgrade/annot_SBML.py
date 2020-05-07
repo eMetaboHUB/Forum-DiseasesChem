@@ -26,6 +26,7 @@ url = config['VIRTUOSO'].get('url')
 SBML_graph_uri = config['SBML'].get("graph_uri")
 # ANNOTATIONS
 annot_graph_uri = config['ANNOTATION_GRAPH'].get("graph_uri").split('\n')
+sources_uris = config['EXT_SOURCES'].get("graph_uri").split('\n')
 version = config['ANNOTATION_TYPE'].get('version')
 
 header = {
@@ -155,7 +156,6 @@ BIND(str(?inchi) as ?selected_inchi)
 """
 
 smiles_annotation_request = """
-Requête pour récupérer l'ensemble des associations specie - SMILES - OK - Graph :
 DEFINE input:inference 'schema-inference-rules'
 prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
 prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
@@ -217,6 +217,11 @@ if config['ANNOTATION_TYPE'].getboolean('id_mapping'):
         print("Infered uris synonyms annotation Ok")
     else:
         print("Infered uris synonyms annotation fail")
+
+# Add annotation graph URI from computed Synonyms and infered URIs:
+annot_graph_uri.append("http://database/ressources/annotation_graph/" + version)
+# Add annotation graph from external sources containing additional informatio
+annot_graph_uri.append(sources_uris)
 
 if config['ANNOTATION_TYPE'].getboolean('inchi'):
     test_inchi = request_annotation(url, inchi_annotation_request, SBML_graph_uri, annot_graph_uri, version, header, data)
