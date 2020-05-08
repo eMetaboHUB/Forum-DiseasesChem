@@ -60,7 +60,7 @@ query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
                                     api_key = apiKey)
 # On crée le graph SBML mergé :
-smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
+smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/onlyMetaNetX/")
 cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
 sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID", 
@@ -177,27 +177,27 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
 
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
-                  all_ids = all_new_cids,
+                  all_ids = cid_list,
                   prefix = "compound:CID",
                   out_dir = "data/PubChem_Compound/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
                   filtered_ressource_name = "CompoundFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/SBML_2020-05-07"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "2020-04-29",
+                  version = "SBML_2020-05-07",
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/2020-03-06/",
-                  all_ids = all_new_cids_features_list,
+                  all_ids = smbl_compound_ids_features_list,
                   prefix = "descriptor:CID",
                   out_dir = "data/PubChem_Descriptor/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/ressource_info_descriptor_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/descriptor/2020-03-06"),
                   filtered_ressource_name = "DescriptorFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/SBML_2020-05-07"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "2020-04-29",
+                  version = "SBML_2020-05-07",
                   separator = '\t')
