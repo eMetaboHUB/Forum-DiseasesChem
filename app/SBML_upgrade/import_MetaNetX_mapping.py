@@ -45,11 +45,13 @@ url = config['VIRTUOSO'].get('url')
 MetaNetX_v = config['METANETX'].get('version')
 path_to_g_MetaNetX = config['METANETX'].get('g_path')
 path_to_dir_MetaNetX = config['METANETX'].get('path_to_dir_from_dumps')
+base_uri_MetaNetX = config['METANETX'].get('base_uri')
 # Intra
 path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
+base_uri_Intra = config['INTRA'].get('base_uri')
 
-uri_MetaNetX = "http://database/ressources/ressources_id_mapping/MetaNetX/" + MetaNetX_v
-linked_grahs = ["http://database/ressources/ressources_id_mapping/Intra/" + MetaNetX_v]
+uri_MetaNetX = base_uri_MetaNetX + MetaNetX_v
+linked_grahs = [base_uri_Intra + MetaNetX_v]
 
 # Test if graph exists
 if test_if_graph_exists(url, uri_MetaNetX, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):

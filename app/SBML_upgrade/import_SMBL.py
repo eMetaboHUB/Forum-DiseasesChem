@@ -46,6 +46,8 @@ path_to_g_SBML = config['SBML'].get('g_path')
 path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
 sbml_version = config['SBML'].get('version')
 path_to_dir_Intra = config['SBML'].get('path_to_dir_intra_from_dumps')
+#LINKED GRAPH
+Intra_eq_base_uri = config['INTRA'].get('base_uri')
 
 # Test if .graph file exists
 if not os.path.exists(path_to_g_SBML + ".graph"):
@@ -55,7 +57,7 @@ if not os.path.exists(path_to_g_SBML + ".graph"):
 with open(path_to_g_SBML + ".graph", "r") as f_uri:
     uri = f_uri.readline().rstrip()
 
-linked_grahs = ["http://database/ressources/ressources_id_mapping/Intra/SBML_" + sbml_version]
+linked_grahs = [Intra_eq_base_uri + "SBML_" + sbml_version]
 
 if test_if_graph_exists(url, uri, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
     print("Create graphs ...")

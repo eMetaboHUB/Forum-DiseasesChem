@@ -21,13 +21,17 @@ except configparser.Error as e:
 
 # Intialyze attributes and paths: 
 # Virtuoso
+path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
+path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
+db_password = config['VIRTUOSO'].get('db_password')
 url = config['VIRTUOSO'].get('url')
 # SBML
 SBML_graph_uri = config['SBML'].get("graph_uri")
 # ANNOTATIONS
-annot_graph_uri = config['ANNOTATION_GRAPH'].get("graph_uri").split('\n')
+mapping_graph_uri = config['MAPPING_GRAPH'].get("graph_uri").split('\n')
 sources_uris = config['EXT_SOURCES'].get("graph_uri").split('\n')
 version = config['ANNOTATION_TYPE'].get('version')
+annot_graph_base_uri = config['ANNOTATION_TYPE'].get('annotation_graph_base_uri')
 
 header = {
     "Content-Type": "application/x-www-form-urlencoded",
@@ -46,7 +50,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 INSERT {
-    GRAPH <http://database/ressources/annotation_graph/%s> { ?specie bqbiol:is ?ref_syn . }
+    GRAPH <%s%s> { ?specie bqbiol:is ?ref_syn . }
 }
 FROM <%s>
 %s
@@ -67,7 +71,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 INSERT {
-	GRAPH <http://database/ressources/annotation_graph/%s> { ?specie bqbiol:is ?otherRef . }
+	GRAPH <%s%s> { ?specie bqbiol:is ?otherRef . }
 }
 FROM <%s>
 %s
@@ -93,7 +97,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 INSERT {
-	GRAPH <http://database/ressources/annotation_graph/%s> { ?specie bqbiol:is ?otherRef_syn . }
+	GRAPH <%s%s> { ?specie bqbiol:is ?otherRef_syn . }
 }
 FROM <%s>
 %s
@@ -132,7 +136,7 @@ prefix mnx: <https://rdf.metanetx.org/schema/>
 prefix sio: <http://semanticscience.org/resource/>
 prefix voc:  <http://database/ressources/properties#> 
 INSERT {
-        GRAPH <http://database/ressources/annotation_graph/%s> { ?specie voc:hasInchI ?selected_inchi . }
+        GRAPH <%s%s> { ?specie voc:hasInchI ?selected_inchi . }
 }
 FROM <%s>
 %s
@@ -167,7 +171,7 @@ prefix mnx: <https://rdf.metanetx.org/schema/>
 prefix sio: <http://semanticscience.org/resource/>
 prefix voc:  <http://database/ressources/properties#> 
 INSERT {
-        GRAPH <http://database/ressources/annotation_graph/%s> { ?specie voc:hasSmiles ?selected_smiles . }
+        GRAPH <%s%s> { ?specie voc:hasSmiles ?selected_smiles . }
 }
 FROM <%s>
 %s
@@ -192,46 +196,54 @@ BIND(URI(str(?smiles)) as ?selected_smiles)
 
 # Test if annot graph(s) and SBML graph exists
 # SBML
-if not test_if_graph_exists(url, SBML_graph_uri):
+if not ask_for_graph(url, SBML_graph_uri):
     print("SMBL graph " + SBML_graph_uri + " does not exists")
     sys.exit(3)
 # ANNOTATIONS
-for uri in annot_graph_uri:
-    if not test_if_graph_exists(url, uri):
+for uri in mapping_graph_uri:
+    if not ask_for_graph(url, uri):
         print("Annotation graph " + uri + " does not exists")
         sys.exit(3)
+
+if test_if_graph_exists(url, annot_graph_base_uri + version, [], path_to_dumps, path_to_docker_yml_file, db_password):
+    print("Create graphs ...")
+
 print("Starting annotation ...")
 if config['ANNOTATION_TYPE'].getboolean('id_mapping'):
-    test_synonyms = request_annotation(url, synonyms_request, SBML_graph_uri, annot_graph_uri, version, header, data)
+    test_synonyms = request_annotation(url, annot_graph_base_uri, synonyms_request, SBML_graph_uri, mapping_graph_uri, version, header, data)
     if test_synonyms:
         print("Synonyms annotation Ok")
     else:
         print("Synonyms annotation fail")
-    test_infered_uris = request_annotation(url, infered_uris_request, SBML_graph_uri, annot_graph_uri, version, header, data)
+    test_infered_uris = request_annotation(url, annot_graph_base_uri, infered_uris_request, SBML_graph_uri, mapping_graph_uri, version, header, data)
     if test_infered_uris:
         print("Infered uris annotation Ok")
     else:
         print("Infered uris annotation fail")
-    test_infered_uris_synonyms = request_annotation(url, infered_uris_synonyms_request, SBML_graph_uri, annot_graph_uri, version, header, data)
+    test_infered_uris_synonyms = request_annotation(url, annot_graph_base_uri, infered_uris_synonyms_request, SBML_graph_uri, mapping_graph_uri, version, header, data)
     if test_infered_uris_synonyms:
         print("Infered uris synonyms annotation Ok")
     else:
         print("Infered uris synonyms annotation fail")
 
 # Add annotation graph URI from computed Synonyms and infered URIs:
-annot_graph_uri.append("http://database/ressources/annotation_graph/" + version)
+mapping_graph_uri.append(annot_graph_base_uri + version)
 # Add annotation graph from external sources containing additional informatio
-annot_graph_uri = annot_graph_uri + sources_uris
+mapping_graph_uri = mapping_graph_uri + sources_uris
+
+if not ask_for_graph(url, annot_graph_base_uri + version):
+    print("SMBL graph " + annot_graph_base_uri + version + " does not exists")
+    sys.exit(3)
 
 if config['ANNOTATION_TYPE'].getboolean('inchi'):
-    test_inchi = request_annotation(url, inchi_annotation_request, SBML_graph_uri, annot_graph_uri, version, header, data)
+    test_inchi = request_annotation(url, annot_graph_base_uri, inchi_annotation_request, SBML_graph_uri, mapping_graph_uri, version, header, data)
     if test_inchi:
         print("Inchi annotation Ok")
     else:
         print("Inchi annotation fail")
 
 if config['ANNOTATION_TYPE'].getboolean('smiles'):
-    test_smiles = request_annotation(url, smiles_annotation_request, SBML_graph_uri, annot_graph_uri, version, header, data)
+    test_smiles = request_annotation(url, annot_graph_base_uri, smiles_annotation_request, SBML_graph_uri, mapping_graph_uri, version, header, data)
     if test_smiles:
         print("Smiles annotation Ok")
     else:

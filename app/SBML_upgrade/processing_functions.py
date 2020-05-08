@@ -80,10 +80,28 @@ def test_if_graph_exists(url, graph_uri, linked_graph_uri, path_out, path_to_doc
     else:
         return True
 
-def request_annotation(url, query, sbml_uri, annot_graph_uri, version, header, data):
-    data["query"] = query %(version, sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
+def request_annotation(url, g_base_uri, query, sbml_uri, annot_graph_uri, version, header, data):
+    data["query"] = query %(g_base_uri, version, sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
+    print(data["query"])
     r = requests.post(url = url, headers = header, data = data)
     print(r.text)
     if r.status_code != 200:
         return False
     return True
+
+def ask_for_graph(url, graph_uri):
+    """
+    This function is used to test if graph a exist without erase
+    """
+    header = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "text/html"
+    }
+    data = {
+        "format": "html",
+        "query": "ASK WHERE { GRAPH <" + graph_uri + "> { ?s ?p ?o } }"
+    }
+    r = requests.post(url = url, headers = header, data = data)
+    if r.text == "true":
+        return True
+    return False
