@@ -5,6 +5,7 @@ def create_update_file_from_ressource(path_out, path_to_graph_dir, path_to_docke
     This function is used to load graph which represent a ressource, with one or several .trig files associated to data graph and one ressource_info_**.ttl file describing the ressource
     """
     with open(path_out + 'update.sh', "w") as update_f:
+        update_f.write("delete from DB.DBA.load_list ;\n")
         update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '*.trig', '');\n")
         update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', 'ressource_info_*.ttl', 'http://database/ressources');\n")
         update_f.write("rdf_loader_run();\n")
@@ -17,12 +18,13 @@ def create_update_file_from_ressource(path_out, path_to_graph_dir, path_to_docke
         print("There was an error when trying to load files in virtusoso: " + e)
         sys.exit(3)
 
-def create_update_file_from_graph_dir(path_out, path_to_graph_dir, path_to_docker_yml_file, db_password):
+def create_update_file_from_graph_dir(path_out, path_to_graph_dir, grah_uri, path_to_docker_yml_file, db_password):
     """
     This function is used to load grpah from a directory, the URI of each graph must be indicated using a <source-file>.<ext>.graph file containing the URI (Cf.http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader)
     """
     with open(path_out + 'update.sh', "w") as update_f:
-        update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '*.ttl', '');\n")
+        update_f.write("delete from DB.DBA.load_list ;\n")
+        update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '*.ttl', '" + grah_uri + "');\n")
         update_f.write("rdf_loader_run();\n")
         update_f.write("checkpoint;\n")
         update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")

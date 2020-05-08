@@ -46,16 +46,11 @@ path_to_g_SBML = config['SBML'].get('g_path')
 path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
 sbml_version = config['SBML'].get('version')
 path_to_dir_Intra = config['SBML'].get('path_to_dir_intra_from_dumps')
+base_uri_SBML = config['SBML'].get('base_uri')
 #LINKED GRAPH
 Intra_eq_base_uri = config['INTRA'].get('base_uri')
 
-# Test if .graph file exists
-if not os.path.exists(path_to_g_SBML + ".graph"):
-    print("There is no .graph file attached to the SBML file.\nPlease create a <source-file>.ttl.graph containing the URI of the graph to load it.")
-    sys.exit(3)
-# test if graph already exists
-with open(path_to_g_SBML + ".graph", "r") as f_uri:
-    uri = f_uri.readline().rstrip()
+uri = base_uri_SBML + sbml_version
 
 linked_grahs = [Intra_eq_base_uri + "SBML_" + sbml_version]
 
@@ -69,13 +64,13 @@ print("Try to move SMBL files to Virtuoso shared directory ...")
 if not os.path.exists(path_to_dumps + path_to_dir_SMBL):
     os.makedirs(path_to_dumps + path_to_dir_SMBL)
 try:
-    subprocess.run("cp " + path_to_g_SBML + " " + path_to_g_SBML + ".graph " + path_to_dumps + path_to_dir_SMBL, shell = True, stderr=subprocess.STDOUT)
+    subprocess.run("cp " + path_to_g_SBML + " " + path_to_dumps + path_to_dir_SMBL, shell = True, stderr=subprocess.STDOUT)
 except subprocess.SubprocessError as e:
     print("There was an error when trying to move SBML files : " + e)
     sys.exit(3)
 # Load graph
 print("Try to load SMBL graph in Virtuoso ...")
-create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL, path_to_docker_yml_file, db_password)
+create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL, uri, path_to_docker_yml_file, db_password)
 
 print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
