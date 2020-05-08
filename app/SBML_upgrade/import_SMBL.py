@@ -73,6 +73,7 @@ except subprocess.SubprocessError as e:
     sys.exit(3)
 # Load graph
 print("Try to load SMBL graph in Virtuoso ...")
+create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL, path_to_docker_yml_file, db_password)
 
 print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
@@ -83,9 +84,5 @@ map_ids.get_graph_ids_set(path_to_g_SBML)
 print("Export SBML Uris intra equivalences ")
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra)
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
-try:
-    create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML_" + sbml_version + "/")
-    subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
-except subprocess.SubprocessError as e:
-    print("There was an error when trying to load files in virtusoso: " + e)
-    sys.exit(3)
+
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML_" + sbml_version + "/", path_to_docker_yml_file, db_password)
