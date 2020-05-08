@@ -66,18 +66,16 @@ print("Import configuration table ...", end = '')
 map_ids.import_table_infos(config['METANETX'].get('path_to_table_infos'))
 # Import graph :
 print("Ok\nTry to load MetanetX graph from " + config['METANETX'].get('g_path') + " ...", end = '')
-# graph_metaNetX = rdflib.Graph()
-# graph_metaNetX.parse(path_to_g_MetaNetX, format = "turtle")
+graph_metaNetX = rdflib.Graph()
+graph_metaNetX.parse(path_to_g_MetaNetX, format = "turtle")
 print("Ok\nTry de create URIs equivalences from MetaNetX graph ...")
 # Create graphs :
-# map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_MetaNetX)
-# map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra)
-
+map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_MetaNetX)
+map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "MetaNetX")
 
 print("Try to load mapping graphs in Virtuoso ...")
 create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
 
-
 print("Try to intra mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
    

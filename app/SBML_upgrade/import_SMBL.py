@@ -52,7 +52,7 @@ Intra_eq_base_uri = config['INTRA'].get('base_uri')
 
 uri = base_uri_SBML + sbml_version
 
-linked_grahs = [Intra_eq_base_uri + "SBML_" + sbml_version]
+linked_grahs = [Intra_eq_base_uri + sbml_version]
 
 if test_if_graph_exists(url, uri, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
     print("Create graphs ...")
@@ -74,12 +74,12 @@ create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL, uri, path_to_
 
 print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
-map_ids = Id_mapping("SBML_" + sbml_version, namespaces)
+map_ids = Id_mapping(sbml_version, namespaces)
 print("Import configuration table", end = '')
 map_ids.import_table_infos(config['SBML'].get('path_to_table_infos'))
 map_ids.get_graph_ids_set(path_to_g_SBML)
 print("Export SBML Uris intra equivalences ")
-map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra)
+map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "SBML")
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
 
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML_" + sbml_version + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", path_to_docker_yml_file, db_password)

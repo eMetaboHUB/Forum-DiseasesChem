@@ -141,16 +141,17 @@ class Id_mapping:
         ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_UniChem.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_UniChem_" + ressource_version_UniChem.version + ".ttl", format = 'turtle')
     
-    def export_intra_eq(self, path_out):
+    def export_intra_eq(self, path_out, source):
         """
         This function is used to create a graph or URIs equivalences between the different URIs associated to a given ressource. E
         Between differents URIs of the same ressource (called intra-uris) a skos:exactMatch relation is implemented
         - path_out: a path to out files
+        - source : a string which defined the origin of the data stores in the IdMapping object, et may be SBML, MetaNetX, BiGG ...
         """
-        ressource_version_intra = Database_ressource_version(ressource = "ressources_id_mapping/Intra", version = self.version)
+        ressource_version_intra = Database_ressource_version(ressource = "ressources_id_mapping/Intra/" + source, version = self.version)
         n_triples = 0
         subjects = set()
-        path_out = path_out + ressource_version_intra.version + "/"
+        path_out = path_out + source + "/" + ressource_version_intra.version + "/"
         if not os.path.exists(path_out):
             os.makedirs(path_out)
         for r_name in self.intra_ids_dict.keys():
