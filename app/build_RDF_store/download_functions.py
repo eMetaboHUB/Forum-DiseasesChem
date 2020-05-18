@@ -1,6 +1,5 @@
 import os, time
 import rdflib
-from Database_ressource_version import Database_ressource_version
 from rdflib.namespace import XSD, DCTERMS
 
 def download_pubChem(dir, request_ressource, out_path):
@@ -9,6 +8,7 @@ def download_pubChem(dir, request_ressource, out_path):
     - dir: the path to the directory/file to fetch in the ftp server from ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/
     - request_ressource: the name of the ressource as indicated in the void.ttl file.
     - out_path: a path to a directory to write output files
+    The function return the version path
     """
     # On télécharge le fichier void et les données
     os.system("wget ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl")
@@ -31,6 +31,7 @@ def download_pubChem(dir, request_ressource, out_path):
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(out_path + request_ressource + "/" + "ressource_info_" + request_ressource + "_" + str(global_modif_date) + ".ttl", format = 'turtle')
+    return version_path
 
 def download_MeSH(out_dir, namespaces_dict):
     """
@@ -39,6 +40,7 @@ def download_MeSH(out_dir, namespaces_dict):
     Ressource is named 'MeSHRDF' as indicate in the void.ttl
     - out_dir: a path to an directory to write output files
     - namespace_list: a list of the namespaces that should be associated to the graph
+    The function return the version path
     """
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -72,3 +74,4 @@ def download_MeSH(out_dir, namespaces_dict):
     ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
     # On écrit le graph de la ressource 
     ressource_version.version_graph.serialize(out_dir + "ressource_info_MeSHRDF" + "_" + version + ".ttl", format = 'turtle')
+    return out_path
