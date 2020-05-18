@@ -23,7 +23,6 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
         n_offset = count_id // limit_pack_ids
         if (count_id % limit_pack_ids) > 0:
             n_offset += 1
-    n_offset = 3
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     print(str(len(offset_list)) + " offset(s) will be computed using " + str(n_processes) + " processes")
     # Apply send_query_by_offset in parallel respecting the number of processes fixed
@@ -108,7 +107,6 @@ def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
         n_offset = count_id // limit_pack_ids
         if (count_id % limit_pack_ids) > 0:
             n_offset += 1
-    n_offset = 3
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     results = [pool.apply_async(aggregate_pmids_by_id, args=(path_in, str(offset))) for offset in offset_list]

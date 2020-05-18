@@ -56,21 +56,27 @@ descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
 mesh_out_dir = config['MESH'].get('out_dir_name')
 
 print("Download MESH :")
-mesh_version_path = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
+mesh_version = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
 
 print("Download References")
-reference_version_path = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
+reference_version = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
 
 print("Download Compounds")
-compound_version_path = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
+compound_version = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
 
 print("Download Descriptors")
-descriptor_version_path = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
+descriptor_version = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
 
 # The second step is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
 # Create a Conjunctive graph :
 g = rdflib.ConjunctiveGraph()
-for path in glob.glob(reference_version_path + "*_type.ttl.gz"):
+for path in glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz"):
     with gzip.open(path, 'rb') as f_ref_type:
         g.parse(f_ref_type, format = "turtle")
-print(len(g))
+all_pmids = [pmid for pmid in g.subjects()]
+print(len(all_pmids))
+
+
+
+
+# TODO: C'est ce main qui écrit le fichier d'uplaud avec les bonne version et les bon paths
