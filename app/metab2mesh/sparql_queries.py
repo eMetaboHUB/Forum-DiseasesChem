@@ -17,6 +17,7 @@ prefix = """
 
 count_distinct_pmids_by_CID = """
 select ?CID ?count
+%s
 where
 {
     {
@@ -60,6 +61,7 @@ offset %d
 
 count_distinct_pmids_by_MESH = """
 select ?MESH ?count
+%s
 where
 {
     {
@@ -102,22 +104,25 @@ offset %d
 """
 
 count_all_distinct_pmids = """
-    select (count(distinct ?pmid) as ?count) where {
-        {
-            select ?mesh 
-            where {
-                ?mesh a meshv:TopicalDescriptor .
-                ?mesh meshv:treeNumber ?tn .
-                FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-            }
+select (count(distinct ?pmid) as ?count)
+%s
+where {
+    {
+        select ?mesh 
+        where {
+            ?mesh a meshv:TopicalDescriptor .
+            ?mesh meshv:treeNumber ?tn .
+            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
         }
-        ?cid cito:isDiscussedBy ?pmid .
-        ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
     }
+    ?cid cito:isDiscussedBy ?pmid .
+    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+}
 """
 
 count_distinct_pmids_by_CID_MESH = """
 select ?CID ?MESH ?count
+%s
 where
 {
     {
@@ -159,6 +164,7 @@ offset %d
 
 list_of_distinct_pmid_by_CID_MeSH = """
 select ?id ?str_pmid
+%s
 where
 {
     {
@@ -199,6 +205,7 @@ offset %d
 
 MESH_name = """
 select ?MESH str(?str_f_label)
+%s
 where
 {
     {
@@ -234,19 +241,21 @@ offset %d
 """
 
 count_number_of_CID = """
-    select (count(distinct ?cid) as ?count_CID)
-    where 
-    {
-        ?cid cito:isDiscussedBy ?pmid .
-    }
+select (count(distinct ?cid) as ?count_CID)
+%s
+where 
+{
+    ?cid cito:isDiscussedBy ?pmid .
+}
 """
 
 count_number_of_MESH = """
-    select (count(distinct ?mesh) as ?count_MESH) 
-    where 
-    {
-        ?mesh a meshv:TopicalDescriptor .
-        ?mesh meshv:treeNumber ?tn .
-        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-    }
+select (count(distinct ?mesh) as ?count_MESH)
+%s
+where 
+{
+    ?mesh a meshv:TopicalDescriptor .
+    ?mesh meshv:treeNumber ?tn .
+    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+}
 """
