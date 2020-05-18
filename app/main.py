@@ -7,7 +7,8 @@ from parse_pubchem_RDF import parse_pubchem_RDF
 from Request_RESTful_PubChem import REST_ful_bulk_download
 from download_functions import download_MeSH, download_pubChem
 from process_SMBL import extract_ids_from_SMBL_by_URI_prefix, merge_SMBL_and_annot_graphs
-from get_info_from_UniChem import Id_mapping
+
+
 # The Api_key can be found on the NCBI account.
 # Creating the directory of all namespaces
 namespaces = {
@@ -59,7 +60,7 @@ query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
                                     api_key = apiKey)
 # On crée le graph SBML mergé :
-smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/2020-04-06/")
+smbl_graph = merge_SMBL_and_annot_graphs("data/HumanGEM/HumanGEM.ttl", ["synonyms.trig", "infered_uris.trig", "infered_uris_synonyms.trig"], "data/annot_graphs/onlyMetaNetX/")
 cid_list = extract_ids_from_SMBL_by_URI_prefix(smbl_graph, "http://identifiers.org/pubchem.compound/")
 # Create Graph
 sbml_cid_pmid = Elink_ressource_creator(ressource_name = "CID_PMID", 
@@ -176,44 +177,27 @@ parse_pubchem_RDF(input_ressource_directory = "data/PubChem_References/PrimarySu
 
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/2020-03-06/",
-                  all_ids = all_new_cids,
+                  all_ids = cid_list,
                   prefix = "compound:CID",
                   out_dir = "data/PubChem_Compound/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Compound/compound/ressource_info_compound_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/compound/2020-03-06"),
                   filtered_ressource_name = "CompoundFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/SBML_2020-05-07"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "2020-04-29",
+                  version = "SBML_2020-05-07",
                   separator = '\t')
 
 parse_pubchem_RDF(input_ressource_directory = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/2020-03-06/",
-                  all_ids = all_new_cids_features_list,
+                  all_ids = smbl_compound_ids_features_list,
                   prefix = "descriptor:CID",
                   out_dir = "data/PubChem_Descriptor/",
                   input_ressource_file = "/media/mxdelmas/DisqueDur/data_max/PubChem_Descriptor/descriptor/ressource_info_descriptor_2020-03-06.ttl",
                   input_ressource_uri = rdflib.URIRef("http://database/ressources/PubChem/descriptor/2020-03-06"),
                   filtered_ressource_name = "DescriptorFiltered",
-                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/2020-04-18"),
+                  input_ids_uri = rdflib.URIRef("http://database/ressources/PMID_CID/SBML_2020-05-07"),
                   isZipped = True,
                   namespace_dict = namespaces,
-                  version = "2020-04-29",
+                  version = "SBML_2020-05-07",
                   separator = '\t')
-
-
-
-graph_metaNetX = rdflib.Graph()
-graph_metaNetX.parse("data/MetaNetX/metanetx.ttl", format = "turtle")
-## Ids - Mapping ##
-map_ids = Id_mapping(None, namespaces)
-map_ids.import_config("data/Id_mapping/config.csv")
-map_ids.get_graph_ids_set("data/HumanGEM/HumanGEM.ttl")
-map_ids.create_graph_from_UniChem("data/Id_mapping/UniChem/")
-
-map_ids.create_graph_from_MetaNetX(graph_metaNetX, "data/Id_mapping/MetaNetX/")
-
-map_ids.create_graph_from_tab(tab_name = "BiGG", path_tab = "data/Recon3D/ids_table.csv", path_out = "data/Id_mapping/BiGG/")
-
-map_ids.export_intra_eq("data/Id_mapping/Intra/")
-

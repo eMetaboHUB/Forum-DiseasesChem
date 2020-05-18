@@ -40,7 +40,7 @@ launch_from_config(prefix, header, data, url, config, 'MESH_NAMES', out_path)
 
 print("Start getting CID - MeSH coocurences pmid list")
 
-# launch_from_config(prefix, header, data, url, config, 'CID_MESH_PMID_LIST', out_path)
+launch_from_config(prefix, header, data, url, config, 'CID_MESH_PMID_LIST', out_path)
 l_pmid_out_path = out_path + config['CID_MESH_PMID_LIST']['out_dir'] + "/"
 
 print("Call aggregate function")
