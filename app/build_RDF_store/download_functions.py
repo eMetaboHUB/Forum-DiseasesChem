@@ -11,14 +11,17 @@ def download_pubChem(dir, request_ressource, out_path):
     - out_path: a path to a directory to write output files
     The function return the version created
     """
+    # Intialyze .log files
+    with open("dl_pubchem_" + dir + ".log", "wb") as f_log:
+        pass
     # On télécharge le fichier void et les données
     print("Trying to dowload PubChem void.ttl file ...", end = '')
     try:
         subprocess.run("wget ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl", shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
-        print("Error during trying to download PubChem void.ttl file, check dl_pubchem.log")
+        print("Error during trying to download PubChem void.ttl file, check dl_pubchem_" + dir + ".log")
         print(e)
-        with open("dl_mesh.log", "ab") as f_log:
+        with open("dl_pubchem_" + dir + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to read Pubchem void.ttl file ...", end = '')
@@ -34,9 +37,9 @@ def download_pubChem(dir, request_ressource, out_path):
     try:
         subprocess.run("mv void.ttl " + out_path, shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
-        print("Error during trying to move PubChem void.ttl file, check dl_pubchem.log")
+        print("Error during trying to move PubChem void.ttl file, check dl_pubchem_" + dir + ".log")
         print(e)
-        with open("dl_mesh.log", "ab") as f_log:
+        with open("dl_pubchem_" + dir + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to dowload Pubchem " + dir + " directory ...", end = '')
@@ -44,9 +47,9 @@ def download_pubChem(dir, request_ressource, out_path):
     try:
         subprocess.run("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir, shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
-        print("Error during trying to dowload PubChem " + dir + " directory, check dl_pubchem.log")
+        print("Error during trying to dowload PubChem " + dir + " directory, check dl_pubchem_" + dir + ".log")
         print(e)
-        with open("dl_mesh.log", "ab") as f_log:
+        with open("dl_pubchem_" + dir + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to build Pubchem " + dir + " new ressource version ...", end = '')
@@ -70,6 +73,9 @@ def download_MeSH(out_dir, namespaces_dict):
     - namespace_list: a list of the namespaces that should be associated to the graph
     The function return the version
     """
+    # Intialyze .log files
+    with open("dl_mesh.log", "wb") as f_log:
+        pass
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     print("Trying to dowload MeSH void.ttl file ...", end = '')
