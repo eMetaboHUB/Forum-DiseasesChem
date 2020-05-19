@@ -15,6 +15,9 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
+    # Initialyze .log file
+    with open(out_path + "requests.log", "w") as f_log:
+        pass
     # First step is to get the total number of cid: 
     # Getting the number of CID, we can prepare the pack of cids respecting limit_size
     if limit_pack_ids > count_id:

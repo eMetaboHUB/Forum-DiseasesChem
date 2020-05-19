@@ -36,6 +36,12 @@ namespaces = {
     "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 }
 
+# Initialyze log files.
+with open("update.log", "wb") as f_log:
+    pass
+with open("remove.log", "wb") as f_log:
+    pass
+
 # Virtuoso:
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
 path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')

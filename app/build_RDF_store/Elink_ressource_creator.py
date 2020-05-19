@@ -182,6 +182,9 @@ class Elink_ressource_creator:
         - max_size : the maximal number of pmids by files
         - uri_targeted_ressource: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
         """
+        # Intialyze .log file :
+        with open("elink.log", "w") as f_log:
+            pass
         # Création des fichiers de sorties :
         add_files_path = "additional_files/" + self.ressource_version.version + "/"
         if not os.path.exists(add_files_path):
