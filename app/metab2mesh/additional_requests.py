@@ -1,6 +1,6 @@
 
 from sparql_queries import *
-from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request
+from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request, ask_for_graph
 import configparser
 import argparse, sys, os, requests
 
@@ -29,6 +29,12 @@ header = {
 data = {
     "format": "csv",
 }
+
+# First step is to test if all the needed graph are present in the RDF Store :
+for uri in config['VIRTUOSO'].get("graph_from").split('\n'):
+    if not ask_for_graph(url, uri):
+        print("Annotation graph " + uri + " does not exists")
+        sys.exit(3)
 
 # Start data Extraction : 
 

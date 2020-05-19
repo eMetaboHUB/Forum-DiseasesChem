@@ -32,7 +32,7 @@ def download_pubChem(dir, request_ressource, out_path):
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(version_path + "ressource_info_" + request_ressource + "_" + str(global_modif_date) + ".ttl", format = 'turtle')
-    return ressource_version.version
+    return ressource_version.version, str(ressource_version.uri_version)
 
 def download_MeSH(out_dir, namespaces_dict):
     """
@@ -77,4 +77,4 @@ def download_MeSH(out_dir, namespaces_dict):
     ressource_version.version_graph.serialize(out_path + "ressource_info_MeSHRDF" + "_" + version + ".ttl", format = 'turtle')
     # On supprime le fichier initial au format .nt
     os.system("rm " + out_path + "mesh.nt")
-    return ressource_version.version
+    return ressource_version.version, str(ressource_version.uri_version)

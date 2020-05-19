@@ -40,6 +40,7 @@ namespaces = {
 # Reading paths :
 
 out_path = config['GENERAL'].get('path_out')
+uri_graph_metadata = config['GENERAL'].get('uri_graph_metadata')
 # References
 reference_out_dir = config['REFERENCE'].get('out_dir_name')
 reference_r_name = config['REFERENCE'].get('ressource_name')
@@ -54,18 +55,30 @@ descriptor_r_name =config['DESCRIPTOR'].get('ressource_name')
 descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
 # MeSH 
 mesh_out_dir = config['MESH'].get('out_dir_name')
+# Elink
+run_as_test = config['ELINK'].getboolean('run_as_test')
+apiKey = config['ELINK'].get('api_key')
+pmid_cid_version = config['ELINK'].get('version')
 
 print("Download MESH :")
-mesh_version = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
+# mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
+mesh_version = "2020-05-18"
+mesh_uri = "http://database/ressources/MeSHRDF/2020-05-18"
 
 print("Download References")
-reference_version = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
+# reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
+reference_version = "2020-04-24"
+reference_uri = "http://database/ressources/PubChem/reference/2020-04-24"
 
 print("Download Compounds")
-compound_version = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
+# compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
+compound_version = "2020-04-24"
+compound_uri = "http://database/ressources/PubChem/compound/2020-04-24"
 
 print("Download Descriptors")
-descriptor_version = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
+# descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
+descriptor_version = "2020-04-24"
+descriptor_uri = "http://database/ressources/PubChem/descriptor/2020-04-24"
 
 # The second step is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
 # Create a Conjunctive graph :
@@ -73,10 +86,67 @@ g = rdflib.ConjunctiveGraph()
 for path in glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz"):
     with gzip.open(path, 'rb') as f_ref_type:
         g.parse(f_ref_type, format = "turtle")
-all_pmids = [pmid for pmid in g.subjects()]
-print(len(all_pmids))
 
+all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
 
+# Building requests
+query_builder = eutils.QueryService(cache = False,
+                                    default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
+                                    api_key = apiKey)
+# Build Elink ressource creator: 
 
+pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID", 
+                                        version = pmid_cid_version, 
+                                        dbfrom = "pubmed",
+                                        db = "pccompound",
+                                        ns_linking_id = ("reference", "PMID"),
+                                        ns_linked_id = ("compound", "CID"),
+                                        ns_endpoint = ("endpoint", ""),
+                                        primary_predicate = ("cito", "discusses"),
+                                        secondary_predicate = ("cito", "isCitedAsDataSourceBy"),
+                                        namespaces = namespaces)
+if run_as_test:
+    all_pmids = [all_pmids[i] for i in range(0,30000)]
 
-# TODO: C'est ce main qui écrit le fichier d'uplaud avec les bonne version et les bon paths
+# Run :
+pmid_cid.create_ressource(out_path, all_pmids, 10000, query_builder, 5000000)
+
+# Looking for failed at first try :
+while(len(pmid_cid.request_failure) != 0):
+    pmid_cid.create_ressource(out_path, pmid_cid.request_failure, 10000, query_builder, 5000000)
+
+pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef(reference_uri), rdflib.URIRef(compound_uri)])
+
+pmid_cid_version = pmid_cid.ressource_version.version
+
+# Final step is to create the file that may be used to load in this data in the correct graphs:
+
+print("Write output file")
+
+with open(out_path + "upload_data.sh", "w") as upload_f:
+    upload_f.write("delete from DB.DBA.load_list ;\n")
+    # For references
+    upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    # For compounds
+    upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    # For descriptors
+    upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    # For MeSH
+    upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    # For CID - PMID :
+    upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    # For CID - PMID endpoint :
+    upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    # Write loaders
+    upload_f.write("select * from DB.DBA.load_list;\n")
+    upload_f.write("rdf_loader_run();\n")
+    upload_f.write("checkpoint;\n")
+    upload_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
+
+print("End")

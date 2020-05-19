@@ -143,7 +143,6 @@ def launch_from_config(prefix, header, data, url, config, key, out_path):
     print("Exporting in " + out_path_dir + " ...")
     request = eval(config[key].get('Request_name'))
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
-    print(graph_from)
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
 def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_path, file_size):
@@ -170,3 +169,20 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
     for i, start in enumerate(range(0, df_size, file_size)):
         data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i), index = False)
     return data
+
+def ask_for_graph(url, graph_uri):
+    """
+    This function is used to test if graph a exist without erase
+    """
+    header = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "text/html"
+    }
+    data = {
+        "format": "html",
+        "query": "ASK WHERE { GRAPH <" + graph_uri + "> { ?s ?p ?o } }"
+    }
+    r = requests.post(url = url, headers = header, data = data)
+    if r.text == "true":
+        return True
+    return False
