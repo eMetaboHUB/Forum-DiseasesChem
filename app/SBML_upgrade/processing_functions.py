@@ -12,15 +12,17 @@ def create_update_file_from_ressource(path_out, path_to_graph_dir, path_to_docke
         update_f.write("checkpoint;\n")
         update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
     try:
-        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.STDOUT).rstrip()
-        subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
-    except subprocess.SubprocessError as e:
-        print("There was an error when trying to load files in virtusoso: " + e)
+        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.PIPE).rstrip()
+        subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, check=True, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("There was an error when trying to load files in virtusoso, check update.log : " + e)
+        with open("update.log", "ab") as f_log:
+            f_log.write(e.stderr)
         sys.exit(3)
 
 def create_update_file_from_graph_dir(path_out, path_to_graph_dir, grah_uri, path_to_docker_yml_file, db_password):
     """
-    This function is used to load grpah from a directory, the URI of each graph must be indicated using a <source-file>.<ext>.graph file containing the URI (Cf.http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader)
+    This function is used to load grpah from a directory, the URI of each graph must be indicated as grah_uri
     """
     with open(path_out + 'update.sh', "w") as update_f:
         update_f.write("delete from DB.DBA.load_list ;\n")
@@ -29,10 +31,12 @@ def create_update_file_from_graph_dir(path_out, path_to_graph_dir, grah_uri, pat
         update_f.write("checkpoint;\n")
         update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
     try:
-        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.STDOUT).rstrip()
-        subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, stderr=subprocess.STDOUT)
-    except subprocess.SubprocessError as e:
-        print("There was an error when trying to load SBML files in virtusoso: " + e)
+        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.PIPE).rstrip()
+        subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, check=True, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("There was an error when trying to load SBML files in virtusoso, check update.log: " + e)
+        with open("update.log", "ab") as f_log:
+            f_log.write(e.stderr)
         sys.exit(3)
 
 def remove_graph(path_out, uris, path_to_docker_yml_file, db_password):
@@ -42,10 +46,12 @@ def remove_graph(path_out, uris, path_to_docker_yml_file, db_password):
             remove_f.write("SPARQL CLEAR GRAPH  \"" + uri + "\"; \n")
         remove_f.write("delete from DB.DBA.load_list ;\n")
     try:
-        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.STDOUT).rstrip()
-        subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/remove.sh'", shell = True, stderr=subprocess.STDOUT)
-    except subprocess.SubprocessError as e:
-        print("There was an error when trying to remove graphs: " + e)
+        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.PIPE).rstrip()
+        subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/remove.sh'", shell = True, check=True, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("There was an error when trying to remove graphs, check remove.log: " + e)
+        with open("remove.log", "ab") as f_log:
+            f_log.write(e.stderr)
         sys.exit(3)
 
 

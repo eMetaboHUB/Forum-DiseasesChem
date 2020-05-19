@@ -1,4 +1,4 @@
-import os, time, rdflib, sys
+import os, time, rdflib, sys, subprocess
 from rdflib.namespace import XSD, DCTERMS
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
@@ -12,7 +12,14 @@ def download_pubChem(dir, request_ressource, out_path):
     The function return the version created
     """
     # On télécharge le fichier void et les données
-    os.system("wget ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl")
+    try:
+        subprocess.run("wget ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to download PubChem void.ttl file, check dl_pubchem.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     # On parse le fichier des metadatas
     g_metada = rdflib.Graph()
     g_metada.parse("void.ttl", format='turtle')
@@ -21,9 +28,23 @@ def download_pubChem(dir, request_ressource, out_path):
     version_path = out_path + request_ressource + "/" + str(global_modif_date) + "/"
     if not os.path.exists(version_path):
         os.makedirs(version_path)
-    os.system("mv void.ttl " + out_path)
+    try:
+        subprocess.run("mv void.ttl " + out_path, shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to move PubChem void.ttl file, check dl_pubchem.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     # On récupère les données que l'on enregistre dans le directory créée
-    os.system("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir)
+    try:
+        subprocess.run("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir, shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to dowload PubChem " + dir + " directory, check dl_pubchem.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = str(global_modif_date))
     ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
@@ -46,19 +67,40 @@ def download_MeSH(out_dir, namespaces_dict):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     # On télécharge le fichier void et les données
-    os.system("wget -P " + out_dir + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/void_1.0.0.ttl ")
+    try:
+        subprocess.run("wget -P " + out_dir + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/void_1.0.0.ttl", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to download MeSH void.ttl file, check dl_mesh.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     g_metada = rdflib.Graph()
     g_metada.parse(out_dir + "void_1.0.0.ttl", format = 'turtle')
     # téléchargement du MeSH RDF
-    os.system("wget -P " + out_dir + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt")
+    try:
+        subprocess.run("wget -P " + out_dir + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to download MeSH mesh.nt file, check dl_mesh.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     # On récupère la date de modification
     version = time.strftime('%Y-%m-%d', time.gmtime(os.path.getmtime(out_dir + "mesh.nt")))
     out_path = out_dir + version + "/"
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     # On déplace les fichiers aux endroits correspondant à la version
-    os.system("rm " + out_dir + "void_1.0.0.ttl ")
-    os.system("mv " + out_dir + "mesh.nt " + out_path + "mesh.nt")
+    try:
+        subprocess.run("rm " + out_dir + "void_1.0.0.ttl ", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("mv " + out_dir + "mesh.nt " + out_path + "mesh.nt", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to move files, check dl_mesh.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     # On crée la nouvelle ressource MeSH
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = version)
     ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
@@ -76,5 +118,12 @@ def download_MeSH(out_dir, namespaces_dict):
     # On écrit le graph de la ressource 
     ressource_version.version_graph.serialize(out_path + "ressource_info_MeSHRDF" + "_" + version + ".ttl", format = 'turtle')
     # On supprime le fichier initial au format .nt
-    os.system("rm " + out_path + "mesh.nt")
+    try:
+        subprocess.run("rm " + out_path + "mesh.nt", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to move files, check dl_mesh.log")
+        print(e)
+        with open("dl_mesh.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
     return ressource_version.version, str(ressource_version.uri_version)
