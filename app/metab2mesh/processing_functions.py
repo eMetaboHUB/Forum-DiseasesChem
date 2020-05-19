@@ -1,5 +1,6 @@
 import requests
 import os
+import sys
 import glob
 import multiprocessing as mp
 import pandas as pd
@@ -59,10 +60,13 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
     r = send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from)
     # Test if request successed
     if r.status_code != 200:
-        with open(out_path + "fail.log", "a") as log_fail:
-            log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
-        # If the first request fail, we fake it succed so the will still check the superior offset
-        test = True
+        print("Error in request at offset pack %d and offset pagination %d, request status code = %d.\nOffsets added to list_fail.log\nCheck requests.log\n" %(offset_pack_ids, offset_selected_ids, r.status_code))
+        with open(out_path + "requests.log", "a") as log_fail:
+            log_fail.write("for offset pack %d at offset pagination %d :\n" % (offset_pack_ids, offset_selected_ids))
+            log_fail.write(r.text + "\n")
+        with open(out_path + "list_fail.log", "a") as list_fail:
+            list_fail.write("%d\t%d\n" % (offset_pack_ids, offset_selected_ids))
+        test = False
     else:
         print("Request succed !")
         # Parse and write lines
@@ -83,10 +87,13 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
         # Send request
         r = send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from)
         if r.status_code != 200:
-            with open(out_path + "fail.log", "a") as log_fail:
-                log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
-            # If the first request fail, we fake it succed so the will still check the superior offset
-            test = True
+            print("Error in request at offset pack %d and offset pagination %d, request status code = %d.\nOffsets added to list_fail.log\nCheck requests.log\n" %(offset_pack_ids, offset_selected_ids, r.status_code))
+            with open(out_path + "requests.log", "a") as log_fail:
+                log_fail.write("for offset pack %d at offset pagination %d :\n" % (offset_pack_ids, offset_selected_ids))
+                log_fail.write(r.text + "\n")
+            with open(out_path + "list_fail.log", "a") as list_fail:
+                list_fail.write("%d\t%d\n" % (offset_pack_ids, offset_selected_ids))
+            test = False
             continue
         lines = r.text.splitlines()
         # After testing, lines are clean:
@@ -127,11 +134,20 @@ def aggregate_pmids_by_id(path_in, offset):
 def send_counting_request(prefix, header, data, url, config, key):
     r_data = data
     name = config[key].get('name')
-    query = eval(config[key].get('Size_Request_name'))
+    try:
+        query = eval(config[key].get('Size_Request_name'))
+    except NameError as e:
+        print("Specified request name \"" + config[key].get('Size_Request_name') + "\" seems not to exists in the sparql query file, exit.")
+        print("Error : " + str(e))
+        sys.exit(3)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     r_data["query"] = prefix + query %(graph_from)
     print("Counting total number of " + name + " ...")
     count_res = requests.post(url = url, headers = header, data = r_data)
+    if count_res.status_code != 200:
+        print("Error in request " + config[key].get('Size_Request_name') + ", request status code = " + str(count_res.status_code) + "\nImpossible to continue without total counts, exit.\n")
+        print(count_res.text)
+        sys.exit(3)
     count = int(count_res.text.splitlines().pop(1))
     print("There are " + str(count) + " " + name)
     return count
@@ -141,7 +157,12 @@ def launch_from_config(prefix, header, data, url, config, key, out_path):
     count = send_counting_request(prefix, header, data, url, config, key)
     out_path_dir = out_path + config[key].get('out_dir') + "/"
     print("Exporting in " + out_path_dir + " ...")
-    request = eval(config[key].get('Request_name'))
+    try:
+        request = eval(config[key].get('Request_name'))
+    except NameError as e:
+        print("Specified request name \"" + config[key].get('Request_name') + "\" seems not to exists in the sparql query file, exit.")
+        print("Error : " + str(e))
+        sys.exit(3)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
@@ -183,6 +204,10 @@ def ask_for_graph(url, graph_uri):
         "query": "ASK WHERE { GRAPH <" + graph_uri + "> { ?s ?p ?o } }"
     }
     r = requests.post(url = url, headers = header, data = data)
+    if r.status_code != 200:
+        print("Error in request while trying to check if all needed graphs exists.\nImpossible to continue, exit.\n")
+        print(r.text)
+        sys.exit(3)
     if r.text == "true":
         return True
     return False
