@@ -71,6 +71,7 @@ compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_
 
 print("Download Descriptors :")
 descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
+print("Ok")
 
 # The second step is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
 # Create a Conjunctive graph :

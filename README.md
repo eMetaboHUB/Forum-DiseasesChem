@@ -563,3 +563,12 @@ select count(distinct(?otherRef_syn)) where {
 	}
 }
 ```
+
+## - Launch Docker -
+### Build
+docker build -t forum/metdisease .
+### Run
+docker run --rm -it \
+-v $(pwd)/data:/workdir/data \
+forum/metdisease bash 
+
