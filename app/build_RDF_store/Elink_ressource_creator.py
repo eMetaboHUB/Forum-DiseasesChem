@@ -54,18 +54,25 @@ class Elink_ressource_creator:
         self.n_subjects_g_linked_id_endpoint = 0
         self.n_triples_g_linked_id_endpoint = 0
         
-    def append_linked_ids(self, id_pack, query_builder):
+    def append_linked_ids(self, id_packed_list, index_list, query_builder, pack_size):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
         - id_pack: a list Entrez Identifier 
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key"""
+        id_pack = id_packed_list[index_list]
         # Get linking_id associated linked_id. using try we test if request fail or not. If request fail, it's added to append_failure list
         try:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
         except eutils.EutilsError as fail_request:
-            print("Request on Eutils for current compound pack has failed during process, with error name: %s \n -- Compound cids is added to request_failure list" % (fail_request))
+            print("\nRequest on Eutils for current compound pack has failed during process, with error name: %s \n -- Compound cids is added to request_failure list" % (fail_request))
+            with open("elink.log", "a") as f_log:
+                f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
+                f_log.write(str(fail_request) + "\n")
             return False
         except (ValueError, requests.exceptions.RequestException) as e:
-            print("There was an request error: %s \n-- Compound cids is added to request_failure list" %(e))
+            print("\nThere was an request error: %s \n-- Compound cids is added to request_failure list" %(e))
+            with open("elink.log", "a") as f_log:
+                f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
+                f_log.write(str(e) + "\n")
             return False
         
         root = ET.fromstring(response)
@@ -175,6 +182,9 @@ class Elink_ressource_creator:
         - max_size : the maximal number of pmids by files
         - uri_targeted_ressource: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
         """
+        # Intialyze .log file :
+        with open("elink.log", "w") as f_log:
+            pass
         # Création des fichiers de sorties :
         add_files_path = "additional_files/" + self.ressource_version.version + "/"
         if not os.path.exists(add_files_path):
@@ -196,7 +206,7 @@ class Elink_ressource_creator:
         for index_list in range(0, len(id_packed_list)):
             print("-- Start getting pmids of list %d !\nTry to append compounds ..." %(index_list + 1), end = '')
             # On append les linked_ids: Si false est return c'est qu'il y a eu une erreur dans la requête, sinon on continue
-            test_append = self.append_linked_ids(id_packed_list[index_list], query_builder)
+            test_append = self.append_linked_ids(id_packed_list, index_list, query_builder, pack_size)
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
                 self.request_failure.extend(id_packed_list[index_list])

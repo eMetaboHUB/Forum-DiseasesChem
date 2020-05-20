@@ -1,5 +1,5 @@
 
-import argparse, sys, os
+import argparse, sys, os, gzip, glob
 import rdflib
 import configparser
 import subprocess
@@ -47,41 +47,43 @@ path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
 path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
 db_password = config['VIRTUOSO'].get('db_password')
 url = config['VIRTUOSO'].get('url')
+# PubChem:
 # MetaNetX:
-MetaNetX_v = config['METANETX'].get('version')
-path_to_g_MetaNetX = config['METANETX'].get('g_path')
-path_to_dir_MetaNetX = config['METANETX'].get('path_to_dir_from_dumps')
-base_uri_MetaNetX = config['METANETX'].get('base_uri')
+Pubchem_v = config['PUBCHEM'].get('version')
+path_to_pubchem_dir = config['PUBCHEM'].get('path_to_pubchem_dir')
+path_to_pubchem_dumps_dir = config['PUBCHEM'].get('path_to_dir_from_dumps')
+base_uri_pubchem = config['PUBCHEM'].get('base_uri')
 # Intra
 path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
 base_uri_Intra = config['INTRA'].get('base_uri')
 
-uri_MetaNetX = base_uri_MetaNetX + MetaNetX_v
-linked_grahs = [base_uri_Intra + MetaNetX_v]
+uri_PubChem = base_uri_pubchem + Pubchem_v
+linked_grahs = [base_uri_Intra + Pubchem_v]
 
 # Test if graph exists
-if test_if_graph_exists(url, uri_MetaNetX, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
+if test_if_graph_exists(url, uri_PubChem, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
     print("Create graphs ...")
 else:
     sys.exit(3)
 
-print("Mapping MetaNetX v." + MetaNetX_v + " graph don't exist, create graph.")
 # Intialyze Object:
-map_ids = Id_mapping(MetaNetX_v, namespaces)
+map_ids = Id_mapping(Pubchem_v, namespaces)
 print("Import configuration table ...", end = '')
-map_ids.import_table_infos(config['METANETX'].get('path_to_table_infos'))
-# Import graph :
-print("Ok\nTry to load MetanetX graph from " + config['METANETX'].get('g_path') + " ...", end = '')
-graph_metaNetX = rdflib.Graph()
-graph_metaNetX.parse(path_to_g_MetaNetX, format = "turtle")
-print("Ok\nTry de create URIs equivalences from MetaNetX graph ...")
-# Create graphs :
-map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_MetaNetX)
-map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "MetaNetX")
+map_ids.import_table_infos(config['PUBCHEM'].get('path_to_table_infos'))
+
+print("Ok\nRead pubchem type graph(s) ...", end = '')
+g = rdflib.ConjunctiveGraph()
+for path in glob.glob(path_to_pubchem_dir + "*_type*.ttl.gz"):
+    with gzip.open(path, "rb") as f:
+        g.parse(f, format="turtle")
+
+print("Ok\nCreate PubChem mapping graph")
+map_ids.create_graph_from_pubchem_type(g, path_to_dumps + path_to_pubchem_dumps_dir)
+print("Create PubChem Intra equivalences graph ")
+map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "PubChem")
 
 print("Try to load mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", path_to_docker_yml_file, db_password)
 
 print("Try to intra mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
-   
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", path_to_docker_yml_file, db_password)

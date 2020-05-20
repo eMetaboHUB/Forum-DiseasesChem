@@ -1,5 +1,6 @@
 import requests
 import os
+import sys
 import glob
 import multiprocessing as mp
 import pandas as pd
@@ -14,6 +15,9 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
+    # Initialyze .log file
+    with open(out_path + "requests.log", "w") as f_log:
+        pass
     # First step is to get the total number of cid: 
     # Getting the number of CID, we can prepare the pack of cids respecting limit_size
     if limit_pack_ids > count_id:
@@ -23,7 +27,6 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
         n_offset = count_id // limit_pack_ids
         if (count_id % limit_pack_ids) > 0:
             n_offset += 1
-    n_offset = 3
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     print(str(len(offset_list)) + " offset(s) will be computed using " + str(n_processes) + " processes")
     # Apply send_query_by_offset in parallel respecting the number of processes fixed
@@ -60,10 +63,13 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
     r = send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from)
     # Test if request successed
     if r.status_code != 200:
-        with open(out_path + "fail.log", "a") as log_fail:
-            log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
-        # If the first request fail, we fake it succed so the will still check the superior offset
-        test = True
+        print("Error in request at offset pack %d and offset pagination %d, request status code = %d.\nOffsets added to list_fail.log\nCheck requests.log\n" %(offset_pack_ids, offset_selected_ids, r.status_code))
+        with open(out_path + "requests.log", "a") as log_fail:
+            log_fail.write("for offset pack %d at offset pagination %d :\n" % (offset_pack_ids, offset_selected_ids))
+            log_fail.write(r.text + "\n")
+        with open(out_path + "list_fail.log", "a") as list_fail:
+            list_fail.write("%d\t%d\n" % (offset_pack_ids, offset_selected_ids))
+        test = False
     else:
         print("Request succed !")
         # Parse and write lines
@@ -84,10 +90,13 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
         # Send request
         r = send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from)
         if r.status_code != 200:
-            with open(out_path + "fail.log", "a") as log_fail:
-                log_fail.write("%d_%d" % (offset_pack_ids, offset_selected_ids))
-            # If the first request fail, we fake it succed so the will still check the superior offset
-            test = True
+            print("Error in request at offset pack %d and offset pagination %d, request status code = %d.\nOffsets added to list_fail.log\nCheck requests.log\n" %(offset_pack_ids, offset_selected_ids, r.status_code))
+            with open(out_path + "requests.log", "a") as log_fail:
+                log_fail.write("for offset pack %d at offset pagination %d :\n" % (offset_pack_ids, offset_selected_ids))
+                log_fail.write(r.text + "\n")
+            with open(out_path + "list_fail.log", "a") as list_fail:
+                list_fail.write("%d\t%d\n" % (offset_pack_ids, offset_selected_ids))
+            test = False
             continue
         lines = r.text.splitlines()
         # After testing, lines are clean:
@@ -108,7 +117,6 @@ def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
         n_offset = count_id // limit_pack_ids
         if (count_id % limit_pack_ids) > 0:
             n_offset += 1
-    n_offset = 3
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     results = [pool.apply_async(aggregate_pmids_by_id, args=(path_in, str(offset))) for offset in offset_list]
@@ -129,11 +137,20 @@ def aggregate_pmids_by_id(path_in, offset):
 def send_counting_request(prefix, header, data, url, config, key):
     r_data = data
     name = config[key].get('name')
-    query = eval(config[key].get('Size_Request_name'))
+    try:
+        query = eval(config[key].get('Size_Request_name'))
+    except NameError as e:
+        print("Specified request name \"" + config[key].get('Size_Request_name') + "\" seems not to exists in the sparql query file, exit.")
+        print("Error : " + str(e))
+        sys.exit(3)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     r_data["query"] = prefix + query %(graph_from)
     print("Counting total number of " + name + " ...")
     count_res = requests.post(url = url, headers = header, data = r_data)
+    if count_res.status_code != 200:
+        print("Error in request " + config[key].get('Size_Request_name') + ", request status code = " + str(count_res.status_code) + "\nImpossible to continue without total counts, exit.\n")
+        print(count_res.text)
+        sys.exit(3)
     count = int(count_res.text.splitlines().pop(1))
     print("There are " + str(count) + " " + name)
     return count
@@ -143,9 +160,13 @@ def launch_from_config(prefix, header, data, url, config, key, out_path):
     count = send_counting_request(prefix, header, data, url, config, key)
     out_path_dir = out_path + config[key].get('out_dir') + "/"
     print("Exporting in " + out_path_dir + " ...")
-    request = eval(config[key].get('Request_name'))
+    try:
+        request = eval(config[key].get('Request_name'))
+    except NameError as e:
+        print("Specified request name \"" + config[key].get('Request_name') + "\" seems not to exists in the sparql query file, exit.")
+        print("Error : " + str(e))
+        sys.exit(3)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
-    print(graph_from)
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
 def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_path, file_size):
@@ -155,11 +176,11 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     print("Import dataframes")
-    df_cid_mesh_list = [pd.read_csv(path, sep = ",", names=[X_name, Y_name, "COOC"]) for path in glob.glob(path_to_COOC + "*")]
+    df_cid_mesh_list = [pd.read_csv(path, sep = ",", names=[X_name, Y_name, "COOC"]) for path in glob.glob(path_to_COOC + "*.csv")]
     cid_mesh = pd.concat(df_cid_mesh_list)
-    df_cid_pmid_list = [pd.read_csv(path, sep = ",", names=[X_name, "TOTAL" + "_" + Individual_name + "_" + X_name]) for path in glob.glob(path_to_X + "*")]
+    df_cid_pmid_list = [pd.read_csv(path, sep = ",", names=[X_name, "TOTAL" + "_" + Individual_name + "_" + X_name]) for path in glob.glob(path_to_X + "*.csv")]
     cid_pmid = pd.concat(df_cid_pmid_list)
-    df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(path_to_Y + "*")]
+    df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(path_to_Y + "*.csv")]
     mesh_pmid = pd.concat(df_mesh_pmid_list)
     print("Merge columns")
     # Step 1: merging total CID counts :
@@ -172,3 +193,24 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
     for i, start in enumerate(range(0, df_size, file_size)):
         data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i), index = False)
     return data
+
+def ask_for_graph(url, graph_uri):
+    """
+    This function is used to test if graph a exist without erase
+    """
+    header = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "text/html"
+    }
+    data = {
+        "format": "html",
+        "query": "ASK WHERE { GRAPH <" + graph_uri + "> { ?s ?p ?o } }"
+    }
+    r = requests.post(url = url, headers = header, data = data)
+    if r.status_code != 200:
+        print("Error in request while trying to check if all needed graphs exists.\nImpossible to continue, exit.\n")
+        print(r.text)
+        sys.exit(3)
+    if r.text == "true":
+        return True
+    return False
