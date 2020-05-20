@@ -1,0 +1,90 @@
+# docker image
+image: forum/metdisease
+
+# maven env.
+variables:
+  # docker
+  DOCKER_IMAGE: "forum/metdisease"
+  # SSH / SCP
+  SSH_OPTS: " -q -t "
+  SSH_USER: "gitlab-bot"
+  SSH_HOST: "147.99.132.187"
+  # fetch data
+  WGET_URL: "https://pfem.clermont.inra.fr/pydio/public/7af464"
+  WGET_LOGIN: "--user none --password $PYDIO_PASSWD"
+  # cache
+  CACHE_BASH: "/tmp/gitlab-ci-cache"
+  CACHE_DOCKER: "/root/.cache-ci"
+
+# cache 
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - docker_resources/
+    - app/data/
+    
+# stages
+stages:
+  - get_resources
+  - docker_env
+  - test
+
+# jobs
+
+# main jobs: build and test
+get resources:
+  stage: get_resources
+  tags:
+    - docker
+  image: cirrusci/wget
+  before_script:
+    - echo "==================================";
+    - echo "[info] load cache ";
+    - test -d $CACHE_DOCKER || mkdir -p $CACHE_DOCKER
+    - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl docker_resources/
+  script:
+    - echo "==================================";
+    - echo "[info] get resources from Pydio";
+    - test -f docker_resources/HumanGEM.ttl || wget $WGET_LOGIN $WGET_URL/dl/HumanGEM.ttl -P docker_resources/
+  after_script:
+    - echo "==================================";
+    - echo "[info] save cache ";
+    - cp -r docker_resources/HumanGEM.ttl $CACHE_DOCKER/
+
+
+docker env:
+  stage: docker_env
+  tags:
+    - bash
+  before_script:
+    - echo "==================================";
+    - echo "[info] load cache ";
+    - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
+    - cp -r $CACHE_BASH/HumanGEM.ttl docker_resources/
+  script:
+    - echo "==================================";
+    - echo "[info] run 'docker build image' ";
+    - docker build -t $DOCKER_IMAGE .
+
+test:
+  stage: test
+  tags:
+    - docker
+  before_script:
+    - echo "==================================";
+    - echo "[info] check TTF file symlink (or create it)";
+    - test -d $CI_PROJECT_DIR/app/data/HumanGEM || mkdir -p $CI_PROJECT_DIR/app/data/HumanGEM
+    - test -f $CI_PROJECT_DIR/app/data/HumanGEM/HumanGEM.ttl || ln -s $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl $CI_PROJECT_DIR/app/data/HumanGEM/HumanGEM.ttl
+  script:
+    - echo "==================================";
+    - echo "[info] test 'docker image' ";
+    - pushd $CI_PROJECT_DIR/app
+    - python3 Citation.py
+    - python3 Database_ressource_version.py
+    - python3 Ensemble_citation.py
+    - python3 Ensemble_pccompound.py
+    - python3 Pmid.py
+    - python3 Pccompound.py
+    # - python3 get_info_from_UniChem.py
+    # - python3 Get_CID_PMID_associations.py
+    - popd 
