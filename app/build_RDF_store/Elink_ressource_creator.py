@@ -4,6 +4,7 @@ import numpy
 import sys
 import os
 import requests
+sys.path.insert(1, 'app/')
 from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 from datetime import date
 import xml.etree.ElementTree as ET

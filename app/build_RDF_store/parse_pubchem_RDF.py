@@ -1,7 +1,9 @@
 
 import gzip
 import rdflib
+import sys
 import os, time
+sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 from rdflib.namespace import XSD, DCTERMS
 

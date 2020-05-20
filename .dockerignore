@@ -1,0 +1,9 @@
+additional_files
+data
+docker-virtuoso
+.git
+.gitignore
+.gitlab-ci.yml
+notes
+README.md
+.vscode

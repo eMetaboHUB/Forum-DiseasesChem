@@ -3,7 +3,6 @@ import argparse, configparser, os
 sys.path.insert(1, 'app/')
 from Elink_ressource_creator import Elink_ressource_creator
 from Database_ressource_version import Database_ressource_version
-from parse_pubchem_RDF import parse_pubchem_RDF
 from download_functions import download_MeSH, download_pubChem
 
 parser = argparse.ArgumentParser()
