@@ -86,4 +86,3 @@ test:
     # - python3 Pccompound.py
     # - python3 get_info_from_UniChem.py
     # - python3 Get_CID_PMID_associations.py
-    - popd 
