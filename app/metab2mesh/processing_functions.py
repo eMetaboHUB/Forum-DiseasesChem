@@ -176,11 +176,11 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     print("Import dataframes")
-    df_cid_mesh_list = [pd.read_csv(path, sep = ",", names=[X_name, Y_name, "COOC"]) for path in glob.glob(path_to_COOC + "*")]
+    df_cid_mesh_list = [pd.read_csv(path, sep = ",", names=[X_name, Y_name, "COOC"]) for path in glob.glob(path_to_COOC + "*.csv")]
     cid_mesh = pd.concat(df_cid_mesh_list)
-    df_cid_pmid_list = [pd.read_csv(path, sep = ",", names=[X_name, "TOTAL" + "_" + Individual_name + "_" + X_name]) for path in glob.glob(path_to_X + "*")]
+    df_cid_pmid_list = [pd.read_csv(path, sep = ",", names=[X_name, "TOTAL" + "_" + Individual_name + "_" + X_name]) for path in glob.glob(path_to_X + "*.csv")]
     cid_pmid = pd.concat(df_cid_pmid_list)
-    df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(path_to_Y + "*")]
+    df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(path_to_Y + "*.csv")]
     mesh_pmid = pd.concat(df_mesh_pmid_list)
     print("Merge columns")
     # Step 1: merging total CID counts :

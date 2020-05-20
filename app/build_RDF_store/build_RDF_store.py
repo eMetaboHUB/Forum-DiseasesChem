@@ -61,17 +61,17 @@ apiKey = config['ELINK'].get('api_key')
 pmid_cid_version = config['ELINK'].get('version')
 
 print("Download MESH ...")
-mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
-# mesh_version = "2020-05-18"
-# mesh_uri = "http://database/ressources/MeSHRDF/2020-05-18"
+# mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
+mesh_version = "2020-05-18"
+mesh_uri = "http://database/ressources/MeSHRDF/2020-05-18"
 
 print(mesh_version)
 print(mesh_uri)
 
 print("Download References ...")
-reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
-# reference_version = "2020-04-24"
-# reference_uri = "http://database/ressources/PubChem/reference/2020-04-24"
+# reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
+reference_version = "2020-04-24"
+reference_uri = "http://database/ressources/PubChem/reference/2020-04-24"
 
 print(reference_version)
 print(reference_uri)
