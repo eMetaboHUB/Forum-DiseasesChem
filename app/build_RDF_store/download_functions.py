@@ -1,5 +1,5 @@
 import os, time, rdflib, sys, subprocess
-from rdflib.namespace import XSD, DCTERMS
+from rdflib.namespace import XSD, DCTERMS, VOID
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 
@@ -26,10 +26,10 @@ def download_pubChem(dir, request_ressource, out_path):
         sys.exit(3)
     print("Ok\nTrying to read Pubchem void.ttl file ...", end = '')
     # On parse le fichier des metadatas
-    g_metada = rdflib.Graph()
-    g_metada.parse("void.ttl", format='turtle')
+    g_metadata = rdflib.Graph()
+    g_metadata.parse("void.ttl", format='turtle')
     print("Ok\nGet version from void.ttl file ...", end = '')
-    global_modif_date = g_metada.value(subject=rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#PubChemRDF"), predicate=rdflib.URIRef("http://purl.org/dc/terms/modified"), object=None)
+    global_modif_date = g_metadata.value(subject=rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#PubChemRDF"), predicate=rdflib.URIRef("http://purl.org/dc/terms/modified"), object=None)
     # On crée un repertoire correspondant au subset PubChem récupéré et à la date de récupération
     version_path = out_path + request_ressource + "/" + str(global_modif_date) + "/"
     if not os.path.exists(version_path):
@@ -55,9 +55,11 @@ def download_pubChem(dir, request_ressource, out_path):
     print("Ok\nTrying to build Pubchem " + request_ressource + " new ressource version ...", end = '')
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = str(global_modif_date))
-    ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
+    ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
     # On annote la nouvelle version avec les informations du fichier void
-    for s,p,o in g_metada.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource), None, None)):
+    for s,p,o in g_metadata.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource), None, None)):
+        if p == VOID['dataDump'] and not str(o).startswith("ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir):
+            continue
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(version_path + "ressource_info_" + request_ressource + "_" + str(global_modif_date) + ".ttl", format = 'turtle')
@@ -89,8 +91,8 @@ def download_MeSH(out_dir, namespaces_dict):
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to read MeSH void.ttl file ...", end = '')
-    g_metada = rdflib.Graph()
-    g_metada.parse(out_dir + "void_1.0.0.ttl", format = 'turtle')
+    g_metadata = rdflib.Graph()
+    g_metadata.parse(out_dir + "void_1.0.0.ttl", format = 'turtle')
     print("Ok\nTrying to dowload MeSH RDF file ...", end = '')
     # téléchargement du MeSH RDF
     try:
@@ -121,8 +123,8 @@ def download_MeSH(out_dir, namespaces_dict):
     print("Ok\nTrying to parse MeSH original metadata ...", end = '')
     # On crée la nouvelle ressource MeSH
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = version)
-    ressource_version.version_graph.namespace_manager = g_metada.namespace_manager
-    for s,p,o in g_metada.triples((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), None, None)):
+    ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
+    for s,p,o in g_metadata.triples((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), None, None)):
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
         if p != DCTERMS["created"]:
             ressource_version.add_version_attribute(predicate = p, object = o)

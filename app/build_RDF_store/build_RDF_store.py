@@ -60,34 +60,21 @@ run_as_test = config['ELINK'].getboolean('run_as_test')
 apiKey = config['ELINK'].get('api_key')
 pmid_cid_version = config['ELINK'].get('version')
 
-print("Download MESH ...")
-# mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
-mesh_version = "2020-05-18"
-mesh_uri = "http://database/ressources/MeSHRDF/2020-05-18"
+print("Download MESH :")
+mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
 
-print(mesh_version)
-print(mesh_uri)
+print("Download References :")
+reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
 
-print("Download References ...")
-# reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
-reference_version = "2020-04-24"
-reference_uri = "http://database/ressources/PubChem/reference/2020-04-24"
-
-print(reference_version)
-print(reference_uri)
-
-print("Download Compounds ...")
+print("Download Compounds :")
 compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
-# compound_version = "2020-04-24"
-# compound_uri = "http://database/ressources/PubChem/compound/2020-04-24"
 
-print("Download Descriptors ...")
+print("Download Descriptors :")
 descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
-# descriptor_version = "2020-04-24"
-# descriptor_uri = "http://database/ressources/PubChem/descriptor/2020-04-24"
 
 # The second step is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
 # Create a Conjunctive graph :
+print("Try to extract all pmids from Reference type graph(s) ...", end = '')
 g = rdflib.ConjunctiveGraph()
 for path in glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz"):
     with gzip.open(path, 'rb') as f_ref_type:
@@ -95,6 +82,9 @@ for path in glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/
 
 all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
 
+print("Ok\n" + str(len(all_pmids)) + " pmids were found !")
+
+print("Try to extract CID - PMID associations using Elink processes")
 # Building requests
 query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
