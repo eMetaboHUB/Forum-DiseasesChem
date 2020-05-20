@@ -79,10 +79,9 @@ test:
     - echo "==================================";
     - echo "[info] test 'docker image' ";
     - python3 $CI_PROJECT_DIR/app/build_RDF_store/Elink_ressource_creator.py
-    # - python3 Database_ressource_version.py
-    # - python3 Ensemble_citation.py
-    # - python3 Ensemble_pccompound.py
-    # - python3 Pmid.py
-    # - python3 Pccompound.py
-    # - python3 get_info_from_UniChem.py
-    # - python3 Get_CID_PMID_associations.py
+    - python3 $CI_PROJECT_DIR/app/build_RDF_store/download_functions.py
+    - python3 $CI_PROJECT_DIR/app/build_RDF_store/parse_pubchem_RDF.py
+    - python3 $CI_PROJECT_DIR/app/metab2mesh/processing_functions.py
+    - python3 $CI_PROJECT_DIR/app/metab2mesh/sparql_queries.py
+    - python3 $CI_PROJECT_DIR/app/SBML_upgrade/Id_mapping.py
+    - python3 $CI_PROJECT_DIR/app/SBML_upgrade/processing_functions.py
