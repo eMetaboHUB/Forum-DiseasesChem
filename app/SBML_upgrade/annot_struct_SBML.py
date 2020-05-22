@@ -118,6 +118,10 @@ BIND(URI(str(?smiles)) as ?selected_smiles)
 }
 """
 
+print("Initialyze update file : " + update_f_name)
+with open(path_to_dumps + update_f_name, "w") as update_f:
+    pass
+
 if not ask_for_graph(url, SBML_graph_uri):
     print("SMBL graph " + SBML_graph_uri + " does not exists")
     sys.exit(3)
