@@ -29,27 +29,28 @@ forum/metdisease bash
 Use build_RDF_store.py
 
 #### Config file:
-[GENERAL]
-path_out: /path/to/output/directory. Shoud be /workdir/share-virtuoso/ which have to be mapped to the dumps directory of Virtuoso
-uri_graph_metadata: base uri for metadata graph (ex: http://database/ressources)
-[MESH]
-out_dir_name: output directory name (ex: MeSH)
-[COMPOUND]
-out_dir_name: output directory name (ex: PubChem_compound)
-dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: compound/general)
-ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: compound)
-[DESCRIPTOR]
-out_dir_name: output directory name (ex: PubChem_Descriptor)
-dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: descriptor/compound)
-ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: descriptor)
-[REFERENCE]
-out_dir_name: output directory name (ex: PubChem_References)
-dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: reference)
-ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: reference)
-[ELINK]
-run_as_test: a boolean (True/False) indicating if the Elink processes have to be run as test (only the first 30000 pmids) or full
-api_key: an apiKey provided by a NCBI account 
-version: The version of the builded ressource. If nothing is indicated, date will be used
+
+- [GENERAL]
+  - path_out: /path/to/output/directory. Shoud be /workdir/share-virtuoso/ which have to be mapped to the dumps directory of Virtuoso
+  - uri_graph_metadata: base uri for metadata graph (ex: http://database/ressources)
+- [MESH]
+  - out_dir_name: output directory name (ex: MeSH)
+- [COMPOUND]
+  - out_dir_name: output directory name (ex: PubChem_compound)
+  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: compound/general)
+  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: compound)
+- [DESCRIPTOR]
+  - out_dir_name: output directory name (ex: PubChem_Descriptor)
+  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: descriptor/compound)
+  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: descriptor)
+- [REFERENCE]
+  - out_dir_name: output directory name (ex: PubChem_References)
+  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: reference)
+  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: reference)
+- [ELINK]
+  - run_as_test: a boolean (True/False) indicating if the Elink processes have to be run as test (only the first 30000 pmids) or full
+  - api_key: an apiKey provided by a NCBI account 
+  - version: The version of the builded ressource. If nothing is indicated, date will be used
 
 run from workdir:
 ```python
@@ -80,7 +81,7 @@ This 4 counts must be determine for each available combinations of *x* and *y* u
 
 So, for each section *Request_name* contains the name of the variable in the sparql_query.py file, containing the string of the request couting individuals. But as this request may be really time and memory consumming, it's advised to run this query in parallel. To do so, the structure of the sparql query provided in the sparql_query.py file is adapted to the parallelization. A first internal nested *SELECT* is used to order modalities of the Variable and use a combination of *LIMIT* and *OFFSET* clauses to divide the set of modalities in smaller sets with a size of *limit_pack_ids* for each request.
 
-Then, each request is send in parallel with a specific sub-set. For exemple if the request is send with the *OFFSET a*, it computes the request for the *OFFSET a *th modality to the *OFFSET a + limit_pack_ids*th modality. The external *LIMIT* and *OFFSET* clauses are used to manage the pagination of outputed results by Virtuoso. Virtuoso max outputed rows is 2^20, so if for a particular sub-set there are more results, the request need to be re-send, incrementing the last offset from the maximal number of outputed lines (*limit_selected_ids*)
+Then, each request is send in parallel with a specific sub-set. For exemple if the request is send with the *OFFSET a*, it computes the request for the *OFFSET a* 'th modality to the *OFFSET a + limit_pack_ids* 'th modality. The external *LIMIT* and *OFFSET* clauses are used to manage the pagination of outputed results by Virtuoso. Virtuoso max outputed rows is 2^20, so if for a particular sub-set there are more results, the request need to be re-send, incrementing the last offset from the maximal number of outputed lines (*limit_selected_ids*)
 
 But in order to prepare the list of all offsets with a size of *limit_pack_ids*, that must be send, the total number of modalities of the variable must be determined. So, for each variable a request couting the total number of modalities must be provided. Like the others request, it must be set in a variable in the *sparql_queries.py* file. The name of this variable is then specified in th configuration file at the *Size_Request_name* parameter. *Counting requests* only return the count, like : 'SELECT ?COUNT WHERE { ... }'
 
@@ -94,43 +95,45 @@ After all queries have been completed, all results are merged to build a global 
 *modalility_x, modalility_y, total_counts_for_modality_x, total_counts_for_modality_y, total_counts_for_coocurences_between_x_and_y, total_number_of_individuals*
 
 The data.frame is printed in *df_out_dir* at *out_path*
+
 #### config file :
-[DEFAULT]
-out_path = /path/to/output/directory/
-df_out_dir = name of metab2mesh data.frame output directory
-file_size = number of lines per outputed data.frames
-[VIRTUOSO]
-url = url of the Virtuoso SPARQL endpoint
-graph_from = uri of data source graphs, one per line, Ex: 
+
+- [DEFAULT]
+  - out_path = /path/to/output/directory/
+  - df_out_dir = name of metab2mesh data.frame output directory
+  - file_size = number of lines per outputed data.frames
+- [VIRTUOSO]
+  - url = url of the Virtuoso SPARQL endpoint
+  - graph_from = uri of data source graphs, one per line, Ex: 
              http://database/ressources/PMID_CID/2020-04-20
              http://database/ressources/reference/2020-04-19
-[X_Y]
-name: name of the coocurences variable (ex: CID_MESH)
-Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each combinations of modalities of X and Y
-Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities in the grouping variable
-limit_pack_ids: Modality pack size that will be used to divide modalities of the grouping variable in smaller groups to allow parallelization (ex: 10000)
-limit_selected_ids: Maximal number of lines return by Virtuoso in one request. Use to manage pagination (ex: 1000000). Virtuoso max is 2^20
-n_processes: Number of processes that will be used to send queries in parallel
-out_dir: output directory name for coocurences
-[X]
-name: name of the X variable (ex: CID)
-Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each modalities of X
-Size_Request_name:  name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities of the variable X
-limit_pack_ids:  Modality pack size that will be used to divide modalities of X in smaller groups to allow parallelization (ex: 10000)
-limit_selected_ids: Maximal number of lines return by Virtuoso in one request. By default it can be set to limit_pack_ids + 1
-n_processes: Number of processes that will be used to send queries in parallel
-out_dir: output directory name for variable X
-[Y]
-name: name of the Y variable (ex: CID)
-Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each modalities of Y
-Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities of the variable Y
-limit_pack_ids: Modality pack size that will be used to divide modalities of Y in smaller groups to allow parallelization (ex: 10000)
-limit_selected_ids: Maximal number of lines return by Virtuoso in one request. By default it can be set to limit_pack_ids + 1
-n_processes: Number of processes that will be used to send queries in parallel
-out_dir: output directory name for variable Y
-[U]
-name = Name of the variable representing individuals (ex: PMID)
-Size_Request_name = name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of individuals in all the concerned set: that present at least one modality of variable X and one modality of variable Y
+- [X_Y]
+  - name: name of the coocurences variable (ex: CID_MESH)
+  - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each combinations of modalities of X and Y
+  - Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities in the grouping variable
+  - limit_pack_ids: Modality pack size that will be used to divide modalities of the grouping variable in smaller groups to allow parallelization (ex: 10000)
+  - limit_selected_ids: Maximal number of lines return by Virtuoso in one request. Use to manage pagination (ex: 1000000). Virtuoso max is 2^20
+  - n_processes: Number of processes that will be used to send queries in parallel
+  - out_dir: output directory name for coocurences
+- [X]
+  - name: name of the X variable (ex: CID)
+  - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each modalities of X
+  - Size_Request_name:  name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities of the variable X
+  - limit_pack_ids:  Modality pack size that will be used to divide modalities of X in smaller groups to allow parallelization (ex: 10000)
+  - limit_selected_ids: Maximal number of lines return by Virtuoso in one request. By default it can be set to limit_pack_ids + 1
+  - n_processes: Number of processes that will be used to send queries in parallel
+  - out_dir: output directory name for variable X
+- [Y]
+  - name: name of the Y variable (ex: CID)
+  - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each modalities of Y
+  - Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities of the variable Y
+  - limit_pack_ids: Modality pack size that will be used to divide modalities of Y in smaller groups to allow parallelization (ex: 10000)
+  - limit_selected_ids: Maximal number of lines return by Virtuoso in one request. By default it can be set to limit_pack_ids + 1
+  - n_processes: Number of processes that will be used to send queries in parallel
+  - out_dir: output directory name for variable Y
+- [U]
+  - name = Name of the variable representing individuals (ex: PMID)
+  - Size_Request_name = name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of individuals in all the concerned set: that present at least one modality of variable X and one modality of variable Y
 
 run from workdir:
 ```python
