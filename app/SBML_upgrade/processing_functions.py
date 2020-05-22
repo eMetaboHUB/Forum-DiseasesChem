@@ -6,14 +6,13 @@ import glob, requests, subprocess, sys
 #
 #
 
-def create_update_file_from_ressource(path_out, path_to_graph_dir, path_to_docker_yml_file, db_password):
+def create_update_file_from_ressource(path_out, path_to_graph_dir, path_to_docker_yml_file, db_password, file_pattern, target_graph):
     """
     This function is used to load graph which represent a ressource, with one or several .trig files associated to data graph and one ressource_info_**.ttl file describing the ressource
     """
     with open(path_out + 'update.sh', "w") as update_f:
         update_f.write("delete from DB.DBA.load_list ;\n")
-        update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '*.trig', '');\n")
-        update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', 'ressource_info_*.ttl', 'http://database/ressources');\n")
+        update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '" + file_pattern + "', '" + target_graph + "');\n")
         update_f.write("rdf_loader_run();\n")
         update_f.write("checkpoint;\n")
         update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
@@ -23,26 +22,6 @@ def create_update_file_from_ressource(path_out, path_to_graph_dir, path_to_docke
         print(p.stdout.decode('utf-8'))
     except subprocess.CalledProcessError as e:
         print("There was an error when trying to load files in virtusoso, check update.log")
-        with open("update.log", "ab") as f_log:
-            f_log.write(e.stdout)
-        sys.exit(3)
-
-def create_update_file_from_graph_dir(path_out, path_to_graph_dir, grah_uri, path_to_docker_yml_file, db_password):
-    """
-    This function is used to load grpah from a directory, the URI of each graph must be indicated as grah_uri
-    """
-    with open(path_out + 'update.sh', "w") as update_f:
-        update_f.write("delete from DB.DBA.load_list ;\n")
-        update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '*.ttl', '" + grah_uri + "');\n")
-        update_f.write("rdf_loader_run();\n")
-        update_f.write("checkpoint;\n")
-        update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
-    try:
-        dockvirtuoso = subprocess.check_output("docker-compose -f '" + path_to_docker_yml_file + "' ps | grep virtuoso | awk '{print $1}'", shell = True, universal_newlines=True, stderr=subprocess.PIPE).rstrip()
-        p = subprocess.run("docker exec -t " + dockvirtuoso + " bash -c \'/usr/local/virtuoso-opensource/bin/isql-v 1111 dba \"" + db_password + "\" ./dumps/update.sh'", shell = True, check=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        print(p.stdout.decode('utf-8'))
-    except subprocess.CalledProcessError as e:
-        print("There was an error when trying to load SBML files in virtusoso, check update.log")
         with open("update.log", "ab") as f_log:
             f_log.write(e.stdout)
         sys.exit(3)
@@ -104,7 +83,7 @@ def test_if_graph_exists(url, graph_uri, linked_graph_uri, path_out, path_to_doc
     else:
         return True
 
-def request_annotation(url, g_base_uri, query, sbml_uri, annot_graph_uri, version, header, data):
+def request_annotation(url, query, sbml_uri, annot_graph_uri, header, data, out_file):
     """
     This function is ised to send an annotation request
     - g_base_uri: the annotation graph uri base, ex: http://database/annotation_graph/
@@ -115,13 +94,15 @@ def request_annotation(url, g_base_uri, query, sbml_uri, annot_graph_uri, versio
     - header: a dict containing header paramters for the request
     - data: a dict containing data parameteres for the request
     """
-    data["query"] = query %(g_base_uri, version, sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
+    data["query"] = query %(sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
     r = requests.post(url = url, headers = header, data = data)
     if r.status_code != 200:
         print("Error in request while trying to compute annotation query.\nImpossible to continue, exit.\n")
         print(r.text)
         return False
-    print(r.text)
+    print("Write results in " + out_file)
+    with open(out_file, "w") as f_out:
+        f_out.write(r.text)
     return True
 
 def ask_for_graph(url, graph_uri):
