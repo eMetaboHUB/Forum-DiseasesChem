@@ -22,14 +22,12 @@ except configparser.Error as e:
 # Intialyze attributes and paths: 
 # Virtuoso
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
-path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
-db_password = config['VIRTUOSO'].get('db_password')
 url = config['VIRTUOSO'].get('url')
+update_f_name = config['VIRTUOSO'].get('update_file')
 # SBML
 SBML_graph_uri = config['SBML'].get("graph_uri")
 # ANNOTATIONS
 mapping_graph_uri = config['MAPPING_GRAPH'].get("graph_uri").split('\n')
-sources_uris = config['EXT_SOURCES'].get("graph_uri").split('\n')
 version = config['ANNOTATION_TYPE'].get('version')
 annot_graph_base_uri = config['ANNOTATION_TYPE'].get('annotation_graph_base_uri')
 
@@ -132,6 +130,10 @@ where {
 }
 """
 
+print("Initialyze update file : " + update_f_name)
+with open(path_to_dumps + update_f_name, "w") as update_f:
+    pass
+
 # Test if annot graph(s) and SBML graph exists
 # SBML
 if not ask_for_graph(url, SBML_graph_uri):
@@ -143,7 +145,7 @@ for uri in mapping_graph_uri:
         print("Annotation graph " + uri + " does not exists")
         sys.exit(3)
 
-if test_if_graph_exists(url, annot_graph_base_uri + version, [], path_to_dumps, path_to_docker_yml_file, db_password):
+if test_if_graph_exists(url, annot_graph_base_uri + version, [], path_to_dumps, update_f_name):
     print("Create graphs ...")
 
 print("Starting annotation ...")
@@ -168,4 +170,4 @@ if test_infered_uris_synonyms:
 else:
     print("Infered uris synonyms annotation fail")
 
-create_update_file_from_ressource(path_to_dumps, path_to_dir_from_dumps + version, path_to_docker_yml_file, db_password, "*.ttl", annot_graph_base_uri + version)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_from_dumps + version, "*.ttl", annot_graph_base_uri + version, update_f_name)

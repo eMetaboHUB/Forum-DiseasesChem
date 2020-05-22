@@ -44,9 +44,8 @@ with open("remove.log", "wb") as f_log:
 # Intialyze attributes and paths: 
 # Virtuoso:
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
-path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
-db_password = config['VIRTUOSO'].get('db_password')
 url = config['VIRTUOSO'].get('url')
+update_f_name = config['VIRTUOSO'].get('update_file')
 # PubChem:
 # MetaNetX:
 Pubchem_v = config['PUBCHEM'].get('version')
@@ -60,8 +59,12 @@ base_uri_Intra = config['INTRA'].get('base_uri')
 uri_PubChem = base_uri_pubchem + Pubchem_v
 linked_grahs = [base_uri_Intra + Pubchem_v]
 
+print("Initialyze update file : " + update_f_name)
+with open(path_to_dumps + update_f_name, "w") as update_f:
+    pass
+
 # Test if graph exists
-if test_if_graph_exists(url, uri_PubChem, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
+if test_if_graph_exists(url, uri_PubChem, linked_grahs, path_to_dumps, update_f_name):
     print("Create graphs ...")
 else:
     sys.exit(3)
@@ -83,9 +86,9 @@ print("Create PubChem Intra equivalences graph ")
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "PubChem")
 
 print("Try to load mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", path_to_docker_yml_file, db_password, "*.trig", '')
-create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", path_to_docker_yml_file, db_password, "ressource_info_*.ttl", base_uri_pubchem + Pubchem_v)
+create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", "*.trig", '', update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", "ressource_info_*.ttl", base_uri_pubchem + Pubchem_v, update_f_name)
 
 print("Try to intra mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", path_to_docker_yml_file, db_password, "*.trig", '')
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", path_to_docker_yml_file, db_password, "ressource_info_*.ttl", base_uri_Intra + Pubchem_v)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", "*.trig", '', update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", "ressource_info_*.ttl", base_uri_Intra + Pubchem_v, update_f_name)
