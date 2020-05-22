@@ -33,32 +33,32 @@ RUN apt update && \
     
 # SET WORK DIRECTORY
 RUN mkdir /workdir \
+    /workdir/share-virtuoso/ \
+    /workdir/out/ \
+    /workdir/config/ \
+    /workdir/data \
+    /workdir/data/HumanGEM \
+    /workdir/data/MetaNetX \
     /workdir/app \
     /workdir/app/SBML_upgrade \
-    /workdir/app/SBML_upgrade/config \
     /workdir/app/build_RDF_store \
-    /workdir/app/build_RDF_store/config  \
     /workdir/app/metab2mesh \
-    /workdir/app/metab2mesh/config \
-    /workdir/app/metab2mesh/post-processes \
-    /workdir/data \
-    /workdir/data/HumanGEM
+    /workdir/app/metab2mesh/post-processes
+    
 
 # COPY FILES
 COPY app/*.py /workdir/app/
 
 COPY app/SBML_upgrade/*.py /workdir/app/SBML_upgrade/
 COPY app/SBML_upgrade/table_info.csv /workdir/app/SBML_upgrade/
-COPY app/SBML_upgrade/config/*.ini /workdir/app/SBML_upgrade/config/
 
 COPY app/build_RDF_store/*.py /workdir/app/build_RDF_store/
-COPY app/build_RDF_store/config/*.ini /workdir/app/build_RDF_store/config/
 
 COPY app/metab2mesh/*.py /workdir/app/metab2mesh/
-COPY app/metab2mesh/config/*.ini /workdir/app/metab2mesh/config/
 COPY app/metab2mesh/post-processes/* /workdir/app/metab2mesh/post-processes/
 
-# COPY docker_resources/HumanGEM.ttl /workdir/data/HumanGEM/HumanGEM.ttl
+COPY docker_resources/HumanGEM.ttl /workdir/data/HumanGEM/HumanGEM.ttl
+COPY docker_resources/metanetx.ttl /workdir/data/MetaNetX/metanetx.ttl
 
 # SET WORK DIR.
 WORKDIR /workdir
