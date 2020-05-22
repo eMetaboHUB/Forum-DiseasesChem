@@ -25,6 +25,7 @@ class Elink_ressource_creator:
     - g_linked_id: a rdflib graph storing association between linking ids and linked ids using the primary_predicate
     - g_linked_id_endpoint: a rdflib graph storing describing associations between linking ids and linked ids using the secondary_predicate
     - append_failure: a list of the linking ids for which the NCBI eutils request succeeded but for which there was no associated linked ids
+    - request_failure: a list of linkings ids for which there was a eutils.EutilsError or a RequestException. For all ids contained in the request failure, a new attempt will be processed until th request succeded. 
     - available_linked_ids: a variable that store the current number of linking ids added to graphs
     - all_linked_ids: a set of all the linked ids which were added to graphs 
     - n_subjects_g_linked_id: the number of subjects in the g_linked_id graph
@@ -57,8 +58,11 @@ class Elink_ressource_creator:
         
     def append_linked_ids(self, id_packed_list, index_list, query_builder, pack_size):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
-        - id_pack: a list Entrez Identifier 
-        - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key"""
+        - id_packed_list: a list of pack of ids
+        - index_list: the index of the current pack
+        - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
+        - pack_size: the pack ids size
+        """
         id_pack = id_packed_list[index_list]
         # Get linking_id associated linked_id. using try we test if request fail or not. If request fail, it's added to append_failure list
         try:
@@ -153,6 +157,11 @@ class Elink_ressource_creator:
         self.available_linked_ids = 0
     
     def export_ressource_metatdata(self, out_dir, uri_targeted_ressources):
+        """
+        This function is used to export the metadata graph.
+        - out_dir: a path to the out directory
+        - uri_targeted_ressources: A list of uri targeted ressource. As the association graph provides links between two ressources, it can be defined as a LinkSet. The targeted ressources for which the graph is providing associations are displayed is the metadata graph.
+        """
         path_out_1 = out_dir + self.ressource_version.ressource + "/" + self.ressource_version.version + "/"
         path_out_2 = out_dir + self.ressource_version_endpoint.ressource + "/" + self.ressource_version_endpoint.version + "/"
         # On ajoute les infos pour la première ressource:
@@ -181,7 +190,6 @@ class Elink_ressource_creator:
         - pack_size: the size of the cids pack that have to be send as request, refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
         - max_size : the maximal number of pmids by files
-        - uri_targeted_ressource: a list containing the both URI of the targeted ressource used as dbfrom and db. If none, just put an empty list
         """
         # Intialyze .log file :
         with open("elink.log", "w") as f_log:

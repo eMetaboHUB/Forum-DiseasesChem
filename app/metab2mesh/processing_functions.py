@@ -11,6 +11,20 @@ from sparql_queries import *
 
 
 def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limit_pack_ids, limit_selected_ids, out_path, n_processes, graph_from):
+    """
+    This function is used to launch a SPARQL request in parralel according to config file parameters.
+    To be parralelize, the total number of modalities for one of the two studied variable (named the grouping variable) need to be cut in smaller groups. the number of groups is determine from the total number of modalities and the fixed group size.
+    - count_id: the total number of modalities for the grouping variable
+    - query: a string associated to the query with offset and limit prepared to be filled and incremented
+    - header: the header dict for the request
+    - data: the data dict for the request
+    - url: the Virtuoso SPARQL endpoint url
+    - limit_pack_ids: the fixed maximal size of each group of ids from the grouping variable
+    - limit_selected_ids: the fixed maximal number of lines that have to be exported by Virtuoso, manage the pagination (Virutoso max is 2^20)
+    - out_path: path to the output directory
+    - n_processes: the maximal number of processes, determining the number of queries send in parallel
+    - graph_from: a list of uris associated to the sources grpahs containing needed data for the query
+    """
     # Initialyze the pool
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     if not os.path.exists(out_path):
@@ -38,6 +52,11 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
 
 
 def write_request(lines, out_name):
+    """
+    This function is used to write lines in the output file
+    - lines: a list of lines, by default the result of the SPARQL query
+    - out_name: path to the output file
+    """
     if len(lines) > 0:
         # Remove the header 
         lines.pop(0)
@@ -46,6 +65,19 @@ def write_request(lines, out_name):
                 out.write(l + "\n")
 
 def send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from):
+    """
+    The function which is used to send the query
+    - url: the Virtuoso SPARQL endpoint url
+    - query: a string associated to the query with offset and limit prepared to be filled and incremented
+    - prefix: a string representing prefix of the SPARQL query
+    - header: the header dict for the request
+    - data: the data dict for the request
+    - limit_pack_ids: the fixed maximal size of each group of ids from the grouping variable
+    - offset_pack_ids: the offset in identifiers of the grouping variable, used to determine the group of treated identifiers by the request. For example, offset_pack_ids = 10000 and limit_pack_ids = 1000 implies that the 10001th ids to the 11000th will be treated
+    - limit_selected_ids: the fixed maximal number of lines that have to be exported by Virtuoso, manage the pagination (Virutoso max is 2^20)
+    - offset_selected_ids: same as offset_pack_ids but to deal with pagination of results. For example, offset_pack_ids = 1000000 and limit_pack_ids = 1000000 implies that Virtuoso will return results from the 1000001th lines to at most the 2000000th lines
+    - graph_from: a list of uris associated to the sources grpahs containing needed data for the query
+    """
     # Fill the query string with the associated parameters
     formated_query = prefix + query % (graph_from, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids)
     r_data = data
@@ -55,7 +87,17 @@ def send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids
 
 def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from, out_path):
     """
-    In this function limit_pack_ids, offset_pack_ids are fixed and only offset_selected_ids is increased if needed
+    This function is used to treat to treat a request results and to re-send the query with the next pagination offset if needed.
+    - url: the Virtuoso SPARQL endpoint url
+    - query: a string associated to the query with offset and limit prepared to be filled and incremented
+    - prefix: a string representing prefix of the SPARQL query
+    - header: the header dict for the request
+    - data: the data dict for the request
+    - limit_pack_ids: the fixed maximal size of each group of ids from the grouping variable (fixed here !)
+    - offset_pack_ids: the offset in identifiers of the grouping variable, used to determine the group of treated identifiers by the request. For example, offset_pack_ids = 10000 and limit_pack_ids = 1000 implies that the 10001th ids to the 11000th will be treated (fixed here !)
+    - limit_selected_ids: the fixed maximal number of lines that have to be exported by Virtuoso, manage the pagination (Virutoso max is 2^20)
+    - offset_selected_ids: same as offset_pack_ids but to deal with pagination of results. For example, offset_pack_ids = 1000000 and limit_pack_ids = 1000000 implies that Virtuoso will return results from the 1000001th lines to at most the 2000000th lines
+    - graph_from: a list of uris associated to the sources grpahs containing needed data for the query
     """
     n_f = 1
     out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
@@ -110,6 +152,13 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
     return True
 
 def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
+    """
+    This function is used to call the aggregate_pmids_by_id function in parallel
+    - count_id: the total number of modalities for the grouping variable (need to be the same as used for CID_MESH_PMID_LIST)
+    - limit_pack_ids: the fixed maximal size of each group of ids from the grouping variable (need to be the same as used for CID_MESH_PMID_LIST)
+    - out_path: path to the output directory
+    - n_processes: the maximal number of processes, determining the number of queries send in parallel
+    """
     # get all offset
     if limit_pack_ids > count_id:
         n_offset = 1
@@ -126,6 +175,11 @@ def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
     pool.join()
 
 def aggregate_pmids_by_id(path_in, offset):
+    """
+    This function is used to process results of the SPARQL query CID_MESH_PMID_LIST to create a list of PMID separated by a ';' for each outputed combination of CID and MESH.
+    - path_in: path to the directory containing the res_offset_* files for the CID_MESH_PMID_LIST query
+    - offset: the treated offset
+    """
     # In the first step, all files associated to the same offset are read, and then data.frame are concatenate
     print("Working on offset " + offset + " ...")
     df_list = [pd.read_csv(path, sep = ",", names=["ID", "PMID"], dtype="string") for path in glob.glob(path_in + "res_offset_" + offset + "_f_*.csv")]
@@ -135,6 +189,16 @@ def aggregate_pmids_by_id(path_in, offset):
     agg.to_csv(path_in + "res_offset_aggregate_" + offset + ".csv", index = False, header = False)
 
 def send_counting_request(prefix, header, data, url, config, key):
+    """
+    This function is used to send a counting query to determine the total number of modalities for a variable (count_id)
+    - url: the Virtuoso SPARQL endpoint url
+    - query: a string associated to the query with offset and limit prepared to be filled and incremented
+    - prefix: a string representing prefix of the SPARQL query
+    - config: a configParser object containing parameters for each process
+    - key: the name of a section in the configParser object associated to a task
+    - header: the header dict for the request
+    - data: the data dict for the request
+    """
     r_data = data
     name = config[key].get('name')
     try:
@@ -156,6 +220,16 @@ def send_counting_request(prefix, header, data, url, config, key):
     return count
 
 def launch_from_config(prefix, header, data, url, config, key, out_path):
+    """
+    This functin is used to launch a query from the specified paramteres set in the config file.
+    - prefix: a string representing prefix of the SPARQL query
+    - header: the header dict for the request
+    - data: the data dict for the request
+    - url: the Virtuoso SPARQL endpoint url
+    - config: a configParser object containing parameters for each process
+    - key: the name of a section in the configParser object associated to a task
+    - out_path: path to the output directory
+    """
     # Get count:
     count = send_counting_request(prefix, header, data, url, config, key)
     out_path_dir = out_path + config[key].get('out_dir') + "/"
@@ -170,6 +244,17 @@ def launch_from_config(prefix, header, data, url, config, key, out_path):
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
 def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_path, file_size):
+    """
+    This function is used to build the final data.frame containg all results for next computation. As this table can be really huge and post processes need also to be parallelized, the table is separated in sub-table with a number of lines fixed by file_size.
+    Columns are: Modalities of X, Modalities of Y, Total number of individuals with modality X and Y, Total number of individuals with modality X, Total number of individuals with modality Y, Total number of individuals. 
+    - config: a configParser object containing parameters for each process
+    - path_to_COOC: path to coocurences directory
+    - path_to_X: path to counts for modalities X directory
+    - path_to_Y: path to counts for modalities Y directory
+    - U_size: the total number of individuals
+    - out_path: path to the output directory
+    - file_size: the number of lines is each outputed sub-table.
+    """
     X_name = config['X'].get('name')
     Y_name = config['Y'].get('name')
     Individual_name = config['U'].get('name')
@@ -197,6 +282,8 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
 def ask_for_graph(url, graph_uri):
     """
     This function is used to test if graph a exist without erase
+    - url: the Virtuoso SPARQL endpoint url
+    - graph_uri: the URI of the graph to test
     """
     header = {
         "Content-Type": "application/x-www-form-urlencoded",

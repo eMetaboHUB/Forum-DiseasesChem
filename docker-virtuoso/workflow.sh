@@ -43,7 +43,7 @@ echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
 # echo "ld_dir_all ('./dumps/HumanGEM/', '*.ttl', 'http://database/ressourcesSMBL');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl.gz', 'http://database/MetaNetX');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl.gz', 'http://database/MetaNetX');" >> share/upload.sh
 
 # echo "ld_dir_all ('./dumps/annot_graphs/MetaNetX_BiGG/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
 # echo "ld_dir_all ('./dumps/annot_graphs/MetaNetX_BiGG/', '*.trig', '');" >> share/upload.sh
@@ -74,11 +74,11 @@ echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl.gz', 'http://database/MetaNetX');"
 # echo "ld_dir_all ('./dumps/PMID_CID_endpoints/2020-04-18/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
 # echo "ld_dir_all ('./dumps/PMID_CID_endpoints/2020-04-18/', '*.trig.gz', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SBML_2020-05-07/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SBML_2020-05-07/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SBML_2020-05-07/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Compound/CompoundFiltered/SBML_2020-05-07/', '*.trig', '');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SBML_2020-05-07/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SBML_2020-05-07/', '*.trig', '');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SBML_2020-05-07/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/PubChem_Descriptor/DescriptorFiltered/SBML_2020-05-07/', '*.trig', '');" >> share/upload.sh
 
 # echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/2020-04-20/', '*.ttl', 'http://database/ressources');" >> share/upload.sh
 # echo "ld_dir_all ('./dumps/PubChem_References/PrimarySubjectTermFiltered/2020-04-20/', '*.trig.gz', '');" >> share/upload.sh

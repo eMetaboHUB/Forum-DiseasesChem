@@ -67,7 +67,10 @@ def remove_graph(path_out, uris, path_to_docker_yml_file, db_password):
 def test_if_graph_exists(url, graph_uri, linked_graph_uri, path_out, path_to_docker_yml_file, db_password):
     """
     This function is used to test if graph exist and to erase it if needed.
-    linked_graph_uri MUST be list !
+    - url: Virtuoso SPARQL endpoint url
+    - graph_uri: the graph uri
+    - linked_graph_uri: a list of additionnal graph uri that are linked to this graph (Ex: Intra eq graph)
+    - path_out: path to output directory
     """
     header = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -102,6 +105,16 @@ def test_if_graph_exists(url, graph_uri, linked_graph_uri, path_out, path_to_doc
         return True
 
 def request_annotation(url, g_base_uri, query, sbml_uri, annot_graph_uri, version, header, data):
+    """
+    This function is ised to send an annotation request
+    - g_base_uri: the annotation graph uri base, ex: http://database/annotation_graph/
+    - query: a string associated to the query prepared to be filled with additional parameters
+    - sbml_uri: the uri of the targeted SBML graph
+    - annot_graph_uri: a list of graph used as sources or the annotation process
+    - version: the version of the annotation
+    - header: a dict containing header paramters for the request
+    - data: a dict containing data parameteres for the request
+    """
     data["query"] = query %(g_base_uri, version, sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
     r = requests.post(url = url, headers = header, data = data)
     if r.status_code != 200:
@@ -114,6 +127,8 @@ def request_annotation(url, g_base_uri, query, sbml_uri, annot_graph_uri, versio
 def ask_for_graph(url, graph_uri):
     """
     This function is used to test if graph a exist without erase
+    - url: Virtuoso SPARQL endpoint url
+    - graph_uri: the graph uri to be tested
     """
     header = {
         "Content-Type": "application/x-www-form-urlencoded",

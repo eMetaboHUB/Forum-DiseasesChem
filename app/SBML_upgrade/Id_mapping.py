@@ -19,7 +19,8 @@ class Id_mapping:
         - ressources_ids: a dict with key as ressource name and values representing the ressource id in UniChem
         - graph_original_uri_prefix: a dict with key as ressource name and values as the URI used in the SBML graph
         - intra_ids_dict: a dict with key as ressource name and values containing the union of all the ids extracted for this ressource
-        - uri_MetaNetX: a dict with key as ressource name and values representing the URI of the ressource in the MetaNetX RDF graph
+        - uri_MetaNetX: a dict with key as ressource name and values representing the URI of the ressource present in the MetaNetX RDF graph
+        - uri_PubChem: a dict with key as ressource name and values representing the URI of the ressource present in the PubChem type RDF graph
         - namespaces: a dict of namespaces
         - version: the version of the ressource, if None date is used
         """
@@ -237,6 +238,7 @@ class Id_mapping:
         """
         This function is used to create a graph or uri equivalences between MetaNetX identifiers and other ressources. Equivalence information are fetch from the MetaNetX RDF graph. 
         Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
+        - graph_metaNetX: a rdflib object graph associated to the MetaNetX RDF graph
         - path_out: a path to out files
         """
         ressource_version_MetaNetX = Database_ressource_version(ressource = "ressources_id_mapping/MetaNetX", version = self.version)
@@ -318,6 +320,7 @@ class Id_mapping:
         Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
         - path_tab: a path to the tabulated file
         - tab_name: the name of the tabulated to implement the ressource
+        - path_out: path to the output directory
         """ 
         ressource_version_Tab = Database_ressource_version(ressource = "ressources_id_mapping/" + tab_name, version = self.version)
         n_triples = 0
@@ -364,6 +367,8 @@ class Id_mapping:
     def create_graph_from_pubchem_type(self, pubchem_graph, path_out):
         """
         This function is ised to create a mapping graph from information contains in type pubchem graphs which can contains links between PubChem CID and ChEBI
+        - pubchem_graph: a rdflib object graph associated to the PubChem type RDF graph
+        - path_out: path to the output directory
         """
         ressource_version_PubChem = Database_ressource_version(ressource = "ressources_id_mapping/PubChem", version = self.version)
         n_triples = 0
@@ -411,6 +416,12 @@ class Id_mapping:
         print("Ok")
         
     def get_pubchem_mapping(self, pubchem_graph, uri_1, uri2):
+        """
+        This function is used to request the PubChem type graph.
+        - pubchem_graph: a rdflib object graph associated to the PubChem type RDF graph
+        - uri_1: the uri of the ressource 1 as indicated in the uri_PubChem attribute
+        - uri_2: the uri of the ressource 2 as indicated in the uri_PubChem attribute
+        """
         query = pubchem_graph.query(
         """    
         SELECT (strafter(STR(?cid),\"""" + uri_1 + """\") as ?uri_r1) (strafter(STR(?xref),\"""" + uri2 + """\") as ?uri_r2) 

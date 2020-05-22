@@ -8,8 +8,8 @@ def download_pubChem(dir, request_ressource, out_path):
     This function is used to download PubChem rdf files from the ftp server and create a new version of the associated ressource.
     - dir: the path to the directory/file to fetch in the ftp server from ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/
     - request_ressource: the name of the ressource as indicated in the void.ttl file.
-    - out_path: a path to a directory to write output files
-    The function return the version created
+    - out_path: a path to a directory to write output files.
+    The function return the version created and the uri of this new version. in case of errors during wget downloading, errors are printed in dl_pubchem_*.log
     """
     # Intialyze .log files
     with open("dl_pubchem_" + request_ressource + ".log", "wb") as f_log:
@@ -69,11 +69,11 @@ def download_pubChem(dir, request_ressource, out_path):
 def download_MeSH(out_dir, namespaces_dict):
     """
     This function is used to download the last version of the MeSH RDF from NIH ftp server, the void.ttl file is also use to bring metadata information about the dowloaded version.
-    But contrary to PubChem the modification date is not include in the void.ttl file, so version should be added by the user.
+    But contrary to PubChem the modification date is not include in the void.ttl file. So, version is determine from the modification date of the file.
     Ressource is named 'MeSHRDF' as indicate in the void.ttl
     - out_dir: a path to an directory to write output files
     - namespace_list: a list of the namespaces that should be associated to the graph
-    The function return the version
+    The function return the version and the uri of this new version.
     """
     # Intialyze .log files
     with open("dl_mesh.log", "wb") as f_log:
