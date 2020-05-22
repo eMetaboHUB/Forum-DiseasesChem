@@ -64,6 +64,7 @@ docker env:
     - echo "[info] load cache ";
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
     - cp -r $CACHE_BASH/HumanGEM.ttl docker_resources/
+    - cp -r $CACHE_BASH/metanetx.ttl docker_resources/
   script:
     - echo "==================================";
     - echo "[info] run 'docker build image' ";
@@ -76,8 +77,10 @@ test:
   before_script:
     - echo "==================================";
     - echo "[info] check TTF file symlink (or create it)";
-    - test -d $CI_PROJECT_DIR/app/data/HumanGEM || mkdir -p $CI_PROJECT_DIR/app/data/HumanGEM
-    - test -f $CI_PROJECT_DIR/app/data/HumanGEM/HumanGEM.ttl || ln -s $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl $CI_PROJECT_DIR/app/data/HumanGEM/HumanGEM.ttl
+    - test -d $CI_PROJECT_DIR/data/HumanGEM || mkdir -p $CI_PROJECT_DIR/data/HumanGEM
+    - test -d $CI_PROJECT_DIR/data/MetaNetX || mkdir -p $CI_PROJECT_DIR/data/MetaNetX
+    - test -f $CI_PROJECT_DIR/data/HumanGEM/HumanGEM.ttl || ln -s $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl $CI_PROJECT_DIR/data/HumanGEM/HumanGEM.ttl
+    - test -f $CI_PROJECT_DIR/data/MetaNetX/metanetx.ttl || ln -s $CI_PROJECT_DIR/docker_resources/metanetx.ttl $CI_PROJECT_DIR/data/MetaNetX/metanetx.ttl
   script:
     - echo "==================================";
     - echo "[info] test 'docker image' ";
