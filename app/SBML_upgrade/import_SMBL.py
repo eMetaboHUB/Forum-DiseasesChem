@@ -76,7 +76,7 @@ except subprocess.SubprocessError as e:
     sys.exit(3)
 # Load graph
 print("Try to load SMBL graph in Virtuoso ...")
-create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL, uri, path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_SMBL, path_to_docker_yml_file, db_password, "*.ttl", uri)
 
 print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
@@ -88,4 +88,5 @@ print("Export SBML Uris intra equivalences ")
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "SBML")
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
 
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", path_to_docker_yml_file, db_password, "*.trig", '')
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", path_to_docker_yml_file, db_password, "ressource_info_*.ttl", uri)

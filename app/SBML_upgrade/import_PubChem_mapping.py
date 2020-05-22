@@ -83,7 +83,9 @@ print("Create PubChem Intra equivalences graph ")
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "PubChem")
 
 print("Try to load mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", path_to_docker_yml_file, db_password, "*.trig", '')
+create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", path_to_docker_yml_file, db_password, "ressource_info_*.ttl", base_uri_pubchem + Pubchem_v)
 
 print("Try to intra mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", path_to_docker_yml_file, db_password, "*.trig", '')
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", path_to_docker_yml_file, db_password, "ressource_info_*.ttl", base_uri_Intra + Pubchem_v)
