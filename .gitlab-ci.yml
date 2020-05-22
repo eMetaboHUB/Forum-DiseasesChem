@@ -42,14 +42,17 @@ get resources:
     - echo "[info] load cache ";
     - test -d $CACHE_DOCKER || mkdir -p $CACHE_DOCKER
     - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl docker_resources/
+    - test -f $CACHE_DOCKER/metanetx.ttl && cp -r $CACHE_DOCKER/metanetx.ttl docker_resources/
   script:
     - echo "==================================";
     - echo "[info] get resources from Pydio";
     - test -f docker_resources/HumanGEM.ttl || wget $WGET_LOGIN $WGET_URL/dl/HumanGEM.ttl -P docker_resources/
+    - test -f docker_resources/metanetx.ttl || wget $WGET_LOGIN $WGET_URL/dl/metanetx.ttl -P docker_resources/
   after_script:
     - echo "==================================";
     - echo "[info] save cache ";
     - cp -r docker_resources/HumanGEM.ttl $CACHE_DOCKER/
+    - cp -r docker_resources/metanetx.ttl $CACHE_DOCKER/
 
 
 docker env:
