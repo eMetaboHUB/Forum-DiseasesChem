@@ -65,6 +65,7 @@ class Elink_ressource_creator:
         """
         id_pack = id_packed_list[index_list]
         # Get linking_id associated linked_id. using try we test if request fail or not. If request fail, it's added to append_failure list
+        print("Send request ...")
         try:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
         except eutils.EutilsError as fail_request:
@@ -79,7 +80,7 @@ class Elink_ressource_creator:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write(str(e) + "\n")
             return False
-        
+        print("Try to parse request results ...")
         root = ET.fromstring(response)
         # Exploring sets
         for id_Element in root.findall("./LinkSet"):

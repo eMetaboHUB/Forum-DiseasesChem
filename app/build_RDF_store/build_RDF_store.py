@@ -57,6 +57,7 @@ mesh_out_dir = config['MESH'].get('out_dir_name')
 run_as_test = config['ELINK'].getboolean('run_as_test')
 apiKey = config['ELINK'].get('api_key')
 pmid_cid_version = config['ELINK'].get('version')
+pack_size = config['ELINK'].getint('pack_size')
 
 print("Download MESH :")
 mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
@@ -104,11 +105,11 @@ if run_as_test:
     all_pmids = [all_pmids[i] for i in range(0,30000)]
 
 # Run :
-pmid_cid.create_ressource(out_path, all_pmids, 10000, query_builder, 5000000)
+pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, 5000000)
 
 # Looking for failed at first try :
 while(len(pmid_cid.request_failure) != 0):
-    pmid_cid.create_ressource(out_path, pmid_cid.request_failure, 10000, query_builder, 5000000)
+    pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, 5000000)
 
 pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef(reference_uri), rdflib.URIRef(compound_uri)])
 
