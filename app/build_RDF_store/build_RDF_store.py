@@ -74,25 +74,12 @@ print("Download Descriptors :")
 descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
 print("Ok")
 
-# The second step is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
-# Create a Conjunctive graph :
-print("Try to extract all pmids from Reference type graph(s) ...", end = '')
-g = rdflib.ConjunctiveGraph()
-for path in glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz"):
-    with gzip.open(path, 'rb') as f_ref_type:
-        g.parse(f_ref_type, format = "turtle")
 
-all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
-
-print("Ok\n" + str(len(all_pmids)) + " pmids were found !")
-
-print("Try to extract CID - PMID associations using Elink processes")
 # Building requests
 query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
                                     api_key = apiKey, email = "maxime.delmas@inrae.fr")
 # Build Elink ressource creator: 
-
 pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID", 
                                         version = pmid_cid_version, 
                                         dbfrom = "pubmed",
@@ -104,6 +91,97 @@ pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID",
                                         secondary_predicate = ("cito", "isCitedAsDataSourceBy"),
                                         namespaces = namespaces,
                                         timeout = timeout)
+
+
+# Test if associations files from a previous attempt exists :
+version_add_f_path = addtional_files_out_path + "additional_files/" + pmid_cid_version + "/"
+
+if (os.path.exists(version_add_f_path + "all_linking_ids.txt") and
+    os.path.exists(version_add_f_path + "successful_linking_ids.txt") and
+    os.path.exists(version_add_f_path + "linking_ids_without_linked_ids.txt") and
+    os.path.exists(version_add_f_path + "all_linked_ids.txt") and
+    os.path.exists(version_add_f_path + "s_metdata.txt")):
+    
+    # Initialyze pmid list as set to compute subtracting
+    all_pmids_set = set()
+    print("Cache files from a previous attempt was found.\n")
+    print("Read and parse " + version_add_f_path + "all_linking_ids.txt ... ", end = '')
+    with open(version_add_f_path + "all_linking_ids.txt", "r") as all_linking_ids_f:
+        for id in all_linking_ids_f:
+            all_pmids_set.add(id.rstrip())
+    
+    print("Ok\nRead and parse " + version_add_f_path + "successful_linking_ids.txt ...", end = '')
+    successful_linking_ids_set = set()
+    with open(version_add_f_path + "successful_linking_ids.txt", "r") as successful_linking_ids_f:
+        for id in successful_linking_ids_f:
+            successful_linking_ids_set.add(id.rstrip())
+    
+    print("Ok\nRead and parse " + version_add_f_path + "linking_ids_without_linked_ids.txt ...", end = '')
+    linking_ids_without_linked_ids_set = set()
+    with open(version_add_f_path + "linking_ids_without_linked_ids.txt", "r") as  linking_ids_without_linked_ids_f:
+        for id in linking_ids_without_linked_ids_f:
+            linking_ids_without_linked_ids_set.add(id.rstrip())
+    
+    print("Ok\nRead and parse " + version_add_f_path + "all_linked_ids.txt ... ", end = '')
+    all_linked_ids_set = set()
+    with open(version_add_f_path + "all_linked_ids.txt", "r") as all_linked_ids_f:
+        for id in all_linked_ids_f:
+            all_linked_ids_set.add(id.rstrip())
+    
+    print("Ok\nTry to determine remaining pmids ...", end = '')
+    all_pmids = list(all_pmids_set - linking_ids_without_linked_ids_set - successful_linking_ids_set)
+    if len(all_pmids) == 0:
+        print("Everything seems already done, exit.")
+        sys.exit(3)
+    print("Ok")
+    print(str(len(all_pmids)) + " remaining pmids !")
+    print("Try to initialyze all_linked_ids list ...", end = '')
+    pmid_cid.all_linked_ids = all_linked_ids_set
+    
+    print("Ok\nTry to parse previous metadata ... ", end = '')
+    with open(version_add_f_path + "s_metdata.txt", "r") as s_metadata_f:
+        pmid_cid.n_triples_g_linked_id = int(s_metadata_f.readline())
+        pmid_cid.n_triples_g_linked_id_endpoint = int(s_metadata_f.readline())
+        pmid_cid.n_subjects_g_linked_id = int(s_metadata_f.readline())
+        pmid_cid.n_subjects_g_linked_id_endpoint = int(s_metadata_f.readline())
+    
+    print("Ok\nTry to retrieve dataDumps files ... ")
+    # Initialyze list to determine the last outputed file
+    l1 = list()
+    l2 = list()
+    for pmid_cid_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID/" + pmid_cid_version + "/*.trig.gz")]:
+        l1.append(int(pmid_cid_path.split("PMID_CID_")[1].split(".trig.gz")[0]))
+        pmid_cid.ressource_version.add_DataDump(pmid_cid_path)
+    for pmid_cid_endpoint_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID_endpoints/" + pmid_cid_version + "/*.trig.gz")]:
+        l2.append(int(pmid_cid_endpoint_path.split("PMID_CID_endpoints_")[1].split(".trig.gz")[0]))
+        pmid_cid.ressource_version_endpoint.add_DataDump(pmid_cid_endpoint_path)
+    # The file index is set as the minimum of the last index or PMID_CID and PMIC_CID_endpoints to avoid missing wrong erasing
+    if max(l1) == max(l2):
+        pmid_cid.file_index = max(l1) + 1
+    else:
+        pmid_cid.file_index = max(max(l1), max(l2))
+    print("Starting output file from index: " + str(pmid_cid.file_index))
+
+
+else:
+    # The second option (in first try) is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
+    # Create a Conjunctive graph :
+    print("Try to extract all pmids from Reference type graph(s) ...", end = '')
+    g = rdflib.ConjunctiveGraph()
+    for path in glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz"):
+        with gzip.open(path, 'rb') as f_ref_type:
+            g.parse(f_ref_type, format = "turtle")
+
+    all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
+
+    print("Ok\n" + str(len(all_pmids)) + " pmids were found !")
+    # Ex
+    with open(version_add_f_path + "all_linking_ids.txt", "w") as all_linking_ids_f:
+        for id in all_pmids:
+            t = all_linking_ids_f.write("%s\n" %(id))
+
+print("Try to extract CID - PMID associations using Elink processes")
+
 if run_as_test:
     all_pmids = [all_pmids[i] for i in range(0,30000)]
 

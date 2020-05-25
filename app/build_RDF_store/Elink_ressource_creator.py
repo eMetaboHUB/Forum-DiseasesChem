@@ -5,6 +5,7 @@ import sys
 import os
 import requests
 import signal
+import subprocess
 sys.path.insert(1, 'app/')
 from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 from datetime import date
@@ -253,20 +254,37 @@ class Elink_ressource_creator:
                     print("\t\tEnd was reached with %d new linking_id - linked_id association, start to export graph\n" %(self.available_linked_ids))
                 else:
                     print("\t\tMaximal size (%d) was reached with %d new linking_id - linked_id association, start to export graph\n" %(max_size, self.available_linked_ids))
+                print(" Ok\n\t\tTry to write and compress graph as .trig in %s and %s ..." %(path_out_1, path_out_2), end = '')
+                # On export les graphs :
+                try:
+                    self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".trig", format='trig')
+                    self.ressource_version.add_DataDump(g_linked_id_name + ".trig")
+                except Exception as e:
+                    print("Error while trying to serialize linked id graph at " + path_out_1 + g_linked_id_name)
+                    sys.exit(3)
+                try:
+                    self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".trig", format='trig')
+                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig")
+                except Exception as e:
+                    print("Error while trying to serialize linked id graph endpoint at " + path_out_2 + g_linked_id_endpoint_name)
+                    sys.exit(3)
+                # On zip :
+                try:
+                    subprocess.run("gzip -f " + path_out_1 + g_linked_id_name + ".trig" + " " + path_out_2 + g_linked_id_endpoint_name + ".trig", shell = True, check=True, stderr = subprocess.PIPE)
+                except subprocess.CalledProcessError as e:
+                    print("Eroor while trying to compress files at " + path_out_1 + g_linked_id_name + " and " + path_out_2 + g_linked_id_endpoint_name)
+                    sys.exit(3)
                 # On incrémente les nombres de sujets et de triples :
-                print("\t\tIncrement numbers of triples and subjects from added triples ...", end = '')
+                print("Ok\n\t\tIncrement numbers of triples and subjects from added triples ...", end = '')
                 self.n_triples_g_linked_id += len(self.g_linked_id)
                 self.n_triples_g_linked_id_endpoint += len(self.g_linked_id_endpoint)
                 self.n_subjects_g_linked_id += len(self.get_all_linking_ids())
                 self.n_subjects_g_linked_id_endpoint += len(self.get_all_linked_id_endpoints())
-                print(" Ok\n\t\tTry to write and compress graph as .tll in %s and %s ..." %(path_out_1, path_out_2), end = '')
-                # On export les graphs :
-                self.ressource_version.add_DataDump(g_linked_id_name + ".trig")
-                self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".trig", format='trig')
-                self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig")
-                self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".trig", format='trig')
-                # On zip :
-                os.system("gzip " + path_out_1 + g_linked_id_name + ".trig" + " " + path_out_2 + g_linked_id_endpoint_name + ".trig")
+                with open(add_files_path + "s_metdata.txt", "w") as s_metadata_f:
+                    s_metadata_f.write("%d\n" %(self.n_triples_g_linked_id))
+                    s_metadata_f.write("%d\n" %(self.n_triples_g_linked_id_endpoint))
+                    s_metadata_f.write("%d\n" %(self.n_subjects_g_linked_id))
+                    s_metadata_f.write("%d\n" %(self.n_subjects_g_linked_id_endpoint))
                 # On export les cid successful :
                 print(" Ok\n\t\tTry tp export successful linking ids in " + add_files_path + "successful_linking_ids.txt ...", end = '')
                 with open(add_files_path + "successful_linking_ids.txt", 'a') as f_success:
@@ -277,20 +295,20 @@ class Elink_ressource_creator:
                 with open(add_files_path + "linking_ids_without_linked_ids.txt", 'a') as f_append_failure:
                     for append_failure_id in self.append_failure:
                         f_append_failure.write("%s\n" %(append_failure_id))
-                print(" Ok\n\t\t Try to append new linked ids to the global set ...", end = '')
+                print(" Ok\n\t\tTry to append new linked ids to the global set ...", end = '')
                 self.all_linked_ids = self.all_linked_ids.union(self.get_all_linked_ids())
+                print(" Ok\n\t\tExport all linked ids ...", end = '')
+                # Use write instead of append ('a') to overwrite the file at each new call of the function because only union of linked_ids shouls be mapped, and with append it may have duplicates if there are supplementary trys for request failures
+                with open(add_files_path + "all_linked_ids.txt", 'w') as f_all_linked_ids:
+                    for linked_id in self.all_linked_ids:
+                        f_all_linked_ids.write("%s\n" %(linked_id))
                 print(" Ok\n\t\tTry to clear objects for next iteration ...", end = '')
                 # On vide les graphs et les objects : 
                 self.clean()
                 # On incrémente le fichier :
                 self.file_index += 1
                 if index_list != len(id_packed_list) - 1:
-                    print(" Ok\n\t\tTry to create new graphs ...", end = '')
+                    print(" Ok\n\t\tTry to create new graphs ...")
                     # On créée deux nouveaux graphs :
                     g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(self.file_index), self.ressource_version_endpoint.ressource + "_" + str(self.file_index)
-        print(" Ok\n Export all linked ids ...", end = '')
-        # Use write instead of append ('a') to overwrite the file at each new callon the function because only union of linked_ids shouls be mapped, and with append it may have duplicates if there are supplementary trys for request failures
-        with open(add_files_path + "all_linked_ids.txt", 'w') as f_all_linked_ids:
-            for linked_id in self.all_linked_ids:
-                f_all_linked_ids.write("%s\n" %(linked_id))
         print(" Ok\n End !\n", end = '')
