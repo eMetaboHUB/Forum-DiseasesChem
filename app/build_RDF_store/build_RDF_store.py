@@ -58,6 +58,7 @@ run_as_test = config['ELINK'].getboolean('run_as_test')
 apiKey = config['ELINK'].get('api_key')
 pmid_cid_version = config['ELINK'].get('version')
 pack_size = config['ELINK'].getint('pack_size')
+timeout = config['ELINK'].getint('timeout')
 
 print("Download MESH :")
 mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
@@ -100,7 +101,8 @@ pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID",
                                         ns_endpoint = ("endpoint", ""),
                                         primary_predicate = ("cito", "discusses"),
                                         secondary_predicate = ("cito", "isCitedAsDataSourceBy"),
-                                        namespaces = namespaces)
+                                        namespaces = namespaces,
+                                        timeout = timeout)
 if run_as_test:
     all_pmids = [all_pmids[i] for i in range(0,30000)]
 

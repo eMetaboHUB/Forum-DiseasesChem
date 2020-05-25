@@ -4,11 +4,19 @@ import numpy
 import sys
 import os
 import requests
+import signal
 sys.path.insert(1, 'app/')
 from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 from datetime import date
 import xml.etree.ElementTree as ET
 from Database_ressource_version import Database_ressource_version
+
+# Prepare TimeoutExceptions
+class TimeOutException(Exception):
+   pass
+
+def alarm_handler(signum, frame):
+    raise TimeOutException()
 
 class Elink_ressource_creator:
     """This class represent an ensembl of Pccompound objects:
@@ -33,7 +41,7 @@ class Elink_ressource_creator:
     - n_subjects_g_linked_id_endpoint: the number of subjects in the g_linked_id_endpoint graph
     - n_triples_g_linked_id_endpoint: the total number of triples in the g_linked_id_endpoint graph
     """
-    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces):       
+    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout):       
         self.dbfrom = dbfrom
         self.db = db
         self.file_index = 1
@@ -55,6 +63,7 @@ class Elink_ressource_creator:
         self.n_triples_g_linked_id = 0
         self.n_subjects_g_linked_id_endpoint = 0
         self.n_triples_g_linked_id_endpoint = 0
+        self.r_timeout = timeout
         
     def append_linked_ids(self, id_packed_list, index_list, query_builder, pack_size):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
@@ -66,20 +75,33 @@ class Elink_ressource_creator:
         id_pack = id_packed_list[index_list]
         # Get linking_id associated linked_id. using try we test if request fail or not. If request fail, it's added to append_failure list
         print("Send request ...")
+        # Intialyze signal timeout :
+        signal.signal(signal.SIGALRM, alarm_handler)
+        signal.alarm(self.r_timeout)
         try:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
+        except TimeOutException:
+            print("\nRequest timeout was reached !")
+            with open("elink.log", "a") as f_log:
+                f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
+                f_log.write("Request Timeout\n")
+                signal.alarm(0)
+                return False
         except eutils.EutilsError as fail_request:
             print("\nRequest on Eutils for current compound pack has failed during process, with error name: %s \n" % (fail_request))
             with open("elink.log", "a") as f_log:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write(str(fail_request) + "\n")
+                signal.alarm(0)
             return False
         except (ValueError, requests.exceptions.RequestException) as e:
             print("\nThere was an request error: %s \n-- Compound cids is added to request_failure list" %(e))
             with open("elink.log", "a") as f_log:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write(str(e) + "\n")
+                signal.alarm(0)
             return False
+        signal.alarm(0)
         print("Try to parse request results ...")
         root = ET.fromstring(response)
         # Exploring sets
