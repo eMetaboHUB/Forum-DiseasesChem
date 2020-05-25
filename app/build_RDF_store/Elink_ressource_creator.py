@@ -205,7 +205,7 @@ class Elink_ressource_creator:
         self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
         self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
     
-    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size):
+    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
@@ -218,7 +218,7 @@ class Elink_ressource_creator:
         with open("elink.log", "w") as f_log:
             pass
         # Création des fichiers de sorties :
-        add_files_path = "additional_files/" + self.ressource_version.version + "/"
+        add_files_path = add_f_out_path + "additional_files/" + self.ressource_version.version + "/"
         if not os.path.exists(add_files_path):
             os.makedirs(add_files_path)
         # On prépare les répertoire : 
