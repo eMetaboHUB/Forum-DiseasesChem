@@ -39,7 +39,6 @@ namespaces = {
 # Reading paths :
 
 out_path = config['GENERAL'].get('path_out')
-uri_graph_metadata = config['GENERAL'].get('uri_graph_metadata')
 # References
 reference_out_dir = config['REFERENCE'].get('out_dir_name')
 reference_r_name = config['REFERENCE'].get('ressource_name')
@@ -58,6 +57,7 @@ mesh_out_dir = config['MESH'].get('out_dir_name')
 run_as_test = config['ELINK'].getboolean('run_as_test')
 apiKey = config['ELINK'].get('api_key')
 pmid_cid_version = config['ELINK'].get('version')
+pack_size = config['ELINK'].getint('pack_size')
 
 print("Download MESH :")
 mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
@@ -88,7 +88,7 @@ print("Try to extract CID - PMID associations using Elink processes")
 # Building requests
 query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
-                                    api_key = apiKey)
+                                    api_key = apiKey, email = "maxime.delmas@inrae.fr")
 # Build Elink ressource creator: 
 
 pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID", 
@@ -105,15 +105,17 @@ if run_as_test:
     all_pmids = [all_pmids[i] for i in range(0,30000)]
 
 # Run :
-pmid_cid.create_ressource(out_path, all_pmids, 10000, query_builder, 5000000)
+pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, 5000000)
 
 # Looking for failed at first try :
 while(len(pmid_cid.request_failure) != 0):
-    pmid_cid.create_ressource(out_path, pmid_cid.request_failure, 10000, query_builder, 5000000)
+    pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, 5000000)
 
 pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef(reference_uri), rdflib.URIRef(compound_uri)])
 
 pmid_cid_version = pmid_cid.ressource_version.version
+pmid_cid_uri_version = pmid_cid.ressource_version.uri_version
+pmid_cid_endpoint_uri_version = pmid_cid.ressource_version_endpoint.uri_version
 
 # Final step is to create the file that may be used to load in this data in the correct graphs:
 
@@ -123,22 +125,22 @@ with open(out_path + "upload_data.sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
     # For references
     upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl', '" + reference_uri + "');\n")
     # For compounds
     upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl', '" + compound_uri + "');\n")
     # For descriptors
     upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl', '" + descriptor_uri + "');\n")
     # For MeSH
     upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
-    upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.ttl', '" + mesh_uri + "');\n")
     # For CID - PMID :
     upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
-    upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl', '" + pmid_cid_uri_version + "');\n")
     # For CID - PMID endpoint :
     upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
-    upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl', '" + uri_graph_metadata + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl', '" + pmid_cid_endpoint_uri_version + "');\n")
     # Write loaders
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")

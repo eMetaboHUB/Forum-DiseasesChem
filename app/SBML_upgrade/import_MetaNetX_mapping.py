@@ -35,18 +35,12 @@ namespaces = {
     "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 }
 
-# Initialyze log files.
-with open("update.log", "wb") as f_log:
-    pass
-with open("remove.log", "wb") as f_log:
-    pass
 
 # Intialyze attributes and paths: 
 # Virtuoso:
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
-path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
-db_password = config['VIRTUOSO'].get('db_password')
 url = config['VIRTUOSO'].get('url')
+update_f_name = config['VIRTUOSO'].get('update_file')
 # MetaNetX:
 MetaNetX_v = config['METANETX'].get('version')
 path_to_g_MetaNetX = config['METANETX'].get('g_path')
@@ -59,8 +53,12 @@ base_uri_Intra = config['INTRA'].get('base_uri')
 uri_MetaNetX = base_uri_MetaNetX + MetaNetX_v
 linked_grahs = [base_uri_Intra + MetaNetX_v]
 
+print("Initialyze update file : " + update_f_name)
+with open(path_to_dumps + update_f_name, "w") as update_f:
+    pass
+
 # Test if graph exists
-if test_if_graph_exists(url, uri_MetaNetX, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
+if test_if_graph_exists(url, uri_MetaNetX, linked_grahs, path_to_dumps, update_f_name):
     print("Create graphs ...")
 else:
     sys.exit(3)
@@ -80,8 +78,9 @@ map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_M
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "MetaNetX")
 
 print("Try to load mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", "*trig", '', update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", "ressource_info_*.ttl", base_uri_MetaNetX + MetaNetX_v, update_f_name)
 
 print("Try to intra mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", path_to_docker_yml_file, db_password)
-   
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "*trig", '', update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "ressource_info_*.ttl", base_uri_Intra + MetaNetX_v, update_f_name)

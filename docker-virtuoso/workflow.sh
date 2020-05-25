@@ -13,8 +13,8 @@ docker-compose up -d
 echo "GRANT SELECT ON \"DB\".\"DBA\".\"SPARQL_SINV_2\" TO \"SPARQL\";" >> share/upload.sh
 echo "GRANT EXECUTE ON \"DB\".\"DBA\".\"SPARQL_SINV_IMP\" TO \"SPARQL\";" >> share/upload.sh
 # Allowing insert in graph :
-echo "GRANT EXECUTE ON \"DB\".\"DBA\".\"EXEC_AS\" TO \"SPARQL\";" >> share/upload.sh
-echo "GRANT EXECUTE ON \"DB\".\"DBA\".\"SPARQL_INSERT_DICT_CONTENT\" TO \"SPARQL\";" >> share/upload.sh
+# echo "GRANT EXECUTE ON \"DB\".\"DBA\".\"EXEC_AS\" TO \"SPARQL\";" >> share/upload.sh
+# echo "GRANT EXECUTE ON \"DB\".\"DBA\".\"SPARQL_INSERT_DICT_CONTENT\" TO \"SPARQL\";" >> share/upload.sh
 
 # Importing namespace : 
 echo "DB.DBA.XML_SET_NS_DECL ('SBMLrdf', 'http://identifiers.org/biomodels.vocabulary#', 2);">> share/upload.sh

@@ -36,17 +36,11 @@ namespaces = {
     "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 }
 
-# Initialyze log files.
-with open("update.log", "wb") as f_log:
-    pass
-with open("remove.log", "wb") as f_log:
-    pass
 
 # Virtuoso:
 path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
-path_to_docker_yml_file = config['VIRTUOSO'].get('path_to_docker_yml_file')
-db_password = config['VIRTUOSO'].get('db_password')
 url = config['VIRTUOSO'].get('url')
+update_f_name = config['VIRTUOSO'].get('update_file')
 # SBML
 path_to_g_SBML = config['SBML'].get('g_path')
 path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
@@ -60,7 +54,11 @@ uri = base_uri_SBML + sbml_version
 
 linked_grahs = [Intra_eq_base_uri + sbml_version]
 
-if test_if_graph_exists(url, uri, linked_grahs, path_to_dumps, path_to_docker_yml_file, db_password):
+print("Initialyze update file : " + update_f_name)
+with open(path_to_dumps + update_f_name, "w") as update_f:
+    pass
+
+if test_if_graph_exists(url, uri, linked_grahs, path_to_dumps, update_f_name):
     print("Create graphs ...")
 else:
     sys.exit(3)
@@ -76,7 +74,7 @@ except subprocess.SubprocessError as e:
     sys.exit(3)
 # Load graph
 print("Try to load SMBL graph in Virtuoso ...")
-create_update_file_from_graph_dir(path_to_dumps, path_to_dir_SMBL, uri, path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_SMBL, "*.ttl", uri, update_f_name)
 
 print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
@@ -88,4 +86,5 @@ print("Export SBML Uris intra equivalences ")
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "SBML")
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
 
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", path_to_docker_yml_file, db_password)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "*.trig", '', update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "ressource_info_*.ttl", Intra_eq_base_uri + sbml_version, update_f_name)
