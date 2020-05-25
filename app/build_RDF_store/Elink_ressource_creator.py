@@ -69,7 +69,7 @@ class Elink_ressource_creator:
         try:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
         except eutils.EutilsError as fail_request:
-            print("\nRequest on Eutils for current compound pack has failed during process, with error name: %s \n -- Compound cids is added to request_failure list" % (fail_request))
+            print("\nRequest on Eutils for current compound pack has failed during process, with error name: %s \n" % (fail_request))
             with open("elink.log", "a") as f_log:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write(str(fail_request) + "\n")
@@ -209,12 +209,13 @@ class Elink_ressource_creator:
         id_packed_list = [id_list[i * pack_size:(i + 1) * pack_size] for i in range((len(id_list) + pack_size - 1) // pack_size )]
         print("There are %d packed lists" %(len(id_packed_list)))
         # On réinitialise le fichier request failure et l'attribut (après avoir init packed_list au cas où on est sur un run à partir de self.request_failure):
-        open(add_files_path + "linking_ids_request_failed.txt", 'w').close()
+        with open(add_files_path + "linking_ids_request_failed.txt", 'w') as f:
+            pass
         self.request_failure = list()
         # On initialize les deux premières instances des graphs g_linked_id & g_linked_id_endpoint : 
         g_linked_id_name, g_linked_id_endpoint_name = self.ressource_version.ressource + "_" + str(self.file_index), self.ressource_version_endpoint.ressource + "_" + str(self.file_index)
         for index_list in range(0, len(id_packed_list)):
-            print("-- Start getting pmids of list %d !\nTry to append compounds ..." %(index_list + 1), end = '')
+            print("-- Start getting pmids of list %d !\nTry to append compounds ..." %(index_list + 1))
             # On append les linked_ids: Si false est return c'est qu'il y a eu une erreur dans la requête, sinon on continue
             test_append = self.append_linked_ids(id_packed_list, index_list, query_builder, pack_size)
             if not test_append:
