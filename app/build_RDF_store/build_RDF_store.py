@@ -53,7 +53,6 @@ with open(out_path + "upload_data.sh", "w") as upload_f:
 # MeSH
 if todo_MeSH:
     mesh_out_dir = config['MESH'].get('out_dir_name')
-    print("Download MESH :")
     mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
@@ -64,7 +63,6 @@ if todo_Reference:
     reference_out_dir = config['REFERENCE'].get('out_dir_name')
     reference_r_name = config['REFERENCE'].get('ressource_name')
     reference_dir_on_ftp = config['REFERENCE'].get('dir_on_ftp')
-    print("Download References :")
     reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
@@ -75,7 +73,6 @@ if todo_Compound:
     compound_out_dir = config['COMPOUND'].get('out_dir_name')
     compound_r_name = config['COMPOUND'].get('ressource_name')
     compound_dir_on_ftp = config['COMPOUND'].get('dir_on_ftp')
-    print("Download Compounds :")
     compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
@@ -86,7 +83,6 @@ if todo_Descriptor:
     descriptor_out_dir = config['DESCRIPTOR'].get('out_dir_name')
     descriptor_r_name =config['DESCRIPTOR'].get('ressource_name')
     descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
-    print("Download Descriptors :")
     descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
@@ -189,7 +185,9 @@ if todo_Elink:
     
     else:
         # The second option (in first try) is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
-        # Create a Conjunctive graph :
+        if not todo_Reference:
+            print("Impossible to access to pmids from PubChem Reference RDF Store, unknown last version. Data will be download ONLY if needed (not the last version). Please, put REFERENCE todo attribute to True, exit.")
+            sys.exit(3)
         print("Try to extract all pmids from Reference type graph(s) ...", end = '')
         path_list = glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz")
         if len(path_list) == 0:
