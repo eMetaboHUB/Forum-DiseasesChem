@@ -7,7 +7,7 @@ This repository contains some usefull methods to provides links between PubChem 
 docker build -t forum/metdisease .
 ### Run
 ```bash
-docker run --rm -it \
+docker run --rm -it --network="host" \
 -v path/to/docker-ressource:/workdir/data \
 -v path/to/config/dir:/workdir/config \
 -v /path/to/virtuoso-share/dir:/workdir/share-virtuoso \
@@ -17,9 +17,9 @@ forum/metdisease bash
 
 Exemple:
 ```bash
-docker run --rm -it \
+docker run --rm -it --network="host" \
 -v $(pwd)/docker_resources:/workdir/data \
--v $(pwd)/app/build_RDF_store/config:/workdir/config \
+-v $(pwd)/app/SBML_upgrade/config:/workdir/config \
 -v /media/mxdelmas/DisqueDur/data_max/TEST:/workdir/share-virtuoso \
 -v /media/mxdelmas/DisqueDur/data_max/OUT:/workdir/out/ \
 forum/metdisease bash

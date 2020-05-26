@@ -45,10 +45,10 @@ update_f_name = config['VIRTUOSO'].get('update_file')
 MetaNetX_v = config['METANETX'].get('version')
 path_to_g_MetaNetX = config['METANETX'].get('g_path')
 path_to_dir_MetaNetX = config['METANETX'].get('path_to_dir_from_dumps')
-base_uri_MetaNetX = config['METANETX'].get('base_uri')
+base_uri_MetaNetX = "http://database/ressources/ressources_id_mapping/MetaNetX/"
 # Intra
 path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
-base_uri_Intra = config['INTRA'].get('base_uri')
+base_uri_Intra = "http://database/ressources/ressources_id_mapping/Intra/MetaNetX/"
 
 uri_MetaNetX = base_uri_MetaNetX + MetaNetX_v
 linked_grahs = [base_uri_Intra + MetaNetX_v]
@@ -59,7 +59,7 @@ with open(path_to_dumps + update_f_name, "w") as update_f:
 
 # Test if graph exists
 if test_if_graph_exists(url, uri_MetaNetX, linked_grahs, path_to_dumps, update_f_name):
-    print("Create graphs ...")
+    print("Graphs not already exists, create new graphs...")
 else:
     sys.exit(3)
 

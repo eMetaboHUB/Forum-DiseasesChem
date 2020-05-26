@@ -1,10 +1,9 @@
 import glob, requests, subprocess, sys
-
-# WARNING :
-# When trying to handle exeptions and errors during Virtuoso processes, ONLY docker errors can be raise as error. Because docker exec always return exit code 0 never mind if the executed command succeeded or not
-# All the output of Virtuoso processes are exported in stdout BUT errors can be raised !
-#
-#
+import rdflib
+import os
+from rdflib.namespace import XSD, DCTERMS, OWL, VOID
+sys.path.insert(1, 'app/')
+from Database_ressource_version import Database_ressource_version
 
 def create_update_file_from_ressource(path_out, path_to_graph_dir, file_pattern, target_graph, update_file_name):
     """
@@ -110,3 +109,30 @@ def ask_for_graph(url, graph_uri):
     if r.text == "true":
         return True
     return False
+
+def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version, ressource_name, desc, title, sources):
+    """
+    This function is used to create the ressource_info file associated to the version of the created annotation_graph.
+    - path_to_annot_graphs_dir: A path to a directory containing all the associated annotation graph created using Virtuoso as .TriG file (Cf. README)
+    - version: the version of the annotations graphs, MUST be the same as the one used in Virtuoso !
+    """
+    ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
+    n_triples = 0
+    subjects = set()
+    for annot_graph in os.listdir(path_to_annot_graphs_dir):
+        if not annot_graph.endswith(".ttl"):
+            continue
+        if annot_graph.startswith("ressource_info_"):
+            continue
+        sub_g = rdflib.ConjunctiveGraph()
+        sub_g.parse(path_to_annot_graphs_dir + annot_graph, format = 'turtle')
+        n_triples += len(sub_g)
+        subjects = subjects.union(set([s for s in sub_g.subjects()]))
+        ressource_version.add_DataDump(annot_graph)
+    for source in sources:
+        ressource_version.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
+    ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal(desc))
+    ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(title))
+    ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
+    ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
+    ressource_version.version_graph.serialize(destination=path_to_annot_graphs_dir + "void.ttl", format = 'turtle')

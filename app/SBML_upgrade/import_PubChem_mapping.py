@@ -46,10 +46,10 @@ update_f_name = config['VIRTUOSO'].get('update_file')
 Pubchem_v = config['PUBCHEM'].get('version')
 path_to_pubchem_dir = config['PUBCHEM'].get('path_to_pubchem_dir')
 path_to_pubchem_dumps_dir = config['PUBCHEM'].get('path_to_dir_from_dumps')
-base_uri_pubchem = config['PUBCHEM'].get('base_uri')
+base_uri_pubchem = "http://database/ressources/ressources_id_mapping/PubChem/"
 # Intra
 path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
-base_uri_Intra = config['INTRA'].get('base_uri')
+base_uri_Intra = "http://database/ressources/ressources_id_mapping/Intra/PubChem/"
 
 uri_PubChem = base_uri_pubchem + Pubchem_v
 linked_grahs = [base_uri_Intra + Pubchem_v]
@@ -60,7 +60,7 @@ with open(path_to_dumps + update_f_name, "w") as update_f:
 
 # Test if graph exists
 if test_if_graph_exists(url, uri_PubChem, linked_grahs, path_to_dumps, update_f_name):
-    print("Create graphs ...")
+    print("Graphs not already exists, create new graphs...")
 else:
     sys.exit(3)
 
