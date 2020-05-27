@@ -11,7 +11,7 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     """A function used to create a filtered version of a ressource, by parsing the reference file and extract only triples for which the subject is contains in a defined set.
     Files are not lood as graph using rdflib, but are read as normal files because for heavy files, importing the graph is not memory efficient.
     - input_ressource_directory: a path to the directory containing all the RDF files referenced has 'partOf' the reference source in the input_ressource_file
-    - input_ressource_file: a ressource_info file containing informations about the reference ressource.
+    - input_ressource_file: a void file containing informations about the reference ressource.
     - all_ids: a list of all the ids that should be used to parse the RDF files associated to the ressource.
     - prefix: the string representing the prefix that shoud be added to the id to create the URI of subjects in the file.
     - input_ressource_uri: the rdflib.UriRef associated to the reference ressource in the input_ressource_file
@@ -89,4 +89,4 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ressource_uri)
     ressource_filtered_version.add_version_attribute(DCTERMS["source"], input_ids_uri)
     # On écrit
-    ressource_filtered_version.version_graph.serialize(destination=path_out + "ressource_info_" + filtered_ressource_name + "_" + ressource_filtered_version.version + ".ttl", format = 'turtle')
+    ressource_filtered_version.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')

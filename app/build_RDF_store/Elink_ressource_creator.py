@@ -203,8 +203,8 @@ class Elink_ressource_creator:
         self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
         self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
         self.ressource_version_endpoint.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id_endpoint, datatype=XSD.long ))
-        self.ressource_version.version_graph.serialize(destination= path_out_1 + "ressource_info_cid_pmid_" + self.ressource_version.version + ".ttl", format='turtle')
-        self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "ressource_info_cid_pmid_endpoint_" + self.ressource_version_endpoint.version + ".ttl", format='turtle')
+        self.ressource_version.version_graph.serialize(destination= path_out_1 + "void.ttl", format='turtle')
+        self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "void.ttl", format='turtle')
     
     def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path):
         """

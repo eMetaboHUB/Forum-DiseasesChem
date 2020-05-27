@@ -35,8 +35,8 @@ def download_pubChem(dir, request_ressource, out_path):
     pubchem_last_v = pubchem_last_v.strftime('%Y-%m-%d')
     print("Last PubChem " + request_ressource + "RDF version found on ftp server is : " + pubchem_last_v)
     print("Check if PubChem " + request_ressource + " RDF version " + pubchem_last_v + " was already download ...")
-    # From last version date, if associated ressource_info file already exists, exit and return pubchem last version and associated uri
-    test_r_info = glob.glob(out_path + request_ressource + "/" + pubchem_last_v + "/" + "ressource_info_" + request_ressource + "_" + pubchem_last_v + ".ttl")
+    # From last version date, if associated void.ttl file already exists, exit and return pubchem last version and associated uri
+    test_r_info = glob.glob(out_path + request_ressource + "/" + pubchem_last_v + "/" + "void.ttl")
     if len(test_r_info) == 1:
         print("PubChem " + request_ressource + " RDF version " + pubchem_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_last_v)
@@ -62,7 +62,7 @@ def download_pubChem(dir, request_ressource, out_path):
     g_metadata = rdflib.Graph()
     g_metadata.parse(version_path + "void.ttl", format='turtle')
     try:
-        subprocess.run("rm " + version_path + " void.ttl", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("rm " + version_path + "void.ttl", shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print("Error during trying to remove PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
         print(e)
@@ -89,7 +89,7 @@ def download_pubChem(dir, request_ressource, out_path):
             continue
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
-    ressource_version.version_graph.serialize(version_path + "ressource_info_" + request_ressource + "_" + pubchem_last_v + ".ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
     print("Ok\nEnd !")
     return ressource_version.version, str(ressource_version.uri_version)
 
@@ -124,8 +124,8 @@ def download_MeSH(out_dir, namespaces_dict):
     mesh_last_v = mesh_last_v.strftime('%Y-%m-%d')
     print("Last MeSH RDF version found on ftp server is : " + mesh_last_v)
     print("Check if MeSH RDF version " + mesh_last_v + " was already download ...")
-    test_r_info = glob.glob(out_dir + mesh_last_v + "/" + "ressource_info_MeSHRDF_" + mesh_last_v + ".ttl")
-    # From last version date, if associated ressource_info file already exists, exit and return mesh last version and associated uri
+    test_r_info = glob.glob(out_dir + mesh_last_v + "/" + "void.ttl")
+    # From last version date, if associated void.ttl file already exists, exit and return mesh last version and associated uri
     if len(test_r_info) == 1:
         print("MeSH RDF version " + mesh_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_last_v)
@@ -177,7 +177,7 @@ def download_MeSH(out_dir, namespaces_dict):
     ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
     ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
     # On écrit le graph de la ressource 
-    ressource_version.version_graph.serialize(out_path + "ressource_info_MeSHRDF_" + mesh_last_v + ".ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(out_path + "void.ttl", format = 'turtle')
     # On supprime le fichier initial au format .nt
     try:
         subprocess.run("rm " + out_path + "void_1.0.0.ttl ", shell = True, check=True, stderr = subprocess.PIPE)

@@ -56,7 +56,7 @@ if todo_MeSH:
     mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.ttl', '" + mesh_uri + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
 
 # References
 if todo_Reference:
@@ -66,7 +66,7 @@ if todo_Reference:
     reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl', '" + reference_uri + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
 
 # Compounds
 if todo_Compound:
@@ -76,7 +76,7 @@ if todo_Compound:
     compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl', '" + compound_uri + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
 
 # Descriptors
 if todo_Descriptor:
@@ -86,7 +86,7 @@ if todo_Descriptor:
     descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl', '" + descriptor_uri + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', 'void.ttl', '" + descriptor_uri + "');\n")
 
 # Elink
 if todo_Elink:
@@ -227,9 +227,9 @@ if todo_Elink:
     # Write in upload file :
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl', '" + str(pmid_cid_uri_version) + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
         upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
 
 # Write ouput file footer :
 print("Write output file")
