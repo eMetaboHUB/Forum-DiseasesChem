@@ -79,8 +79,8 @@ map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "MetaNetX")
 
 print("Try to load mapping graphs in Virtuoso ...")
 create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", "*trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", "ressource_info_*.ttl", base_uri_MetaNetX + MetaNetX_v, update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_MetaNetX + MetaNetX_v + "/", "void.ttl", base_uri_MetaNetX + MetaNetX_v, update_f_name)
 
 print("Try to intra mapping graphs in Virtuoso ...")
 create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "*trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "ressource_info_*.ttl", base_uri_Intra + MetaNetX_v, update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "void.ttl", base_uri_Intra + MetaNetX_v, update_f_name)

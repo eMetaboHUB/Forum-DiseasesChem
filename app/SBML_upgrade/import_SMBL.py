@@ -87,4 +87,4 @@ map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "SBML")
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
 
 create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "*.trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "ressource_info_*.ttl", Intra_eq_base_uri + sbml_version, update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "void.ttl", Intra_eq_base_uri + sbml_version, update_f_name)

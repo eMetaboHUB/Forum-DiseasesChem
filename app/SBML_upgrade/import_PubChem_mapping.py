@@ -82,8 +82,8 @@ map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "PubChem")
 
 print("Try to load mapping graphs in Virtuoso ...")
 create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", "*.trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", "ressource_info_*.ttl", base_uri_pubchem + Pubchem_v, update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_pubchem_dumps_dir + Pubchem_v + "/", "void.ttl", base_uri_pubchem + Pubchem_v, update_f_name)
 
 print("Try to intra mapping graphs in Virtuoso ...")
 create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", "*.trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", "ressource_info_*.ttl", base_uri_Intra + Pubchem_v, update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "PubChem/" + Pubchem_v + "/", "void.ttl", base_uri_Intra + Pubchem_v, update_f_name)

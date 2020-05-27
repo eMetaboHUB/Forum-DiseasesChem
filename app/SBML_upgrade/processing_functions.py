@@ -122,7 +122,7 @@ def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version,
     for annot_graph in os.listdir(path_to_annot_graphs_dir):
         if not annot_graph.endswith(".ttl"):
             continue
-        if annot_graph.startswith("ressource_info_"):
+        if annot_graph == "void.ttl":
             continue
         sub_g = rdflib.ConjunctiveGraph()
         sub_g.parse(path_to_annot_graphs_dir + annot_graph, format = 'turtle')
