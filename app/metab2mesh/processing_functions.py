@@ -4,7 +4,8 @@ import sys
 import glob
 import multiprocessing as mp
 import pandas as pd
-from sparql_queries import *
+import importlib
+import sys
 
 
 
@@ -188,7 +189,7 @@ def aggregate_pmids_by_id(path_in, offset):
     agg = df_global.groupby('ID')['PMID'].agg(';'.join).reset_index(name='list_pmids')
     agg.to_csv(path_in + "res_offset_aggregate_" + offset + ".csv", index = False, header = False)
 
-def send_counting_request(prefix, header, data, url, config, key):
+def send_counting_request(prefix, header, data, url, config, key, module):
     """
     This function is used to send a counting query to determine the total number of modalities for a variable (count_id)
     - url: the Virtuoso SPARQL endpoint url
@@ -198,11 +199,12 @@ def send_counting_request(prefix, header, data, url, config, key):
     - key: the name of a section in the configParser object associated to a task
     - header: the header dict for the request
     - data: the data dict for the request
+    - module: a module from import_request_file corresponding to a sparql queries file
     """
     r_data = data
     name = config[key].get('name')
     try:
-        query = eval(config[key].get('Size_Request_name'))
+        query = getattr(module, config[key].get('Size_Request_name'))
     except NameError as e:
         print("Specified request name \"" + config[key].get('Size_Request_name') + "\" seems not to exists in the sparql query file, exit.")
         print("Error : " + str(e))
@@ -219,7 +221,7 @@ def send_counting_request(prefix, header, data, url, config, key):
     print("There are " + str(count) + " " + name)
     return count
 
-def launch_from_config(prefix, header, data, url, config, key, out_path):
+def launch_from_config(prefix, header, data, url, config, key, out_path, module):
     """
     This functin is used to launch a query from the specified paramteres set in the config file.
     - prefix: a string representing prefix of the SPARQL query
@@ -229,13 +231,14 @@ def launch_from_config(prefix, header, data, url, config, key, out_path):
     - config: a configParser object containing parameters for each process
     - key: the name of a section in the configParser object associated to a task
     - out_path: path to the output directory
+    - module: a module from import_request_file corresponding to a sparql queries file
     """
     # Get count:
-    count = send_counting_request(prefix, header, data, url, config, key)
+    count = send_counting_request(prefix, header, data, url, config, key, module)
     out_path_dir = out_path + config[key].get('out_dir') + "/"
     print("Exporting in " + out_path_dir + " ...")
     try:
-        request = eval(config[key].get('Request_name'))
+        request = getattr(module, config[key].get('Request_name')) 
     except NameError as e:
         print("Specified request name \"" + config[key].get('Request_name') + "\" seems not to exists in the sparql query file, exit.")
         print("Error : " + str(e))
@@ -301,3 +304,16 @@ def ask_for_graph(url, graph_uri):
     if r.text == "true":
         return True
     return False
+
+def import_request_file(file_name):
+    """
+    This function is used to load a sparql queries file as a module and return it.
+    -file_name: name of the sparql queries file in the dedicated SPARQL directory
+    """
+    try:
+        module = importlib.import_module('SPARQL.' + file_name)
+    except Exception as e:
+        print("Error while trying to import sparql queries file : " + file_name)
+        print(e)
+        sys.exit(3)
+    return module

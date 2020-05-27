@@ -1,5 +1,4 @@
-from sparql_queries import *
-from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request, ask_for_graph
+from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request, ask_for_graph, import_request_file
 import configparser
 import argparse, sys, os, requests, json
 
@@ -21,6 +20,12 @@ except configparser.Error as e:
 # Initialyse global paramters:
 url = config['VIRTUOSO'].get('url')
 out_path = config['DEFAULT'].get('out_path')
+request_file_name = config['DEFAULT'].get('request_file')
+# Get module for sparql queries :
+module = import_request_file(request_file_name)
+# Get prefix from module :
+prefix = getattr(module, 'prefix')
+
 header = {
     "Content-Type": "application/x-www-form-urlencoded",
     "Accept": "text/csv"
@@ -42,18 +47,18 @@ print("Prepare data Extraction for contingency table using Set X as " + X_name +
 
 # Count distinct CID
 print("Start getting " + X_name + "_" + Y_name +" coocurences")
-launch_from_config(prefix, header, data, url, config, 'X_Y', out_path)
+launch_from_config(prefix, header, data, url, config, 'X_Y', out_path, module)
 
 # Get CID distinct PMID :
 print("Start getting " + X_name + " sets size") 
-launch_from_config(prefix, header, data, url, config, 'X', out_path)
+launch_from_config(prefix, header, data, url, config, 'X', out_path, module)
 
 # Get MeSH distinct PMID :
 print("Start getting " + Y_name + " sets size")
-launch_from_config(prefix, header, data, url, config, 'Y', out_path)
+launch_from_config(prefix, header, data, url, config, 'Y', out_path, module)
 
 # On compte le nombre total de distinct pmids qui ont un CID et un MeSH
-count_U = send_counting_request(prefix, header, data, url, config, 'U')
+count_U = send_counting_request(prefix, header, data, url, config, 'U', module)
 # Nb. total pmids = 8754160
 
 print("Start merge files and create data.frame")
