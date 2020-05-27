@@ -1,14 +1,19 @@
 import glob, requests, subprocess, sys
-
-# WARNING :
-# When trying to handle exeptions and errors during Virtuoso processes, ONLY docker errors can be raise as error. Because docker exec always return exit code 0 never mind if the executed command succeeded or not
-# All the output of Virtuoso processes are exported in stdout BUT errors can be raised !
-#
-#
+import rdflib
+import os
+from rdflib.namespace import XSD, DCTERMS, OWL, VOID
+sys.path.insert(1, 'app/')
+from Database_ressource_version import Database_ressource_version
 
 def create_update_file_from_ressource(path_out, path_to_graph_dir, file_pattern, target_graph, update_file_name):
     """
-    This function is used to load graph which represent a ressource, with one or several .trig files associated to data graph and one ressource_info_**.ttl file describing the ressource
+    This function is used to buid an update.sh file which have to be execute by Virtuoso to properly load all graphs from an input directory.
+    The function does not create a file but append to an existing (or empty file)
+    - path_out: path to write the update file
+    - path_to_graph_dir: path to the graph directory from the Virtuoso share directory (ex: dumps)
+    - file_pattern: a file pattern (ex: *trig) to select graphs files in the input directory
+    - target_graph: an URI corresponding to the associated ressource graph
+    - update_file_name: name of the update file 
     """
     with open(path_out + update_file_name, "a") as update_f:
         update_f.write("delete from DB.DBA.load_list ;\n")
@@ -18,6 +23,13 @@ def create_update_file_from_ressource(path_out, path_to_graph_dir, file_pattern,
         update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
 
 def remove_graph(path_out, uris, update_file_name):
+    """
+    This function is used to build a remove.sh file which have to be execute by Virtuoso to properly remove graphs.
+    The function does not create a file but append to an existing (or empty file)
+    - path_out: path to write the update file
+    - uris: a list of graph uris that have to be remove
+    - update_file_name: name of the update file
+    """
     with open(path_out + update_file_name, "a") as remove_f:
         remove_f.write("log_enable(3,1);\n")
         for uri in uris:
@@ -32,6 +44,7 @@ def test_if_graph_exists(url, graph_uri, linked_graph_uri, path_out, update_file
     - graph_uri: the graph uri
     - linked_graph_uri: a list of additionnal graph uri that are linked to this graph (Ex: Intra eq graph)
     - path_out: path to output directory
+    - update_file_name: name of the update file in case of the graph is erase
     """
     header = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -68,13 +81,14 @@ def test_if_graph_exists(url, graph_uri, linked_graph_uri, path_out, update_file
 def request_annotation(url, query, sbml_uri, annot_graph_uri, header, data, out_file):
     """
     This function is ised to send an annotation request
-    - g_base_uri: the annotation graph uri base, ex: http://database/annotation_graph/
+    - url: the virtuoso sparql endpoint url
     - query: a string associated to the query prepared to be filled with additional parameters
     - sbml_uri: the uri of the targeted SBML graph
     - annot_graph_uri: a list of graph used as sources or the annotation process
     - version: the version of the annotation
     - header: a dict containing header paramters for the request
     - data: a dict containing data parameteres for the request
+    - out_file: path to an output file
     """
     data["query"] = query %(sbml_uri, "\n".join(["FROM <" + uri + ">" for uri in annot_graph_uri]))
     print(data["query"])
@@ -110,3 +124,34 @@ def ask_for_graph(url, graph_uri):
     if r.text == "true":
         return True
     return False
+
+def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version, ressource_name, desc, title, sources):
+    """
+    This function is used to create the ressource_info file associated to the version of the created annotation_graph.
+    - path_to_annot_graphs_dir: a path to annotation graphs directory
+    - version: the version of the annotation graph
+    - ressource_name: the name of the associated ressource for the annotation graph
+    - desc: a description of the graph
+    - title: a title for the graph
+    - sources: a list of uris which vere used to build the annotation graph
+    """
+    ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
+    n_triples = 0
+    subjects = set()
+    for annot_graph in os.listdir(path_to_annot_graphs_dir):
+        if not annot_graph.endswith(".ttl"):
+            continue
+        if annot_graph == "void.ttl":
+            continue
+        sub_g = rdflib.ConjunctiveGraph()
+        sub_g.parse(path_to_annot_graphs_dir + annot_graph, format = 'turtle')
+        n_triples += len(sub_g)
+        subjects = subjects.union(set([s for s in sub_g.subjects()]))
+        ressource_version.add_DataDump(annot_graph)
+    for source in sources:
+        ressource_version.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
+    ressource_version.add_version_attribute(DCTERMS["description"], rdflib.Literal(desc))
+    ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(title))
+    ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
+    ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
+    ressource_version.version_graph.serialize(destination=path_to_annot_graphs_dir + "void.ttl", format = 'turtle')

@@ -29,7 +29,7 @@ SBML_graph_uri = config['SBML'].get("graph_uri")
 # ANNOTATIONS
 mapping_graph_uri = config['MAPPING_GRAPH'].get("graph_uri").split('\n')
 version = config['ANNOTATION_TYPE'].get('version')
-annot_graph_base_uri = config['ANNOTATION_TYPE'].get('annotation_graph_base_uri')
+annot_graph_base_uri = "http://database/ressources/annotation_graph/Id_mapping/"
 
 # OUT:
 path_to_dir_from_dumps = config['ANNOTATION_TYPE'].get('path_to_dir_from_dumps')
@@ -146,7 +146,7 @@ for uri in mapping_graph_uri:
         sys.exit(3)
 
 if test_if_graph_exists(url, annot_graph_base_uri + version, [], path_to_dumps, update_f_name):
-    print("Create graphs ...")
+    print("Graphs not already exists, create new graphs...")
 
 print("Starting annotation ...")
 print("Compute Synonyms ...")
@@ -170,4 +170,11 @@ if test_infered_uris_synonyms:
 else:
     print("Infered uris synonyms annotation fail")
 
+# Creation ressource information file
+sources_list = mapping_graph_uri + [SBML_graph_uri]
+create_annotation_graph_ressource_version(out_path, version, "annotation_graph/Id_mapping", 
+"An annotation graph providing supplementary indenfiers from mapping using different external ressources",
+"Id mapping annotation graph",
+sources_list)
+# Create upload file
 create_update_file_from_ressource(path_to_dumps, path_to_dir_from_dumps + version, "*.ttl", annot_graph_base_uri + version, update_f_name)

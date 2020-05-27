@@ -1,6 +1,5 @@
 
-from sparql_queries import *
-from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request, ask_for_graph
+from processing_functions import launch_from_config, build_PMID_list_by_CID_MeSH, prepare_data_frame, send_counting_request, ask_for_graph, import_request_file
 import configparser
 import argparse, sys, os, requests, subprocess
 
@@ -22,6 +21,11 @@ except configparser.Error as e:
 # Initialyse global paramters:
 url = config['VIRTUOSO'].get('url')
 out_path = config['DEFAULT'].get('out_path')
+request_file_name = config['DEFAULT'].get('request_file')
+# Get module for sparql queries :
+module = import_request_file(request_file_name)
+# Get prefix from module :
+prefix = getattr(module, 'prefix')
 header = {
     "Content-Type": "application/x-www-form-urlencoded",
     "Accept": "text/csv"
@@ -39,7 +43,7 @@ for uri in config['VIRTUOSO'].get("graph_from").split('\n'):
 # Start data Extraction : 
 
 print("Start Getting MeSH labels")
-launch_from_config(prefix, header, data, url, config, 'MESH_NAMES', out_path)
+launch_from_config(prefix, header, data, url, config, 'MESH_NAMES', out_path, module)
 
 mesh_names_final_path = out_path + config['MESH_NAMES'].get('out_dir') + "/"
 
@@ -51,11 +55,11 @@ subprocess.run("cat " + mesh_names_final_path + "res_offset_* >> " + mesh_names_
 
 print("Start getting CID - MeSH coocurences pmid list")
 
-launch_from_config(prefix, header, data, url, config, 'CID_MESH_PMID_LIST', out_path)
+launch_from_config(prefix, header, data, url, config, 'CID_MESH_PMID_LIST', out_path, module)
 l_pmid_out_path = out_path + config['CID_MESH_PMID_LIST']['out_dir'] + "/"
 
 print("Call aggregate function")
-count_cid = send_counting_request(prefix, header, data, url, config, 'CID_MESH_PMID_LIST')
+count_cid = send_counting_request(prefix, header, data, url, config, 'CID_MESH_PMID_LIST', module)
 build_PMID_list_by_CID_MeSH(count_cid, config['CID_MESH_PMID_LIST'].getint('limit_pack_ids'), l_pmid_out_path, config['CID_MESH_PMID_LIST'].getint('n_processes'))
 
 print("Concat files")

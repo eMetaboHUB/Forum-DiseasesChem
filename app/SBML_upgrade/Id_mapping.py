@@ -141,7 +141,7 @@ class Id_mapping:
         ressource_version_UniChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from UniChem"))
         ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_UniChem.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_UniChem_" + ressource_version_UniChem.version + ".ttl", format = 'turtle')
+        ressource_version_UniChem.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
     
     def export_intra_eq(self, path_out, source):
         """
@@ -178,7 +178,7 @@ class Id_mapping:
         ressource_version_intra.add_version_attribute(DCTERMS["title"], rdflib.Literal("URIs equivalence inside a ressource"))
         ressource_version_intra.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_intra.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_intra.version_graph.serialize(destination=path_out + "ressource_info_intra_ids_equivalence_" + ressource_version_intra.version + ".ttl", format = 'turtle')
+        ressource_version_intra.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
     
     def import_table_infos(self, config_file):
@@ -310,7 +310,7 @@ class Id_mapping:
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_MetaNetX.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_MetaNetX.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_MetaNetX_" + ressource_version_MetaNetX.version + ".ttl", format = 'turtle')
+        ressource_version_MetaNetX.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
     
     def create_graph_from_tab(self, tab_name, path_tab, path_out):
@@ -362,7 +362,7 @@ class Id_mapping:
         ressource_version_Tab.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from tabulted file " + tab_name))
         ressource_version_Tab.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_Tab.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_Tab.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_Tab_" + tab_name + "_" + ressource_version_Tab.version + ".ttl", format = 'turtle')
+        ressource_version_Tab.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
     
     def create_graph_from_pubchem_type(self, pubchem_graph, path_out):
         """
@@ -412,7 +412,7 @@ class Id_mapping:
         ressource_version_PubChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from PubChem"))
         ressource_version_PubChem.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_PubChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_PubChem.version_graph.serialize(destination=path_out + "ressource_info_ids_equivalence_PubChem_" + ressource_version_PubChem.version + ".ttl", format = 'turtle')
+        ressource_version_PubChem.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
         
     def get_pubchem_mapping(self, pubchem_graph, uri_1, uri2):

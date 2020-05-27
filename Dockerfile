@@ -43,7 +43,8 @@ RUN mkdir /workdir \
     /workdir/app/SBML_upgrade \
     /workdir/app/build_RDF_store \
     /workdir/app/metab2mesh \
-    /workdir/app/metab2mesh/post-processes
+    /workdir/app/metab2mesh/post-processes \
+    /workdir/app/metab2mesh/SPARQL
     
 
 # COPY FILES
@@ -56,6 +57,7 @@ COPY app/build_RDF_store/*.py /workdir/app/build_RDF_store/
 
 COPY app/metab2mesh/*.py /workdir/app/metab2mesh/
 COPY app/metab2mesh/post-processes/* /workdir/app/metab2mesh/post-processes/
+COPY app/metab2mesh/SPARQL/*.py /workdir/app/metab2mesh/SPARQL/
 
 COPY docker_resources/HumanGEM.ttl /workdir/data/HumanGEM/HumanGEM.ttl
 COPY docker_resources/metanetx.ttl /workdir/data/MetaNetX/metanetx.ttl

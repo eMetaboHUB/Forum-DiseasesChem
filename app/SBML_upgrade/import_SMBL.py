@@ -46,9 +46,9 @@ path_to_g_SBML = config['SBML'].get('g_path')
 path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
 sbml_version = config['SBML'].get('version')
 path_to_dir_Intra = config['SBML'].get('path_to_dir_intra_from_dumps')
-base_uri_SBML = config['SBML'].get('base_uri')
+base_uri_SBML = "http://database/ressources/SMBL/"
 #LINKED GRAPH
-Intra_eq_base_uri = config['INTRA'].get('base_uri')
+Intra_eq_base_uri = "http://database/ressources/ressources_id_mapping/Intra/SBML/"
 
 uri = base_uri_SBML + sbml_version
 
@@ -59,7 +59,7 @@ with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 
 if test_if_graph_exists(url, uri, linked_grahs, path_to_dumps, update_f_name):
-    print("Create graphs ...")
+    print("Graphs not already exists, create new graphs...")
 else:
     sys.exit(3)
 
@@ -87,4 +87,4 @@ map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "SBML")
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
 
 create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "*.trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "ressource_info_*.ttl", Intra_eq_base_uri + sbml_version, update_f_name)
+create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "void.ttl", Intra_eq_base_uri + sbml_version, update_f_name)

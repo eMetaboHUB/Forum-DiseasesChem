@@ -30,7 +30,8 @@ SBML_graph_uri = config['SBML'].get("graph_uri")
 # ANNOTATIONS
 sources_uris = config['EXT_SOURCES'].get("graph_uri").split('\n')
 version = config['ANNOTATION_TYPE'].get('version')
-annot_graph_base_uri = config['ANNOTATION_TYPE'].get('annotation_graph_base_uri')
+
+annot_graph_base_uri = "http://database/ressources/annotation_graph/Inchi_Smiles/"
 
 # OUT:
 path_to_dir_from_dumps = config['ANNOTATION_TYPE'].get('path_to_dir_from_dumps')
@@ -79,7 +80,7 @@ where {
         ?ref_pc_desc a sio:CHEMINF_000396 ;
                 sio:has-value ?inchi
         }
-BIND(URI(str(?inchi)) as ?selected_inchi)
+BIND(str(?inchi) as ?selected_inchi)
 }
 """
 
@@ -114,7 +115,7 @@ where {
         ?ref_pc_desc a sio:CHEMINF_000376 ;
                 sio:has-value ?smiles
         }
-BIND(URI(str(?smiles)) as ?selected_smiles)
+BIND(str(?smiles) as ?selected_smiles)
 }
 """
 
@@ -132,7 +133,7 @@ for uri in sources_uris:
         sys.exit(3)
 
 if test_if_graph_exists(url, annot_graph_base_uri + version, [], path_to_dumps, update_f_name):
-    print("Create graphs ...")
+    print("Graphs not already exists, create new graphs...")
 
 
 test_inchi = request_annotation(url, inchi_annotation_request, SBML_graph_uri, sources_uris, header, data, out_path + "inchi.ttl")
@@ -148,4 +149,11 @@ if test_smiles:
 else:
         print("Smiles annotation fail")
 
+sources_list = sources_uris + [SBML_graph_uri]
+# Creation ressource information file
+create_annotation_graph_ressource_version(out_path, version, "annotation_graph/Inchi_Smiles",
+"An annotation graph providing supplementary Inchi and Smiles identifiers from mapping using different external ressources",
+"Inchi and Smiles annotation Graph",
+sources_list)
+# Create upload file
 create_update_file_from_ressource(path_to_dumps, path_to_dir_from_dumps + version, "*.ttl", annot_graph_base_uri + version, update_f_name)
