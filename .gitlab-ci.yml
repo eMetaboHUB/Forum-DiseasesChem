@@ -88,6 +88,6 @@ test:
     - python3 $CI_PROJECT_DIR/app/build_RDF_store/download_functions.py
     - python3 $CI_PROJECT_DIR/app/build_RDF_store/parse_pubchem_RDF.py
     - python3 $CI_PROJECT_DIR/app/metab2mesh/processing_functions.py
-    - python3 $CI_PROJECT_DIR/app/metab2mesh/sparql_queries.py
+    - python3 $CI_PROJECT_DIR/app/metab2mesh/SPARQL/cid_mesh.py
     - python3 $CI_PROJECT_DIR/app/SBML_upgrade/Id_mapping.py
     - python3 $CI_PROJECT_DIR/app/SBML_upgrade/processing_functions.py
