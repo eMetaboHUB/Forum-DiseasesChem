@@ -1,7 +1,8 @@
 # docker image
 image: forum/metdisease
 
-# maven env.
+###########################################################
+# variables
 variables:
   # docker
   DOCKER_IMAGE: "forum/metdisease"
@@ -16,6 +17,7 @@ variables:
   CACHE_BASH: "/tmp/gitlab-ci-cache"
   CACHE_DOCKER: "/root/.cache-ci"
 
+###########################################################
 # cache 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
@@ -23,15 +25,17 @@ cache:
     - docker_resources/
     - app/data/
     
+###########################################################
 # stages
 stages:
   - get_resources
   - docker_env
   - test
 
+###########################################################
 # jobs
 
-# main jobs: build and test
+# job to fetch resources from pydio
 get resources:
   stage: get_resources
   tags:
@@ -43,18 +47,21 @@ get resources:
     - test -d $CACHE_DOCKER || mkdir -p $CACHE_DOCKER
     - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl docker_resources/
     - test -f $CACHE_DOCKER/metanetx.ttl && cp -r $CACHE_DOCKER/metanetx.ttl docker_resources/
+    - test -f $CACHE_DOCKER/vocabulary.zip && cp -r $CACHE_DOCKER/vocabulary.zip docker_resources/
   script:
     - echo "==================================";
     - echo "[info] get resources from Pydio";
     - test -f docker_resources/HumanGEM.ttl || wget $WGET_LOGIN $WGET_URL/dl/HumanGEM.ttl -P docker_resources/
     - test -f docker_resources/metanetx.ttl || wget $WGET_LOGIN $WGET_URL/dl/metanetx.ttl -P docker_resources/
+    - test -f docker_resources/vocabulary.zip || wget -O docker_resources/vocabulary.zip $WGET_LOGIN $WGET_URL/dl/vocabulary
   after_script:
     - echo "==================================";
     - echo "[info] save cache ";
     - cp -r docker_resources/HumanGEM.ttl $CACHE_DOCKER/
     - cp -r docker_resources/metanetx.ttl $CACHE_DOCKER/
+    - cp -r docker_resources/vocabulary.zip $CACHE_DOCKER/
 
-
+# job to build the docker env.
 docker env:
   stage: docker_env
   tags:
@@ -65,11 +72,17 @@ docker env:
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
     - cp -r $CACHE_BASH/HumanGEM.ttl docker_resources/
     - cp -r $CACHE_BASH/metanetx.ttl docker_resources/
+    - cp -r $CACHE_BASH/vocabulary.zip docker_resources/
+    - echo "[info] unzip files ";
+    - rm -rf docker_resources/vocabulary/*
+    - unzip docker_resources/vocabulary.zip -d docker_resources/
+    - mv docker_resources/vocabulary/* docker_resources/
   script:
     - echo "==================================";
     - echo "[info] run 'docker build image' ";
     - docker build -t $DOCKER_IMAGE .
 
+# job to run tests
 test:
   stage: test
   tags:
