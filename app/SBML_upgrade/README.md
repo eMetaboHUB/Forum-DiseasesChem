@@ -8,7 +8,8 @@ There are two types of provided annotation for SBML graphs: Id mapping and Inchi
 In the SBML graph, metabolite are represented as *SBMLrdf:Species* and links to external references (such as ChEBI, BiGG, KEGG, etc ...) are described using the *bqbiol:is* predicate, associated to an uri representing an external ressource identifier, ex :
 
 *M_m02885c a  SBMLrdf:Species ;*
-          *bqbiol:is chebi:18170 .*
+
+*M_m02885c bqbiol:is chebi:18170.*
 
 From intial external references present in the SBML graph, the program will try to extend this annotation using Id-mapping graphs. The extend of external uris identifiers in the SBML can be done when the SBML and some Id-mapping graphs are imported in the Virtuoso RDF Store.
 
@@ -18,7 +19,7 @@ Id-mapping graphs are RDF graphs providing uris equivalences. There are two type
   It defines equivalences between uris from different external ressources, where identifiers correspond to the same molecule. For example, the ChEBI id 37327 is equivalent to Pubchem CID 5372720, in the Id-mapping graph, this equivalence will be represented as : *http://identifiers.org/chebi/CHEBI:37327* *skos:closeMatch* *http://identifiers.org/pubchem.compound/5372720*. *skos:closeMatch* indicates that two concepts are sufficiently similar and that the two can be used interchangeably, nevertheless, this  is not transitive, to avoid spreading  equivalence errors.
 
 * Intra-uris equivalences:
-  For each identifires of an external ressource, it defines equivalences between uris pattern associated to this same external ressource. For exemple, for one ChEBI id 18170, 3 different uris are availables: *http://purl.obolibrary.org/obo/CHEBI_18170*, *https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18170*, *http://identifiers.org/chebi/CHEBI:18170*. In this case *http://identifiers.org/chebi/CHEBI:18170* is used by default in the SBML graph, but *http://purl.obolibrary.org/obo/CHEBI_18170* is the uri which is used in the ChEBI ontology, and, in order to propagate information from the ontology, the uri *http://purl.obolibrary.org/obo/CHEBI_18170* needs to be added into the graph. In the Id-mapping graph this equivalence will be represented as : *https://identifiers.org/CHEBI:18170* *skos:exactMatch* *http://purl.obolibrary.org/obo/CHEBI_18170*. *skos:exactMatch* indicating that the both concepts have exactly the same meaning, so we can pass from one to each other directly without errors, it's a transitive property.
+  For each identifiers of an external ressource, it defines equivalences between uris pattern associated to this same external ressource. For exemple, for one ChEBI id 18170, 3 different uris are availables: *http://purl.obolibrary.org/obo/CHEBI_18170*, *https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18170*, *http://identifiers.org/chebi/CHEBI:18170*. In this case *http://identifiers.org/chebi/CHEBI:18170* is used by default in the SBML graph, but *http://purl.obolibrary.org/obo/CHEBI_18170* is the uri which is used in the ChEBI ontology. So, in order to propagate information from the ontology, the uri *http://purl.obolibrary.org/obo/CHEBI_18170* needs to be added into the graph. In the Id-mapping graph this equivalence will be represented as : *https://identifiers.org/CHEBI:18170* *skos:exactMatch* *http://purl.obolibrary.org/obo/CHEBI_18170*. *skos:exactMatch* indicating that the both concepts have exactly the same meaning, so we can pass from one to each other directly without errors, it's a transitive property.
 
 The set of all external ressources and associated uris used in the process is indicated in the configuration file: *table_info.csv*. 
 The columns are:
@@ -74,8 +75,9 @@ In MetaNetX RDF graph, equivalences between a MetaNetX uri and external identifi
 Also, if a MetaNetX uri have several external identifiers, these ressources can be linked through the MetaNetX uri. For example if:
 
 *http://identifiers.org/metanetx.chemical/MNXM10* *mnx:chemXref*  *http://identifiers.org/hmdb/HMDB01487*
-and
+
 *http://identifiers.org/metanetx.chemical/MNXM10* *mnx:chemXref*  *https://identifiers.org/CHEBI:18170*
+
 The Inter-uri equivalence *http://identifiers.org/hmdb/HMDB01487* *skos:closeMatch* *https://identifiers.org/CHEBI:18170* can be infered.
 
 From the set of all used identifiers, the Intra-uris equivalence graph is build. 
@@ -115,11 +117,11 @@ use import_PubChem_mapping.py
 
 According to the *table_info.csv* configuration file (*URI used in PubChem*), the script will build an Id-mapping graph containing both Intra and Inter uris equivalences from PubChem type RDF graph.
 
-In the PubChem type RDF graphs, PubChem compouds CID are describe using *rdf:type* associated a ChEBI identifier. For example:
+In the PubChem type RDF graphs, PubChem compouds CID are describe using *rdf:type* associated to a ChEBI identifier. For example:
 
 *http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID1* *rdf:type* *http://purl.obolibrary.org/obo/CHEBI_73024*
 
-In the Id-mapping grapĥ providing using PubChem only equivalences between PubChem CID and ChEBI identfiers are provided.
+In the Id-mapping grapĥ created using PubChem only equivalences between PubChem CID and ChEBI identfiers are provided.
 
 The Id-mapping graph for Inter and Intra uris equivalences will be stored in the Virtuoso shared directory (at *path_to_dumps*) according to the  *path_to_dir_intra_from_dumps* specify in the corresponding section, ready to be loaded.
 To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
@@ -153,6 +155,7 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 use annot_SBML.py
 
 To compute this step, a SBML graph and at least one Id-mapping graph should be imported in the Virtuoso RDF Store, using corresponding update files.
+The SBML graph contains initial external identifier uris that the program will try to extends, and Id-mapping graphs contains Inter/Intra ressources equivalences to compute this process. Used Id-mapping graphs and SBML graph will be mentionned as sources in the *void.ttl* file associated to the annotation graph.
 
 Using imported SBML graph and Id-mapping graphs (*MAPPING_GRAPH* section), this script will extends external ressources, by creating new links using the *bqbiol:is* predicate between species and external identifiers uris.
 
@@ -193,8 +196,17 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 
 use annot_struct_SBML.py
 
-Using external ressources, such as MetaNetX, PubChem and ChEBI (*EXT_SOURCES*), this script allow to fill the SBML graph with Inchi and SMILES associated to species.
-To provide more associations, the Id-mapping annotation graph, describe above can also be also used as sources (*EXT_SOURCES*).
+Using external ressources, such as MetaNetX, PubChem and ChEBI (*EXT_SOURCES*), this script allow to fill the SBML graph with Inchi and SMILES associated to species. For example: 
+  - MetaNetX: *MetaNetX:MNXM10* *mnx:smiles/mnx:inchis* *Inchi or Smiles*
+
+  - ChEBI: *chebi:100014* *chebi:inchi/chebi:smiles*  *Inchi or Smiles*
+
+  - PubChem: *compound:CID1*  *sio:has-attribute* *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*
+
+    *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*  *sio:has-value*  *Inchi or Smiles*
+
+
+To provide more associations, the Id-mapping annotation graph, describe above can also be also used as sources (*EXT_SOURCES*) to provide more available external identifier uris.
 
 For one species, and using external identifiers uris provided by the *bqbiol:is* predicate a SPARQl query will try to retrieve Inchi and SMILES from differents sources.
 Two results files are then exported, one containing links between SBML species and Inchi using the *voc:hasInchi* predicate, and the second with SMILES using the *voc:hasSmiles* predicate.

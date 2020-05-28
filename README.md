@@ -104,7 +104,7 @@ Several other types of metadata are associated to the created graph. All these m
         <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000001.ttl.gz>,
         <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000002.ttl.gz>,
         ... ;
-    void:distinctSubjects number of distincts subkects in the graph^^xsd:long ;
+    void:distinctSubjects number of distincts subjects in the graph^^xsd:long ;
     void:exampleResource <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID10395478> ;
     void:triples "total number of triples in the graph "^^xsd:long ;
     void:uriLookupEndpoint <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> ;
