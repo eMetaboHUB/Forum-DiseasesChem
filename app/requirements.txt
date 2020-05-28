@@ -1,7 +1,0 @@
-
-eutils (0.6.0)
-rdflib (4.2.2)
-numpy (1.18.2)
-elementpath (1.4.3)
-requests (2.23.0)
-pandas (1.0.3)

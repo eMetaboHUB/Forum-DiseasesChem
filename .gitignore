@@ -38,6 +38,10 @@
 ehthumbs.db
 Thumbs.db
 
+# Python associated #
+#####################
+*.pyc
+
 # R associated #
 ################
 *.rds
@@ -72,3 +76,5 @@ docker-virtuoso/share/**
 docker-virtuoso/data/**
 OWL-RL-master/**
 unused_dataand_code/**
+docker-virtuoso/save_workflow.sh
+.dockerignore

@@ -26,7 +26,7 @@ services:
               SPARQL_UPDATE: "false"
               DEFAULT_GRAPH: "http://database/ressources/"
          volumes:
-            - /home/mxdelmas/Documents/Thèse/building_database/FORUM/metdiseasedatabase/docker-virtuoso/share:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps
+            - ./share:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps
             - ./data/virtuoso:/data
          ports:
             - 9980:8890

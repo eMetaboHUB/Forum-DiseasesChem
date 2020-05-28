@@ -11,6 +11,37 @@ docker pull tenforce/virtuoso
 ```
 Documentation at https://hub.docker.com/r/tenforce/virtuoso
 
+### Run Docker Virtuoso :
+
+In the docker-virtuoso directory:
+- Create a share directory:
+```bash
+mkdir share
+```
+In the *share* directory, create two sub-directories *MetaNetX* and *vocabulary*
+
+```bash
+mkdir MetaNetX
+mkdir vocabulary
+```
+The vocabulary directory contains files associated to the schema of used ontology, they can be download at: 
+- MeSH: ftp://ftp.nlm.nih.gov/online/mesh/rdf/vocabulary_1.0.0.ttl
+- ChEBI: ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl
+- cito: http://purl.org/spar/cito.ttl
+- fabio: http://purl.org/spar/fabio.ttl
+- Dublin Core: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.nt
+- Cheminf: http://www.ontobee.org/ontology/CHEMINF
+- skos: https://www.w3.org/2009/08/skos-reference/skos.rdf
+
+Download data from docker-ressources and place a copy of *metanetx.ttl* in the MetaNetX directory and place all vocabulary files in the vocabulary directory.
+
+Be sure that these paths are the same as those indicated in the workslow.sh file
+
+To launch the Virtuoso docker, in the same directory as *docker-compose.yml*, use:
+```
+./workflow.sh
+```
+
 ### Build metdisease Docker :
 
 ```bash
@@ -348,7 +379,7 @@ python3 app/SBML_upgrade/annot_SBML.py --config="/path/to/config.ini"
 use annot_struct_SBML.py
 
 Using external ressources, such as MetaNetX, PubChem and ChEBI (*EXT_SOURCES*), this script allow to fill the SBML graph with Inchi and SMILES associated to species.
-To provide more associations, the Id-mapping annotation graph, describe above can also be used as sources (*EXT_SOURCES*).
+To provide more associations, the Id-mapping annotation graph, describe above can also be also used as sources (*EXT_SOURCES*).
 
 For one species, and using external identifiers uris provided by the *bqbiol:is* predicate a SPARQl query will try to retrieve Inchi and SMILES from differents sources.
 Two results files are then exported, one containing links between SBML species and Inchi using the *voc:hasInchi* , and the second with SMILES using the *voc:hasSmiles* predicate.
@@ -372,6 +403,8 @@ graph_uri: a list of graphs used as sources. It can be graphs providing links be
 [ANNOTATION_TYPE]
 path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-uris equivalences graph will be stored. Should be *Inchi_Smiles/*
 version: version of the annotation graph. 
+
+* * *
 
 To provide a complete annotation process, the above scripts can be executed in this order:
 
