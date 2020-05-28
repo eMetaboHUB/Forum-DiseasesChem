@@ -84,3 +84,29 @@ Go in the app/metab2mesh directory to consult documentation.
 ## SBML Import & SBML annotation :
 
 Go in the app/SBML_upgrade directory to consult documentation.
+
+## Versionning :
+
+Created data-graphs are named graphs for which the associated uri identify the graph and triples it contains in the RDF store. By this specific uri, each data-graph is associated to a version of a specific ressource. There are several main ressources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
+
+When a new graph is created, a new version of the associated ressource is created. For example, if a new version of PubChem compounds is build using *build_RDF_store* script, a new graph with the uri *http://database/ressources/PubChem/compound/version_X* is created as a version of the ressource *http://database/ressources/PubChem/compound*.
+
+Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the data-graph in the same directory. An example of a *void.ttl* associated to a PubChem reference ressource is describe bellow:
+```
+<http://database/ressources/PubChem/reference> dcterms:hasVersion <http://database/ressources/PubChem/reference/version_X> .
+
+<http://database/ressources/PubChem/reference/version_X> a void:Dataset ;
+    dcterms:created "creation date of the data-graph"^^xsd:date ;
+    dcterms:description "The reference subset contains RDF triples for the type and basic metadata of a given PMID."@en ;
+    dcterms:subject <http://dbpedia.org/page/Reference> ;
+    dcterms:title "PubChemRDF reference subset"@en ;
+    void:dataDump a list of all files associated to the graph, ex: 
+        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000001.ttl.gz>,
+        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000002.ttl.gz>,
+        ... ;
+    void:distinctSubjects number of distincts subkects in the graph^^xsd:long ;
+    void:exampleResource <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID10395478> ;
+    void:triples "total number of triples in the graph "^^xsd:long ;
+    void:uriLookupEndpoint <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> ;
+    void:uriSpace "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"^^xsd:string .
+```

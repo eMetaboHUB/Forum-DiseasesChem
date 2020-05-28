@@ -197,7 +197,7 @@ Using external ressources, such as MetaNetX, PubChem and ChEBI (*EXT_SOURCES*), 
 To provide more associations, the Id-mapping annotation graph, describe above can also be also used as sources (*EXT_SOURCES*).
 
 For one species, and using external identifiers uris provided by the *bqbiol:is* predicate a SPARQl query will try to retrieve Inchi and SMILES from differents sources.
-Two results files are then exported, one containing links between SBML species and Inchi using the *voc:hasInchi* , and the second with SMILES using the *voc:hasSmiles* predicate.
+Two results files are then exported, one containing links between SBML species and Inchi using the *voc:hasInchi* predicate, and the second with SMILES using the *voc:hasSmiles* predicate.
 To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
 
 
@@ -213,17 +213,17 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 
 * Config file:
 
-[VIRTUOSO]
+- [VIRTUOSO]
   - url: the url of the Virtuoso SPARQL endpoint
   - path_to_dumps: path to Virtuoso shared directory
   - update_file: name of the update file
-[EXT_SOURCES]
-graph_uri: a list of graphs used as sources. It can be graphs providing links between an identifier uri and Inchi/Smiels such as MetaNetX or ChEBI, or an Id-mapping annotation graph.
-[SBML]
+- [EXT_SOURCES]
+  - graph_uri: a list of graphs used as sources. It can be graphs providing links between an identifier uri and Inchi/Smiels such as MetaNetX or ChEBI, or an Id-mapping annotation graph.
+- [SBML]
   - graph_uri: the uri of the graph corresponding to the SBML to be annotated
-[ANNOTATION_TYPE]
-path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-uris equivalences graph will be stored. Should be *Inchi_Smiles/*
-version: version of the annotation graph. 
+- [ANNOTATION_TYPE]
+  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-uris equivalences graph will be stored. Should be *Inchi_Smiles/*
+  - version: version of the annotation graph. 
 
 * * *
 
