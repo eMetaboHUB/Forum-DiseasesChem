@@ -61,6 +61,7 @@ COPY app/metab2mesh/SPARQL/*.py /workdir/app/metab2mesh/SPARQL/
 
 COPY docker_resources/HumanGEM.ttl /workdir/data/HumanGEM/HumanGEM.ttl
 COPY docker_resources/metanetx.ttl /workdir/data/MetaNetX/metanetx.ttl
+COPY docker_resources/vocabulary /workdir/data/
 
 # SET WORK DIR.
 WORKDIR /workdir
