@@ -77,7 +77,7 @@ docker env:
     - rm -rf docker_resources/vocabulary/*
     - unzip docker_resources/vocabulary.zip -d docker_resources/
     - mv docker_resources/vocabulary/* docker_resources/
-    - ls -al docker_resources/
+    - ls -al docker_resources/vocabulary/
   script:
     - echo "==================================";
     - echo "[info] run 'docker build image' ";
