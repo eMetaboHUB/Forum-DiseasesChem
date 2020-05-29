@@ -59,7 +59,6 @@ docker build -t forum/metdisease .
 ### Run
 ```bash
 docker run --rm -it --network="host" \
--v path/to/docker-ressource:/workdir/data \
 -v path/to/config/dir:/workdir/config \
 -v /path/to/virtuoso-share/dir:/workdir/share-virtuoso \
 -v /path/to/out/dir:/workdir/out/ \
