@@ -278,6 +278,14 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
     # Step 3: Add total number of PMID
     data["TOTAL_" + Individual_name] = U_size
     df_size=len(data)
+    # Write the metadata file :
+    with open(out_path + "metadata.txt", "w") as metadata_f:
+        metadata_f.write("Number of %s: %d\n" %(X_name, len(cid_pmid)))
+        metadata_f.write("Number of %s: %d\n" %(Y_name, len(mesh_pmid)))
+        metadata_f.write("Number of individuals %s: %d\n" %(Individual_name, U_size))
+        metadata_f.write("Number of available coocurences between %s and %s: %d\n" %(X_name, Y_name, len(cid_mesh)))
+        graph_from = ", ".join(["<" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
+        metadata_f.write("List of sources graph :%s\n" %(graph_from))
     for i, start in enumerate(range(0, df_size, file_size)):
         data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i), index = False)
     return data
