@@ -38,7 +38,7 @@ echo "DB.DBA.XML_SET_NS_DECL ('chembl_rdf', 'http://rdf.ebi.ac.uk/resource/chemb
 # Start loading data :
 echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl', 'http://database/MetaNetX');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl', 'http://database/MetaNetX');" >> share/upload.sh
 
 echo "ld_dir_all ('./dumps/vocabulary/', '*.ttl', 'http://database/inference-rules/');" >> share/upload.sh
 echo "ld_dir_all ('./dumps/vocabulary/', '*.rdf', 'http://database/inference-rules/');" >> share/upload.sh

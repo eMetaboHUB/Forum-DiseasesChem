@@ -687,3 +687,24 @@ select count(distinct(?otherRef_syn)) where {
 	}
 }
 ```
+
+
+
+Au niveau de la mise à jour de 2020-05-29 sur le le RDF Store:
+- Maj du store Reference avec les Primary MeSh directement inclus
+- Maj des associations
+Pour les associations:
+	-  il y a : 664104 associations présentes uniquement dans le store de 05-29 et pas présente dans la précédente release, qui ont été *ajouté*
+	- il y a 743343 associations présentes uniquement dans le store de 04-18 et qui ne sont plus présente en 05-29, et qui ont donc été supprimé, avec la différences des 2, on retrouve 79239 ce qui correspond a la différence du nombre de triplets observé avec void.ttl
+	Donc on en a supprimé plus que l'on en a ajouté.
+Il y a eu des correction Ex de la Cyclosomatostatin (CID: 4195535) qui était associé a des publis parlant de somatostatin par erreur (Ex: PMID 2569533)
+La requête utilisée:
+```
+select *
+where {
+GRAPH <http://database/ressources/PMID_CID/2020-04-18> {?s ?p ?o}
+
+FILTER( not exists{ GRAPH <http://database/ressources/PMID_CID/2020-05-29> {?s ?p ?o} })
+}
+limit 1000
+```
