@@ -13,6 +13,7 @@ prefix = """
     PREFIX void: <http://rdfs.org/ns/void#>
     PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
     PREFIX sio: <http://semanticscience.org/resource/>
+    PREFIX obo: <http://purl.obolibrary.org/obo/>
 """
 
 count_distinct_pmids_by_CID = """
@@ -35,7 +36,7 @@ where
                             {
                                 select distinct ?cid where
                                 {
-                                    ?cid cito:isDiscussedBy ?pmid .
+                                    ?endp cito:isCitedAsDataSourceBy ?cid .
                                 }
                                 order by ?cid
                             }
@@ -90,7 +91,7 @@ where
                         limit %d
                         offset %d
                     }
-                    ?cid cito:isDiscussedBy ?pmid .
+                    ?endp obo:IAO_0000136 ?pmid .
                     ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
                 }
                 group by ?mesh
@@ -115,7 +116,7 @@ where {
             FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
         }
     }
-    ?cid cito:isDiscussedBy ?pmid .
+    ?endp obo:IAO_0000136 ?pmid .
     ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
 }
 """
@@ -136,7 +137,7 @@ where
                             select ?cid where {
                                 {
                                     select distinct ?cid where {
-                                        ?cid cito:isDiscussedBy ?pmid .
+                                        ?endp cito:isCitedAsDataSourceBy ?cid .
                                     }
                                     order by ?cid
                                 }
@@ -178,7 +179,7 @@ where
                         select ?cid where {
                             {
                                 select distinct ?cid where {
-                                    ?cid cito:isDiscussedBy ?pmid .
+                                    ?endp cito:isCitedAsDataSourceBy ?cid .
                                 }
                                 order by ?cid
                             }
@@ -245,7 +246,7 @@ select (count(distinct ?cid) as ?count_CID)
 %s
 where 
 {
-    ?cid cito:isDiscussedBy ?pmid .
+    ?endp cito:isCitedAsDataSourceBy ?cid .
 }
 """
 

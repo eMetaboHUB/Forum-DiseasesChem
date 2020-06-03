@@ -699,6 +699,7 @@ Pour les associations:
 	Donc on en a supprimé plus que l'on en a ajouté.
 Il y a eu des correction Ex de la Cyclosomatostatin (CID: 4195535) qui était associé a des publis parlant de somatostatin par erreur (Ex: PMID 2569533)
 La requête utilisée:
+
 ```
 select *
 where {
