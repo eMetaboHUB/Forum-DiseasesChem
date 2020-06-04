@@ -709,3 +709,40 @@ FILTER( not exists{ GRAPH <http://database/ressources/PMID_CID/2020-05-29> {?s ?
 }
 limit 1000
 ```
+
+
+## Pour les corrections apportés aux requête de metab2mesh à cause des liens PMID cito:discusses SCR MeSh :
+Dans plusieurs cas j'ai utilisé le graph endpoint à la place du graph classique PMID_CID.
+
+Dans le cas des requête groupé par MeSH ou pour les comptes totaux de pmids, j'ai remplacé ?cid cito:isDiscussedBy ?pmid par :
+
+?endp obo:IAO_0000136 ?pmid .
+
+Car si la publication (?pmid) présente un liens de type obo:IAO_0000136 avec un élément de endpoint c'est qu'elle est forcément lié à un composé puique que ces entité sont créés pour toutes les associations PMID - CID.
+
+
+Pour récupérer les MeSH Tree number, j'ai utilisé la requête suivante :
+```
+DEFINE input:inference "schema-inference-rules"
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+PREFIX cito: <http://purl.org/spar/cito/>
+PREFIX fabio:	<http://purl.org/spar/fabio/> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+
+select distinct (strafter(str(?mesh), "http://id.nlm.nih.gov/mesh/") as ?MESH) (strafter(str(?tn), "http://id.nlm.nih.gov/mesh/") as ?TREE_NUMBER)
+where
+{
+?mesh a meshv:TopicalDescriptor .
+?mesh meshv:treeNumber ?tn .
+}
+```

@@ -7,8 +7,10 @@ option_list <- list(
               help="path to CID labels table", metavar="character"),
   make_option(c("-m", "--p_MESH_labels"), type="character", default=NULL,
               help="path to MESH labels table", metavar="character"),
-  make_option(c("-c", "--p_MESH_InchI"), type="character", default=NULL,
-              help="path to CID InchI table", metavar="character")
+  make_option(c("-u", "--p_CID_InchI"), type="character", default=NULL,
+              help="path to CID InchI table", metavar="character"),
+  make_option(c("-o", "--p_out"), type="character", default=NULL,
+              help="path to out file", metavar="character")
 );
 
 opt_parser <- OptionParser(option_list=option_list);
@@ -18,12 +20,14 @@ opt <- parse_args(opt_parser);
 path_metab2mesh <- opt$p_metab2mesh
 path_CID_labels <- opt$p_CID_labels
 path_MESH_label <- opt$p_MESH_labels
-path_CID_InchI <- opt$p_MESH_InchI
+path_CID_InchI <- opt$p_CID_InchI
+path_out <- opt$p_out
 
 # path_metab2mesh = "~/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/metab2mesh/metab2mesh_fisher/metab2mesh_fisher.csv"
 # path_CID_labels = "~/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/metab2mesh/CID_LABEL/res_full.txt"
 # path_MESH_label = "~/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/metab2mesh/MESH_LABEL/res_full.csv"
 # path_CID_InchI = "~/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/metab2mesh/CID_INCHI/res_full.txt"
+
 # Add columns names and adjusted p.value
 metab2mesh <- read.table(path_metab2mesh, sep = ",", stringsAsFactors = FALSE)
 colnames(metab2mesh) <- c("CID", "MESH", "COOC", "TOTAL_PMID_CID", "TOTAL_PMID_MESH", "TOTAL_PMID", "p.value", "odds_ratio", "Fold_change", "Chisq_stat")
@@ -46,4 +50,4 @@ metab2mesh <- metab2mesh %>% left_join(cid_labels, by = "CID")
 metab2mesh <- metab2mesh %>% left_join(mesh_labels, by = "MESH")
 metab2mesh <- metab2mesh %>% left_join(cid_inchi, by = "CID")
 
-
+write.table(metab2mesh, file = path_out, sep = ",", row.names = FALSE, col.names = TRUE)
