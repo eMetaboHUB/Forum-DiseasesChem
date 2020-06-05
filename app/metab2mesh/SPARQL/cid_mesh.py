@@ -104,21 +104,39 @@ limit %d
 offset %d
 """
 
-count_all_distinct_pmids = """
-select (count(distinct ?pmid) as ?count)
+count_all_individuals = """
+select ?COUNT
 %s
-where {
+where
+{
     {
-        select ?mesh 
-        where {
-            ?mesh a meshv:TopicalDescriptor .
-            ?mesh meshv:treeNumber ?tn .
-            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+        select (count(distinct ?pmid) as ?COUNT)
+        where
+        {
+            {
+                select ?mesh 
+                where {
+                    ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:treeNumber ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                }
+            }
+            {
+                select ?pmid 
+                where
+                {
+                    ?pmid a fabio:Article
+                }
+                limit %d
+                offset %d
+            }
+            ?endp obo:IAO_0000136 ?pmid .
+            ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
         }
     }
-    ?endp obo:IAO_0000136 ?pmid .
-    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
 }
+limit %d
+offset %d
 """
 
 count_distinct_pmids_by_CID_MESH = """
@@ -258,5 +276,14 @@ where
     ?mesh a meshv:TopicalDescriptor .
     ?mesh meshv:treeNumber ?tn .
     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+}
+"""
+
+count_all_pmids = """
+select count(?pmid) 
+%s
+where
+{
+    ?pmid a fabio:Article
 }
 """
