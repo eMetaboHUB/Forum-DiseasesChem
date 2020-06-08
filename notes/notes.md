@@ -746,3 +746,8 @@ where
 ?mesh meshv:treeNumber ?tn .
 }
 ```
+
+
+# ChEBI by MeSH
+
+Pour les Chebi, on a au total : 93409 CID qui ont un ChEBI associé

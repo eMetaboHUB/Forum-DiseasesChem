@@ -38,16 +38,19 @@ where
                                 select distinct ?chebi where
                                 {
                                     ?chebi rdfs:subClassOf+ chebi:24431 .
+                                    ?cid a+ ?chebi
                                 }
+                                group by ?chebi
+                                having(count (distinct ?cid) <= 10000)
                                 order by ?chebi
                             }
                         }
                         limit %d
                         offset %d
                     }
-                    ?cid rdf:type ?chebi .
+                    ?cid a+ ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
                     ?mesh meshv:treeNumber ?tn .
                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
@@ -96,7 +99,7 @@ where
                     }
                     ?cid rdf:type chebi:24431 .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                 }
                 group by ?mesh
             }
@@ -122,7 +125,7 @@ where {
     }
     ?cid rdf:type chebi:24431 .
     ?cid cito:isDiscussedBy ?pmid .
-    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
 }
 """
 
@@ -155,7 +158,7 @@ where
                         }              
                         ?cid rdf:type ?chebi .
                         ?cid cito:isDiscussedBy ?pmid .
-                        ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                         ?mesh a meshv:TopicalDescriptor .
                         ?mesh meshv:treeNumber ?tn .
                         FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))    
@@ -200,7 +203,7 @@ where
                     }
                     ?cid rdf:type ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
                     ?mesh meshv:treeNumber ?tn .
                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))

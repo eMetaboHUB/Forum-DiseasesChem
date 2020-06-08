@@ -3,15 +3,16 @@ library(tidyverse)
 option_list <- list(
   make_option(c("-i", "--p_metab2mesh"), type="character", default=NULL,
               help="path to metab2mesh fisher table", metavar="character"),
-  make_option(c("-c", "--p_CID_labels"), type="character", default=NULL,
-              help="path to CID labels table", metavar="character"),
-  make_option(c("-m", "--p_MESH_labels"), type="character", default=NULL,
-              help="path to MESH labels table", metavar="character"),
-  make_option(c("-u", "--p_CID_InchI"), type="character", default=NULL,
-              help="path to CID InchI table", metavar="character"),
   make_option(c("-o", "--p_out"), type="character", default=NULL,
               help="path to out file", metavar="character")
 );
+
+# make_option(c("-c", "--p_CID_labels"), type="character", default=NULL,
+#             help="path to CID labels table", metavar="character"),
+# make_option(c("-m", "--p_MESH_labels"), type="character", default=NULL,
+#             help="path to MESH labels table", metavar="character"),
+# make_option(c("-u", "--p_CID_InchI"), type="character", default=NULL,
+#             help="path to CID InchI table", metavar="character"),
 
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser);
