@@ -212,7 +212,8 @@ where
         {
             {
                 select (concat(strafter(STR(?chebi),\"http://purl.obolibrary.org/obo/CHEBI_\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
-                where {
+                where 
+                {
                     {
                         select ?chebi 
                         where 
@@ -221,19 +222,22 @@ where
                                 select distinct ?chebi where
                                 {
                                     ?chebi rdfs:subClassOf+ chebi:24431 .
+                                    ?cid a+ ?chebi
                                 }
+                                group by ?chebi
+                                having(count (distinct ?cid) <= 10000)
                                 order by ?chebi
                             }
                         }
                         limit %d
                         offset %d
-                    }
-                    ?cid rdf:type ?chebi .
+                    }              
+                    ?cid a+ ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
                     ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))  
                 }
                 group by ?chebi ?mesh
             }
