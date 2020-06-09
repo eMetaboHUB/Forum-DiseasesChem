@@ -153,7 +153,7 @@ limit %d
 offset %d
 """
 
-count_distinct_pmids_by_CID_MESH = """
+count_distinct_pmids_by_ChEBI_MESH = """
 select ?CHEBI ?MESH ?count
 %s
 where
@@ -201,7 +201,7 @@ limit %d
 offset %d
 """
 
-list_of_distinct_pmid_by_CID_MeSH = """
+list_of_distinct_pmid_by_ChEBI_MeSH = """
 select ?id ?str_pmid
 %s
 where
@@ -284,5 +284,23 @@ select count(?pmid)
 where
 {
     ?pmid a fabio:Article
+}
+"""
+
+ChEBI_Names = """
+select (?chebi as ?CHEBI) (?chebi_label as ?CHEBI_NAMES)
+%s
+where
+{
+    {
+        select distinct ?chebi where
+        {
+            ?chebi rdfs:subClassOf+ chebi:24431 .
+            ?cid a+ ?chebi
+        }
+        group by ?chebi
+        having(count (distinct ?cid) <= 10000)
+    }
+    ?chebi rdfs:label ?chebi_label
 }
 """
