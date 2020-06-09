@@ -288,7 +288,7 @@ where
 """
 
 ChEBI_Names = """
-select (?chebi as ?CHEBI) (?chebi_label as ?CHEBI_NAMES)
+select (strafter(STR(?chebi),\"http://purl.obolibrary.org/obo/CHEBI_\") as ?CHEBI) (?chebi_label as ?CHEBI_NAMES)
 %s
 where
 {
