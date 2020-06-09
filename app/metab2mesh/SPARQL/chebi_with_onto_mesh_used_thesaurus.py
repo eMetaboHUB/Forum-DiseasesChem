@@ -251,10 +251,19 @@ offset %d
 
 # Here chebi:23367 refer to chemical entity which is a chemical entity is a physical entity of interest in chemistry including molecular entities, parts thereof, and chemical substances.
 count_number_of_ChEBI = """
-select count(distinct ?chebi)
+select count(?chebi)
 %s
-where{
-    ?chebi rdfs:subClassOf+ chebi:24431 .
+where
+{
+    {
+        select distinct ?chebi where
+        {
+            ?chebi rdfs:subClassOf+ chebi:24431 .
+            ?cid a+ ?chebi
+        }
+        group by ?chebi
+        having(count (distinct ?cid) <= 10000)
+    }
 }
 """
 
