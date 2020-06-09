@@ -757,3 +757,16 @@ Dans le cas où l'on cherche à déterminer le nombre pmid associé à un Chebi:
 
 En revanche, lorsque l'on cherche à déterminer déterminer le nombrede pmid associé à chaque MESH en utilisant comme unvisers l'ensemble des ?pmid mentionnant également un CID qui présente un MeSH qui nous intéresse. Pour les rappel les MESH sélectionnés sont ceux pour lesquels on a moins de 10.000 cid associés.
 Pouir déterminer cet univers, on a pas besoin d'utiliser l'ontologie ChEBI directement car on peut simplement sélectionner tout ?cid qui a un ChEBI qui appartient à l'ensemble ?CHEBI sélectionner, mais pas besoin de tester que vérifier que celui-ci est également de la classe des ChEBI enfant
+
+Ainsi faire:
+select (count(distinct ?cid) as ?count) 
+{
+                            ?chebi rdfs:subClassOf+ chebi:24431 .
+                            ?cid a+ ?chebi
+}      
+revient au même que de faire :
+select (count(distinct ?cid) as ?count) 
+{
+                            ?cid a chebi:24431
+}  
+Seulement que pour les autres requêtes, on a pas vraiemnt bveosin de connaitre tout les  cid présents dans chaque classue ChEBI, on a juste besoin de connaitre tout ceux qui ont une classe ChEBI

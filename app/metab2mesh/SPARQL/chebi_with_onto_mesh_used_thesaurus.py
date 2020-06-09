@@ -117,22 +117,40 @@ limit %d
 offset %d
 """
 
-count_all_distinct_pmids = """
-select (count(distinct ?pmid) as ?count)
+count_all_individuals = """
+select ?COUNT
 %s
-where {
+where
+{
     {
-        select ?mesh 
-        where {
-            ?mesh a meshv:TopicalDescriptor .
-            ?mesh meshv:treeNumber ?tn .
-            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+        select (count(distinct ?pmid) as ?COUNT)
+        where
+        {
+            {
+                select ?mesh 
+                where {
+                    ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:treeNumber ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                }
+            }
+            {
+                select ?pmid 
+                where
+                {
+                    ?pmid a fabio:Article
+                }
+                limit %d
+                offset %d
+            }
+            ?cid a chebi:24431 .
+            ?pmid cito:discusses ?cid .
+            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
         }
     }
-    ?cid rdf:type chebi:24431 .
-    ?cid cito:isDiscussedBy ?pmid .
-    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
 }
+limit %d
+offset %d
 """
 
 count_distinct_pmids_by_CID_MESH = """
@@ -155,19 +173,22 @@ where
                                     select distinct ?chebi where
                                     {
                                         ?chebi rdfs:subClassOf+ chebi:24431 .
+                                        ?cid a+ ?chebi
                                     }
+                                    group by ?chebi
+                                    having(count (distinct ?cid) <= 10000)
                                     order by ?chebi
                                 }
                             }
                             limit %d
                             offset %d
                         }              
-                        ?cid rdf:type ?chebi .
+                        ?cid a+ ?chebi .
                         ?cid cito:isDiscussedBy ?pmid .
                         ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                         ?mesh a meshv:TopicalDescriptor .
                         ?mesh meshv:treeNumber ?tn .
-                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))    
+                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))  
                     }
                     group by ?chebi ?mesh
                 } 
@@ -241,5 +262,14 @@ where
     ?mesh a meshv:TopicalDescriptor .
     ?mesh meshv:treeNumber ?tn .
     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+}
+"""
+
+count_all_pmids = """
+select count(?pmid) 
+%s
+where
+{
+    ?pmid a fabio:Article
 }
 """
