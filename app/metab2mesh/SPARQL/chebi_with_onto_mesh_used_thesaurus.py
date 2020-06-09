@@ -97,8 +97,14 @@ where
                         limit %d
                         offset %d
                     }
-                    ?cid rdf:type chebi:24431 .
-                    ?cid cito:isDiscussedBy ?pmid .
+                    {
+                        select ?pmid
+                        where
+                        {
+                            ?cid cito:isDiscussedBy ?pmid .
+                            ?cid a chebi:24431
+                        }
+                    }
                     ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                 }
                 group by ?mesh

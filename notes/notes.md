@@ -750,4 +750,10 @@ where
 
 # ChEBI by MeSH
 
-Pour les Chebi, on a au total : 93409 CID qui ont un ChEBI associé
+Pour les Chebi, on a au total : 93409 CID qui ont un ChEBI associé. 
+Si on ne considère que les classes ChEBI pour lesquelles elles représentent au maximum 10% de ma librairie totale de molécule, soit 9340, on peut mettre à 10000 pour être large
+
+Dans le cas où l'on cherche à déterminer le nombre pmid associé à un Chebi: on a besoin d'utiliser l'ontologie ChEBI est disant ?cid a+ ?chebi car l'on veut récuprer à la fois les cid associé au Chebi mais également les cid associés à tout les ChEBI fils du ChEBI cible.
+
+En revanche, lorsque l'on cherche à déterminer déterminer le nombrede pmid associé à chaque MESH en utilisant comme unvisers l'ensemble des ?pmid mentionnant également un CID qui présente un MeSH qui nous intéresse. Pour les rappel les MESH sélectionnés sont ceux pour lesquels on a moins de 10.000 cid associés.
+Pouir déterminer cet univers, on a pas besoin d'utiliser l'ontologie ChEBI directement car on peut simplement sélectionner tout ?cid qui a un ChEBI qui appartient à l'ensemble ?CHEBI sélectionner, mais pas besoin de tester que vérifier que celui-ci est également de la classe des ChEBI enfant
