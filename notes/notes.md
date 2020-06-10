@@ -758,6 +758,8 @@ Dans le cas où l'on cherche à déterminer le nombre pmid associé à un Chebi:
 En revanche, lorsque l'on cherche à déterminer déterminer le nombrede pmid associé à chaque MESH en utilisant comme unvisers l'ensemble des ?pmid mentionnant également un CID qui présente un MeSH qui nous intéresse. Pour les rappel les MESH sélectionnés sont ceux pour lesquels on a moins de 10.000 cid associés.
 Pouir déterminer cet univers, on a pas besoin d'utiliser l'ontologie ChEBI directement car on peut simplement sélectionner tout ?cid qui a un ChEBI qui appartient à l'ensemble ?CHEBI sélectionner, mais pas besoin de tester que vérifier que celui-ci est également de la classe des ChEBI enfant
 
+Peu importel les éléments sélectionner dans les requête, l'Univers est troujours lensembl des cid pour lesquels on dispose d'un Chebi.
+
 Ainsi faire:
 select (count(distinct ?cid) as ?count) 
 {

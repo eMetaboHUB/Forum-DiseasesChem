@@ -41,7 +41,7 @@ where
                                     ?cid a+ ?chebi
                                 }
                                 group by ?chebi
-                                having(count (distinct ?cid) <= 10000)
+                                having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                 order by ?chebi
                             }
                         }
@@ -176,7 +176,7 @@ where
                                         ?cid a+ ?chebi
                                     }
                                     group by ?chebi
-                                    having(count (distinct ?cid) <= 10000)
+                                    having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                     order by ?chebi
                                 }
                             }
@@ -225,7 +225,7 @@ where
                                     ?cid a+ ?chebi
                                 }
                                 group by ?chebi
-                                having(count (distinct ?cid) <= 10000)
+                                having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                 order by ?chebi
                             }
                         }
@@ -262,7 +262,7 @@ where
             ?cid a+ ?chebi
         }
         group by ?chebi
-        having(count (distinct ?cid) <= 10000)
+        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
     }
 }
 """
@@ -299,7 +299,7 @@ where
             ?cid a+ ?chebi
         }
         group by ?chebi
-        having(count (distinct ?cid) <= 10000)
+        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
     }
     ?chebi rdfs:label ?chebi_label
 }
