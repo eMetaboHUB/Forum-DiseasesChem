@@ -57,13 +57,15 @@ launch_from_config(prefix, header, data, url, config, 'X', out_path, module)
 print("Start getting " + Y_name + " sets size")
 launch_from_config(prefix, header, data, url, config, 'Y', out_path, module)
 
+print("Start getting Univers size")
 # On compte le nombre total de distinct pmids qui ont un CID et un MeSH
-count_U = send_counting_request(prefix, header, data, url, config, 'U', module)
+launch_from_config(prefix, header, data, url, config, 'U', out_path, module)
 # Nb. total pmids = 8754160
 
 print("Start merge files and create data.frame")
 cid_mesh_out_path = out_path + config['X_Y']['out_dir'] + "/"
 cid_pmid_out_path = out_path + config['X']['out_dir'] + "/"
 mesh_pmid_out_path = out_path + config['Y']['out_dir'] + "/"
+univers_out_path = out_path + config['U']['out_dir'] + "/"
 
-df_metab2mesh = prepare_data_frame(config, cid_mesh_out_path , cid_pmid_out_path , mesh_pmid_out_path, count_U, out_path + config['DEFAULT'].get('df_out_dir') + "/", config['DEFAULT'].getint('file_size'))
+df_metab2mesh = prepare_data_frame(config, cid_mesh_out_path , cid_pmid_out_path , mesh_pmid_out_path, univers_out_path, out_path + config['DEFAULT'].get('df_out_dir') + "/", config['DEFAULT'].getint('file_size'))

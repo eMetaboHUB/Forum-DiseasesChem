@@ -38,16 +38,19 @@ where
                                 select distinct ?chebi where
                                 {
                                     ?chebi rdfs:subClassOf+ chebi:24431 .
+                                    ?cid a+ ?chebi
                                 }
+                                group by ?chebi
+                                having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                 order by ?chebi
                             }
                         }
                         limit %d
                         offset %d
                     }
-                    ?cid rdf:type ?chebi .
+                    ?cid a+ ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
                     ?mesh meshv:treeNumber ?tn .
                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
@@ -94,9 +97,15 @@ where
                         limit %d
                         offset %d
                     }
-                    ?cid rdf:type chebi:24431 .
-                    ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    {
+                        select ?pmid
+                        where
+                        {
+                            ?cid cito:isDiscussedBy ?pmid .
+                            ?cid a chebi:24431
+                        }
+                    }
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                 }
                 group by ?mesh
             }
@@ -108,25 +117,43 @@ limit %d
 offset %d
 """
 
-count_all_distinct_pmids = """
-select (count(distinct ?pmid) as ?count)
+count_all_individuals = """
+select ?COUNT
 %s
-where {
+where
+{
     {
-        select ?mesh 
-        where {
-            ?mesh a meshv:TopicalDescriptor .
-            ?mesh meshv:treeNumber ?tn .
-            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+        select (count(distinct ?pmid) as ?COUNT)
+        where
+        {
+            {
+                select ?mesh 
+                where {
+                    ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:treeNumber ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                }
+            }
+            {
+                select ?pmid 
+                where
+                {
+                    ?pmid a fabio:Article
+                }
+                limit %d
+                offset %d
+            }
+            ?cid a chebi:24431 .
+            ?pmid cito:discusses ?cid .
+            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
         }
     }
-    ?cid rdf:type chebi:24431 .
-    ?cid cito:isDiscussedBy ?pmid .
-    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
 }
+limit %d
+offset %d
 """
 
-count_distinct_pmids_by_CID_MESH = """
+count_distinct_pmids_by_ChEBI_MESH = """
 select ?CHEBI ?MESH ?count
 %s
 where
@@ -146,19 +173,22 @@ where
                                     select distinct ?chebi where
                                     {
                                         ?chebi rdfs:subClassOf+ chebi:24431 .
+                                        ?cid a+ ?chebi
                                     }
+                                    group by ?chebi
+                                    having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                     order by ?chebi
                                 }
                             }
                             limit %d
                             offset %d
                         }              
-                        ?cid rdf:type ?chebi .
+                        ?cid a+ ?chebi .
                         ?cid cito:isDiscussedBy ?pmid .
-                        ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                         ?mesh a meshv:TopicalDescriptor .
                         ?mesh meshv:treeNumber ?tn .
-                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))    
+                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))  
                     }
                     group by ?chebi ?mesh
                 } 
@@ -171,7 +201,7 @@ limit %d
 offset %d
 """
 
-list_of_distinct_pmid_by_CID_MeSH = """
+list_of_distinct_pmid_by_ChEBI_MeSH = """
 select ?id ?str_pmid
 %s
 where
@@ -182,7 +212,8 @@ where
         {
             {
                 select (concat(strafter(STR(?chebi),\"http://purl.obolibrary.org/obo/CHEBI_\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
-                where {
+                where 
+                {
                     {
                         select ?chebi 
                         where 
@@ -191,19 +222,22 @@ where
                                 select distinct ?chebi where
                                 {
                                     ?chebi rdfs:subClassOf+ chebi:24431 .
+                                    ?cid a+ ?chebi
                                 }
+                                group by ?chebi
+                                having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                 order by ?chebi
                             }
                         }
                         limit %d
                         offset %d
-                    }
-                    ?cid rdf:type ?chebi .
+                    }              
+                    ?cid a+ ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))  
                 }
                 group by ?chebi ?mesh
             }
@@ -217,10 +251,19 @@ offset %d
 
 # Here chebi:23367 refer to chemical entity which is a chemical entity is a physical entity of interest in chemistry including molecular entities, parts thereof, and chemical substances.
 count_number_of_ChEBI = """
-select count(distinct ?chebi)
+select count(?chebi)
 %s
-where{
-    ?chebi rdfs:subClassOf+ chebi:24431 .
+where
+{
+    {
+        select distinct ?chebi where
+        {
+            ?chebi rdfs:subClassOf+ chebi:24431 .
+            ?cid a+ ?chebi
+        }
+        group by ?chebi
+        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
+    }
 }
 """
 
@@ -232,5 +275,32 @@ where
     ?mesh a meshv:TopicalDescriptor .
     ?mesh meshv:treeNumber ?tn .
     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+}
+"""
+
+count_all_pmids = """
+select count(?pmid) 
+%s
+where
+{
+    ?pmid a fabio:Article
+}
+"""
+
+ChEBI_Names = """
+select (strafter(STR(?chebi),\"http://purl.obolibrary.org/obo/CHEBI_\") as ?CHEBI) (?chebi_label as ?CHEBI_NAMES)
+%s
+where
+{
+    {
+        select distinct ?chebi where
+        {
+            ?chebi rdfs:subClassOf+ chebi:24431 .
+            ?cid a+ ?chebi
+        }
+        group by ?chebi
+        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
+    }
+    ?chebi rdfs:label ?chebi_label
 }
 """

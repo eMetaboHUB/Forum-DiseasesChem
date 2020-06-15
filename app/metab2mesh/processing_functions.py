@@ -246,7 +246,7 @@ def launch_from_config(prefix, header, data, url, config, key, out_path, module)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
-def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_path, file_size):
+def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, out_path, file_size):
     """
     This function is used to build the final data.frame containg all results for next computation. As this table can be really huge and post processes need also to be parallelized, the table is separated in sub-table with a number of lines fixed by file_size.
     Columns are: Modalities of X, Modalities of Y, Total number of individuals with modality X and Y, Total number of individuals with modality X, Total number of individuals with modality Y, Total number of individuals. 
@@ -270,6 +270,9 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, U_size, out_p
     cid_pmid = pd.concat(df_cid_pmid_list)
     df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(path_to_Y + "*.csv")]
     mesh_pmid = pd.concat(df_mesh_pmid_list)
+    df_univers_list = [pd.read_csv(path, sep = ",", names=["COUNT"]) for path in glob.glob(path_to_U + "*.csv")]
+    df_univers = pd.concat(df_univers_list)
+    U_size = df_univers["COUNT"].sum()
     print("Merge columns")
     # Step 1: merging total CID counts :
     data = cid_mesh.merge(cid_pmid, on = X_name, how = "left")
