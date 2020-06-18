@@ -47,6 +47,7 @@ Pubchem_v = config['PUBCHEM'].get('version')
 path_to_pubchem_dir = config['PUBCHEM'].get('path_to_pubchem_dir')
 path_to_pubchem_dumps_dir = config['PUBCHEM'].get('path_to_dir_from_dumps')
 base_uri_pubchem = "http://database/ressources/ressources_id_mapping/PubChem/"
+uri_source_graph = config['PUBCHEM'].get('uri')
 # Intra
 path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
 base_uri_Intra = "http://database/ressources/ressources_id_mapping/Intra/PubChem/"
@@ -76,7 +77,7 @@ for path in glob.glob(path_to_pubchem_dir + "*_type*.ttl.gz"):
         g.parse(f, format="turtle")
 
 print("Ok\nCreate PubChem mapping graph")
-map_ids.create_graph_from_pubchem_type(g, path_to_dumps + path_to_pubchem_dumps_dir)
+map_ids.create_graph_from_pubchem_type(g, path_to_dumps + path_to_pubchem_dumps_dir, uri_source_graph)
 print("Create PubChem Intra equivalences graph ")
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "PubChem")
 

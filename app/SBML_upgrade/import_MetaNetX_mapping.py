@@ -46,6 +46,7 @@ MetaNetX_v = config['METANETX'].get('version')
 path_to_g_MetaNetX = config['METANETX'].get('g_path')
 path_to_dir_MetaNetX = config['METANETX'].get('path_to_dir_from_dumps')
 base_uri_MetaNetX = "http://database/ressources/ressources_id_mapping/MetaNetX/"
+uri_source_graph = config['METANETX'].get('uri')
 # Intra
 path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
 base_uri_Intra = "http://database/ressources/ressources_id_mapping/Intra/MetaNetX/"
@@ -74,7 +75,7 @@ graph_metaNetX = rdflib.Graph()
 graph_metaNetX.parse(path_to_g_MetaNetX, format = "turtle")
 print("Ok\nTry de create URIs equivalences from MetaNetX graph ...")
 # Create graphs :
-map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_MetaNetX)
+map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + path_to_dir_MetaNetX, uri_source_graph)
 map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "MetaNetX")
 
 print("Try to load mapping graphs in Virtuoso ...")
