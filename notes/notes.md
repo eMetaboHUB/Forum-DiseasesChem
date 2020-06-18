@@ -772,3 +772,16 @@ select (count(distinct ?cid) as ?count)
                             ?cid a chebi:24431
 }  
 Seulement que pour les autres requêtes, on a pas vraiemnt bveosin de connaitre tout les  cid présents dans chaque classue ChEBI, on a juste besoin de connaitre tout ceux qui ont une classe ChEBI
+
+
+### Metab2MeSH with Species :
+
+Initialement avec les graph d'annotations : MetaNetX 3.0 et PubChem type 2020-04-24, nous avons 4759 spcies avec un identifiant CID associé par bqbiol:is.
+Parmis ces 4759 species il y en a 3861 qui ont un CID pour lequel on dispose de litterature soit 38%
+
+
+Au sujet de ma problématique sur "est-ce que je dois considérer seulement les articles qui parlent de maladies lorsque je vais faire mon metab2mesh avec les species pour ensuite propager" en fait on se rend compte que suivant si on considère tout les catégorie MeSH ou seulement la catégorie MeSH Disease en fait on répond pas à la même question.
+Si on considère toutes les catégories on répond à : "Parmis tout les sujets (topic) qui sont associés à ma molécule, est-ce que la fait de parler d'Alzeimer est vraiment significatif ?"
+En revanche, si on considère seuelement la catégorie MeSH Diseases, on répond à la question : "Sachant que je parle seulement de maladie, est-ce que ma molécule est significativement associé à cette maladie" Au sens, plus que les autres maladies dont je parle. Genre, parmis toutes les maladies auxquel ma molécule est  associés, qu'elles sont celles qui sont significativement associés.
+
+Le truc c'est que choisir seulement les terme maladie, va grandement me faire diminuer le nombre de publis associés à ma molécule et donc sachant que moins l'on a de publi plus les probabilité associés sont biaisé c'est peut être pas une bonne idée, Genre si j'ai seuelement 3 publi associé à des maladies genre Alzeimer parmis en tout 10000 publis si je considère tout les topics et que je choisis de ne m'intéressés qu'aux maladies vont test va dire est que que en tirant 3 publis c'est significatifs de tirer 3 publis associés à Alzeimer, il va surement me dire oui alors qu'en vrai bof ....
