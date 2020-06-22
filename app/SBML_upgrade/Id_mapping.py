@@ -21,6 +21,7 @@ class Id_mapping:
         - intra_ids_dict: a dict with key as ressource name and values containing the union of all the ids extracted for this ressource
         - uri_MetaNetX: a dict with key as ressource name and values representing the URI of the ressource present in the MetaNetX RDF graph
         - uri_PubChem: a dict with key as ressource name and values representing the URI of the ressource present in the PubChem type RDF graph
+        - sources:  a list of uris representing RDF graph which were used a sources in the process. All the list is exported in metadat when creating Intra-ressources equivalences. For specific Inter-ressource equivalences (Ex: MetaNetX or PubChem), only the associated source graph is exported
         - namespaces: a dict of namespaces
         - version: the version of the ressource, if None date is used
         """
@@ -30,48 +31,15 @@ class Id_mapping:
         self.intra_ids_dict = dict()
         self.uri_MetaNetX = dict()
         self.uri_PubChem = dict()
+        self.sources = list()
         self.namespaces = namespaces
         self.version = version
     
-    def download_mapping_from_ftp(self, ressource_1, ressource_2, path_out):
-        """
-        This function is used to dowload the ressource mapping file from the ftp server
-        - ressource_1: UniChem id of the ressource 1
-        - ressource_2: UniChem id of the ressource 2
-        - path_out: path to a directory to export data 
-        """
-        out = path_out + "data/"
-        if not os.path.exists(out):
-            os.makedirs(out)
-        f_name = "src" + ressource_1 + "src" + ressource_2 + ".txt.gz"
-        # One of the main issue is that the mapping between 2 ressources in provided on only one sens, so r1.vs.r2 or r2.vs.r1, wo we need to check if a file was dowloaded from the ftop, if not it's indicated that the mapping is represented in the reverse order.
-        isReverse = False
-        os.system("wget  -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_1 + "/" + f_name)
-        if not os.path.isfile(out + f_name):
-            print(ressource_1 + ' .vs. ' + ressource_2 + " was not found in this order, try in the order : " + ressource_2 + ' .vs. ' + ressource_1)
-            isReverse = True
-            f_name = "src" + ressource_2 + "src" + ressource_1 + ".txt.gz"
-            os.system("wget -P " + out + " " + "ftp://ftp.ebi.ac.uk/pub/databases/chembl/UniChem/data/wholeSourceMapping/" + "src_id" + ressource_2 + "/" + f_name)
-        # Parsing file : 
-        f_input = gzip.open(out + f_name,'rt')
-        header = f_input.readline()
-        print(header)
-        ids_ressource_1 = list()
-        ids_ressource_2 = list()
-        for line in f_input:
-            columns = line.rstrip().split(sep='\t')
-            ids_ressource_1.append(columns[0])
-            ids_ressource_2.append(columns[1])
-        # If data was found in the reverse order, we also return in the reverse order to keep the initial ids for ressource_1 and ressource_2
-        if isReverse:
-            return(ids_ressource_2, ids_ressource_1)
-        return(ids_ressource_1, ids_ressource_2)
-    
-    def get_graph_ids_set(self, path_to_graph):
+    def get_graph_ids_set(self, path_to_graph, graph_uri):
         """
         This function allow to parse an input SMBL RDF graph and get all the actual ids present in the graph ONLY for ressources that may have several uris.
         - path_to_graph: a path to the .ttl file of the SMBL graph
-        - graph_original_uri_prefix: a dict with key as ressource name and value as the original root uri (so without the id) used in the graph. Exemple for Chebi : http://purl.obolibrary.org/obo/CHEBI_
+        - graph_uri: the URI of the graph, used to provide sources
         Note that keys in the dict must be the same as in the ressource_uris dict.
         """
         g = rdflib.Graph()
@@ -92,56 +60,8 @@ class Id_mapping:
                 if len(split_uri) > 1:
                     # Sachant que l'on a fai la requête avec distinct, pas besoin de union, on peut directement add, il n'y aura pas de duplicats
                     self.intra_ids_dict[key].add(split_uri[1])
-    
-    def create_graph_from_UniChem(self, path_out):
-        """
-        This function is used to create a graph or uri equivalences between different input ressource. Equivalence information are fetch from the WebService of UniChem. 
-        Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
-        Between differents uris of the same ressource (called intra-uris) a skos:exactMatch relation is implemented
-        - path_out: a path to out files
-        """
-        ressource_version_UniChem = Database_ressource_version(ressource = "ressources_id_mapping/UniChem", version = self.version)
-        n_triples = 0
-        subjects = set()
-        path_out = path_out + ressource_version_UniChem.version + "/"
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)
-        selected_ressource = [r for r in self.ressources_ids.keys() if len(self.ressources_ids[r]) > 0]
-        cbn_resource = itertools.combinations(selected_ressource, 2)
-        for ressource_pair in cbn_resource:
-            r1 = ressource_pair[0]
-            r2 = ressource_pair[1]
-            g_name = (r1 + "_" + r2)
-            print("Treating : " + r1 + " - " + r2 + " ...")
-            current_graph = ressource_version_UniChem.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
-            # Le WevService semble mal fonctionner ... donc je suis passer par une nouvelle méthode où de download depuis le ftp :
-            ids_r1, ids_r2 = self.download_mapping_from_ftp(self.ressources_ids[r1], self.ressources_ids[r2], path_out)
-            # Si la requête précédement envoyée à échouée au passe à la paire de ressource suivante
-            if ids_r1 is None or ids_r2 is None:
-                print("Impossible to process information for identifiers equivalence between ressource " + r1 + " and " + r2 + "\n")
-                continue
-            n_ids = len(ids_r1)
-            for id_index in range(n_ids):
-                #  On écrit les équivalence inter-ressource seulement pour une URI de chaque ressource, le liens avec les autres se fera par le biais des équivalence intra-ressource
-                uri_1, uri_2 = rdflib.URIRef(self.ressource_uris[r1][0] + ids_r1[id_index]), rdflib.URIRef(self.ressource_uris[r2][0] + ids_r2[id_index])
-                current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
-            # On écrit le graph :
-            ressource_version_UniChem.add_DataDump(g_name + ".trig")
-            current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
-            n_triples += len(current_graph)
-            subjects = subjects.union(set([s for s in current_graph.subjects()]))
-            # Si il y a plusieurs URI pour la ressource, il faut préparer les identifiants pour les correspondances intra-ressource
-            if len(self.ressource_uris[r1]) > 1:
-                self.intra_ids_dict[r1] = self.intra_ids_dict[r1].union(ids_r1)
-            if len(self.ressource_uris[r2]) > 1:
-                self.intra_ids_dict[r2] = self.intra_ids_dict[r2].union(ids_r2)
-        # On annote le graph :
-        ressource_version_UniChem.add_version_namespaces(["void"], self.namespaces)
-        ressource_version_UniChem.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from UniChem"))
-        ressource_version_UniChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from UniChem"))
-        ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
-        ressource_version_UniChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_UniChem.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
+        # The URI of the source SBML is added to the sources list.
+        self.sources.append(graph_uri)
     
     def export_intra_eq(self, path_out, source):
         """
@@ -176,6 +96,8 @@ class Id_mapping:
         ressource_version_intra.add_version_namespaces(["void"], self.namespaces)
         ressource_version_intra.add_version_attribute(DCTERMS["description"], rdflib.Literal("URIs equivalence inside a ressource"))
         ressource_version_intra.add_version_attribute(DCTERMS["title"], rdflib.Literal("URIs equivalence inside a ressource"))
+        for source_uris in self.sources:
+            ressource_version_intra.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source_uris))
         ressource_version_intra.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_intra.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_intra.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
@@ -234,7 +156,7 @@ class Id_mapping:
         ids_ressource_2 = [id[1].toPython() for id in query]
         return ids_ressource_1, ids_ressource_2
     
-    def create_graph_from_MetaNetX(self, graph_metaNetX, path_out):
+    def create_graph_from_MetaNetX(self, graph_metaNetX, path_out, graph_uri):
         """
         This function is used to create a graph or uri equivalences between MetaNetX identifiers and other ressources. Equivalence information are fetch from the MetaNetX RDF graph. 
         Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
@@ -276,6 +198,7 @@ class Id_mapping:
             if len(self.ressource_uris[ressource]) > 1:
                 self.intra_ids_dict[ressource] = self.intra_ids_dict[ressource].union(ressource_ids)
             print("Ok")
+        self.sources.append(graph_uri)
         # On crée les graph inter ressource à partir des infos de MetaNetX :
         print("Creating inter-ressource equivalences from MetaNetX: ")
         cbn_resource = itertools.combinations(selected_ressource, 2)
@@ -308,63 +231,13 @@ class Id_mapping:
         ressource_version_MetaNetX.add_version_namespaces(["void"], self.namespaces)
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from MetaNetX"))
+        ressource_version_MetaNetX.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
         ressource_version_MetaNetX.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_MetaNetX.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_MetaNetX.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
     
-    def create_graph_from_tab(self, tab_name, path_tab, path_out):
-        """
-        This function is used to create a graph or uri equivalences between different ressources. Equivalence information are fetch from the tabulated file.
-        The tabulated file must a tabulated file with each column representing a ressource, column names must be the same as thoose in the config file. 
-        Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
-        - path_tab: a path to the tabulated file
-        - tab_name: the name of the tabulated to implement the ressource
-        - path_out: path to the output directory
-        """ 
-        ressource_version_Tab = Database_ressource_version(ressource = "ressources_id_mapping/" + tab_name, version = self.version)
-        n_triples = 0
-        subjects = set()
-        file_content = list()
-        path_out = path_out + ressource_version_Tab.version + "/"
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)
-        # Extract associations
-        with open(path_tab, "r") as tab_file:
-            tab_reader = csv.reader(tab_file, delimiter='\t')
-            header = next(tab_reader, None)
-            for l in tab_reader:
-                file_content.append(l)
-        # Build graphs
-        cbn_resource = itertools.combinations(header, 2)
-        for ressource_pair in cbn_resource:
-            r1, r2 = ressource_pair[0], ressource_pair[1]
-            print("Treating " + r1 + " and " + r2)
-            index_r1, index_r2 = header.index(r1), header.index(r2)
-            g_name = (r1 + "_" + r2)
-            current_graph = ressource_version_Tab.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
-            for id_eq in file_content:
-                if (id_eq[index_r1] != '') and (id_eq[index_r2] != ''):
-                    uri_1, uri_2 = rdflib.URIRef(self.ressource_uris[r1][0] + id_eq[index_r1]), rdflib.URIRef(self.ressource_uris[r2][0] + id_eq[index_r2])
-                    current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
-                    # Si il y a plusieurs URI pour la ressource, il faut préparer les identifiants pour les correspondances intra-ressource
-                    if len(self.ressource_uris[r1]) > 1:
-                        self.intra_ids_dict[r1].add(id_eq[index_r1])
-                    if len(self.ressource_uris[r2]) > 1:
-                        self.intra_ids_dict[r2].add(id_eq[index_r2])
-            # On écrit le graph :
-            ressource_version_Tab.add_DataDump(g_name + ".trig")
-            current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
-            n_triples += len(current_graph)
-            subjects = subjects.union(set([s for s in current_graph.subjects()]))
-        ressource_version_Tab.add_version_namespaces(["void"], self.namespaces)
-        ressource_version_Tab.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from tabulted file " + tab_name))
-        ressource_version_Tab.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from tabulted file " + tab_name))
-        ressource_version_Tab.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
-        ressource_version_Tab.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_Tab.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
-    
-    def create_graph_from_pubchem_type(self, pubchem_graph, path_out):
+    def create_graph_from_pubchem_type(self, pubchem_graph, path_out, graph_uri):
         """
         This function is ised to create a mapping graph from information contains in type pubchem graphs which can contains links between PubChem CID and ChEBI
         - pubchem_graph: a rdflib object graph associated to the PubChem type RDF graph
@@ -406,10 +279,12 @@ class Id_mapping:
             if len(self.ressource_uris[ressource]) > 1:
                 self.intra_ids_dict[ressource] = self.intra_ids_dict[ressource].union(ressource_ids)
             print("Ok")
+        self.sources.append(graph_uri)
         print("Write metadata graph ...", end = '')
         ressource_version_PubChem.add_version_namespaces(["void"], self.namespaces)
         ressource_version_PubChem.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from PubChem"))
         ressource_version_PubChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from PubChem"))
+        ressource_version_PubChem.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
         ressource_version_PubChem.add_version_attribute(self.namespaces["void"]["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_PubChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_PubChem.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
