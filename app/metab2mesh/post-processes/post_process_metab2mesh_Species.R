@@ -19,9 +19,7 @@ path_out <- opt$p_out
 
 # Add columns names and adjusted p.value
 metab2mesh <- read.table(path_metab2mesh, sep = ",", stringsAsFactors = FALSE)
-colnames(metab2mesh) <- c("CID", "MESH", "COOC", "TOTAL_PMID_CID", "TOTAL_PMID_MESH", "TOTAL_PMID", "p.value", "odds_ratio", "Fold_change", "Chisq_stat")
+colnames(metab2mesh) <- c("SPECIE", "MESH", "COOC", "TOTAL_PMID_SPECIE", "TOTAL_PMID_MESH", "TOTAL_PMID", "p.value", "odds_ratio", "Fold_change", "Chisq_stat")
 metab2mesh$p.adj <- p.adjust(metab2mesh$p.value, method = "BH")
-
-
 
 write.table(metab2mesh, file = path_out, sep = ",", row.names = FALSE, col.names = TRUE)
