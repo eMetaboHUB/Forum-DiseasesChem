@@ -798,3 +798,26 @@ Le truc c'est que choisir seulement les terme maladie, va grandement me faire di
 (3) J'ai uniquement sélectionner les métabolites du Cytosol
 (4) J'ai remove les side-compounds
 (5) J'ai remove des réactions de transports ou de Biomass
+
+* * * 
+
+J'ai aussi lu la publi sur Annotation Enrichment Analysis: *An Alternative method for Evaluating the Functional Properties of Gene Sets* qui parle des biais que l'on peut trouver dans les analyses de types Go-Enrichments (donc un peu similaire à notre metab2mesh) en utilisant le test de Fisher. Ils montrent qu'il y a un biais dans la significativité des résultats due au fait que la distribution du nombre d'annotation GO-termes au niveau des gènes est très inégale et non-homogène, voir proche d'une power-law. En effet, certains  gènes vont être très bien annotés et auront ainsi énormément de termes Go annotés. En revanche, certains gène, peu annotés auront peu de termes GO annotés. On peut également voir la même chose, moins importante certes, sur les termes ou la distribution de gènes associés à un terme GO varie énormément. Pour des GO-termes qui sont proches des racinces c'est normal car ils comptabilise l'ensemble des annotations de leur enfants, en revanche, le nombre d'enfant variant énormément, certains termes Go ont néanmoins beaucoup plus de gènes associés que les autres.
+Il en retourne par exemple que les tests qui sont réalisés à partir de set de gènes qui présente beaucoup plus d'annotations que les autres sont souvent facilement significatifs. En effet, cedrtains gènes étant annotés avec énormément de termes GO, il vont avoir tendance à augmenter de manière non-spécifique finalement toutes les co-occurences et donc augmenter la significitvité des tests
+Dans notre cas cela reviendrai a dire que les publications qui ont beaucoup de termes MeSH annotés ont tendance à rendre les test plus facilement significatifs. Dans notre cas ce biais n'est pas présent puisque contrairement au gènes globalement toutes les publi on en moyenne une dizaine de publication, aucune publi n'a par exemple 300 MeSh associés.
+
+Pour solutionner ce problème leur solution est non pas de compter l'overlap de gènes entre le set et le termes Go, mais de compter le nombre d'annotations communes entre le set de gènes et le le terme GO et ensuite en rendomisant de voir si ceci est significatif. Donc:
+	- Le set d'annotations associé au set de gène c'est l'union de tout les termes GO associés au set.
+	- Le set d'annotations associé au terme c'est l'ensemble de tout les termes GO enfant associé à ce terme, ils parlent de la branche associé au terme
+  Ainsi on compte les annotations communes entre notre set et le terme GO
+  Ensuite, on va shuffle à la fois gènes et les termes GO, pour obtenir:
+	- Un set de gènes qui contient ~ le même nombre d'annotation que le set d'orgine
+	- Un set de termes MeSH qui à ~ le même nombre d'annotation que la branche d'origine
+
+Ensuite pour chaque des shuffeling crée on va compter le nombre de cooc d'annotation et ensuite c'est donc du monte-Carlo, on compte combien de fois de manière aléatoire on a obtenu un score de co-occurence plus élevé
+La chose à retenir est que le Test Exact de Fisher est basé sur la loi hypergéométrique. Ainsi pour tester la significativité d'une association il cherche à calculer la probabilité de tirer au hazard un set de gène équivalent à celui observé, c a d qui présente k gènes appartenant au GO-terme X connaissant le nombre de gènes associé au GO-terme X. Ainsi, lorsqu'il fait son tirage, il considère que la probabilité de tirer au hazard chaque gène est equiprobable, or dans ce cas là c'est faux !!!! En effet, certains gènes étant annotés avec beaucoup plus de termes GO que les autres, il est beaucoup plus probable quand j'étudie un GO-terme de tirer un gène qui est très fortement annotés (annotés dans beaucoup de GO-termes), qu'un gène très mal annotés qui a par exemple seulement 2 GO-termes annotés.
+Y'a un peu une srote d'effet lampadaire dans la construction des bases par rapport aux gènes souvent étudiés (ex: cancer, etc ...)
+Ainsi en comptant les annotation communes et en randomisant pour estimer la pvalue on s'absous de ça :)
+
+Et dans notre cas cela reviendrait à considérer que l'on a une grosse différence dans les nombre de MeSH associés à nos publications et que donc certaines publication serait plus probable d'être tirer de manière aléatorie car elles ont beaucpoup de MeSH annotés, or ce n'est pas le cas globalement toutes les publications ont en ~ un dizaine de MeSH
+
+que les gènes associés aux sets comparés (ceux de la signature et ceux associé au termes MeSH) sont 
