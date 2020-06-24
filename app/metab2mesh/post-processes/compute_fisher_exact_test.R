@@ -1,4 +1,5 @@
-library(optparse)
+library(optparse, lib.loc="~/work/R")
+
 option_list <- list(
   make_option(c("-f", "--file"), type="character", default=NULL,
               help="dataset file name", metavar="character")
@@ -26,22 +27,22 @@ chisq_stat <- vector(mode = "numeric", length = n)
 # Compute test :
 for( i in 1:n){
   # Prepare matrix
-  a <- data[i, ]$COOC
-  b <- data[i, ]$TOTAL_PMID_CID - data[i, ]$COOC
-  c <- data[i, ]$TOTAL_PMID_MESH - data[i, ]$COOC
-  d <- data[i, ]$TOTAL_PMID - a - b - c
+  a <- data[i, 3]
+  b <- data[i, 4] - data[i, 3]
+  c <- data[i, 5] - data[i, 3]
+  d <- data[i, 6] - a - b - c
   matrice <- matrix(data = c(a, b, c, d), ncol = 2, byrow = TRUE)
   # TryCatch on Fisher test :
   test <- tryCatch(
     {
-      fisher.test(x = matrice, alternative = "two.sided")
+      fisher.test(x = matrice, alternative = "greater")
     },
     error = function(e){
-      writeLines(paste0(c(data[i, ]$CID, data[i, ]$MESH, e), collapse = "\t"), log)
+      writeLines(paste0(c(data[i, 1], data[i, 2], e), collapse = "\t"), log)
       return(NULL)
     },
     warning = function(w){
-      writeLines(paste(c(data[i, ]$CID, data[i, ]$MESH, w), collapse = "\t"), log)
+      writeLines(paste(c(data[i, 1], data[i, 2], w), collapse = "\t"), log)
       return(NULL)
     }
   )
@@ -50,7 +51,7 @@ for( i in 1:n){
     suppressWarnings(chisq.test(matrice)$statistic)
   },
   error = function(e){
-    writeLines(paste0(c(data[i, ]$CID, data[i, ]$MESH, e), collapse = "\t"), log)
+    writeLines(paste0(c(data[i, 1], data[i, 2], e), collapse = "\t"), log)
     return(NULL)
   })
   # parse and write results :
@@ -61,7 +62,7 @@ for( i in 1:n){
       }else{
           odds_ratio[i] <- test$estimate
       }
-        fold_change[i] <- (a/data[i, ]$TOTAL_PMID_CID)/(data[i, ]$TOTAL_PMID_MESH/data[i, ]$TOTAL_PMID)
+        fold_change[i] <- (a/data[i, 4])/(data[i, 5]/data[i, 6])
   }else{
       p.value[i] <- odds_ratio[i] <- fold_change[i] <- NA
   }
