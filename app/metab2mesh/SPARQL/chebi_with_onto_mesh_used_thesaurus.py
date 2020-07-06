@@ -50,10 +50,10 @@ where
                     }
                     ?cid a+ ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
-                    ?mesh a meshv:TopicalDescriptor .
+                    ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    ?mesh a meshv:TopicalDescriptor .
                 }
                 group by ?chebi
             }
@@ -105,7 +105,8 @@ where
                             ?cid a chebi:24431
                         }
                     }
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
+                    ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:treeNumber/meshv:parentTreeNumber+|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                    ?mesh meshv:treeNumber ?tn .
                 }
                 group by ?mesh
             }
@@ -145,7 +146,8 @@ where
             }
             ?cid a chebi:24431 .
             ?pmid cito:discusses ?cid .
-            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
+            ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
+            ?mesh meshv:treeNumber ?tn .
         }
     }
 }
@@ -185,10 +187,10 @@ where
                         }              
                         ?cid a+ ?chebi .
                         ?cid cito:isDiscussedBy ?pmid .
-                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
-                        ?mesh a meshv:TopicalDescriptor .
+                        ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:treeNumber/meshv:parentTreeNumber+|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                         ?mesh meshv:treeNumber ?tn .
-                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))  
+                        ?mesh a meshv:TopicalDescriptor . 
                     }
                     group by ?chebi ?mesh
                 } 
@@ -234,10 +236,10 @@ where
                     }              
                     ?cid a+ ?chebi .
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
-                    ?mesh a meshv:TopicalDescriptor .
+                    ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:treeNumber/meshv:parentTreeNumber+|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))  
+                    ?mesh a meshv:TopicalDescriptor .   
                 }
                 group by ?chebi ?mesh
             }
