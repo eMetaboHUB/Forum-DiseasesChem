@@ -128,14 +128,6 @@ where
         where
         {
             {
-                select ?mesh 
-                where {
-                    ?mesh a meshv:TopicalDescriptor .
-                    ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-                }
-            }
-            {
                 select ?pmid 
                 where
                 {
@@ -148,6 +140,8 @@ where
             ?pmid cito:discusses ?cid .
             ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
             ?mesh meshv:treeNumber ?tn .
+            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
+            ?mesh a meshv:TopicalDescriptor .
         }
     }
 }
