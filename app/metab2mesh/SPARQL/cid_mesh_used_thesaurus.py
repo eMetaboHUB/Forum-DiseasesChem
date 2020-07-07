@@ -251,6 +251,7 @@ where
                         where
                         {
                             ?mesh a meshv:TopicalDescriptor .
+                            ?mesh meshv:active 1 .
                             ?mesh meshv:treeNumber ?tn .
                             FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                         }
