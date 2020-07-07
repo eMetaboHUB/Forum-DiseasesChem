@@ -821,3 +821,11 @@ Ainsi en comptant les annotation communes et en randomisant pour estimer la pval
 Et dans notre cas cela reviendrait à considérer que l'on a une grosse différence dans les nombre de MeSH associés à nos publications et que donc certaines publication serait plus probable d'être tirer de manière aléatorie car elles ont beaucpoup de MeSH annotés, or ce n'est pas le cas globalement toutes les publications ont en ~ un dizaine de MeSH
 
 que les gènes associés aux sets comparés (ceux de la signature et ceux associé au termes MeSH) sont 
+
+
+
+# ON A CHANGE LA MANIERE DE FAIRE LA PROPAGATION :  GROS FIX
+
+On a modifier la manière dont on faisait la propagation dans la hiérarchie qui était en fait erronée. Pour la nouvelle manièe de faire on s'est appuyer sur l'article *Transforming the Medical Subject Headings into Linked Data: Creating the Authorized Version of MeSH in RDF* et sur la page *https://hhs.github.io/meshrdf/tree-numbers*. 
+On passe désormais par les treeNumber/parentTreeNumber+ pour récuprer les ancêtres car en fait dans la documentation du MeSH RDF il s'avère que broaderDescriptor n'est **pas** une relation transitives et que donc on utilisait des mauvais chemins dans la propagation, ils sont notamment l'exemple parlant de Eye Brown (les sourcils) qui peut être considéré comme un organe des sens si on utilise brodaerDescriptor due à la mauvaise utilisation de la transitité. Or la propriété parentTreeNumber est bien fait pour être transitive.
+Aussi cela permet de simplifier les requêtes puisque l'on a plus besoin de propager dans les ancêtre pour les CID ou pour compter les individus. En effet, en utilisant broaderDescriptor on pouvait parfois obtenir des ancêtres qui n'était pas dans l'arbre d'origine du terme et donc initialement on pouvait avoir des publications pour lesquelles les termes MeSh n'appartenait pas aux branches considérés, mais, en propageant aux ancêtres, certains pouvait appartenir aux arbres, toujours due à la mauvaise propagation. Maintenant avec le tree Number on a plus ce problème . En effet, tout les ancêtres d'un termes seront sur les même branche que celles définis par les TreeNumber du termes MeSH (Cf. ex EyeBrown) et donc seulement avec le(s) treeNumber(s) su terme, on peut direct savoir si il appartient lui et ces ancêtres à nos branches ou non.
