@@ -49,6 +49,7 @@ where
                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                     ?mesh meshv:treeNumber ?tn .
                     ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:active 1 .
                 }
                 group by ?cid
             }
@@ -82,6 +83,7 @@ where
                                 where
                                 {
                                     ?mesh a meshv:TopicalDescriptor .
+                                    ?mesh meshv:active 1 .
                                     ?mesh meshv:treeNumber ?tn .
                                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                                 }
@@ -92,8 +94,11 @@ where
                         offset %d
                     }
                     ?endp obo:IAO_0000136 ?pmid .
-                    ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:treeNumber/meshv:parentTreeNumber+|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                    ?mesh_ini meshv:active 1 .
+                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
                     ?mesh meshv:treeNumber ?tn .
+                    
                 }
                 group by ?mesh
             }
