@@ -167,10 +167,14 @@ where
                             offset %d
                         }              
                         ?cid cito:isDiscussedBy ?pmid .
-                        ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:treeNumber/meshv:parentTreeNumber+|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                        ?mesh_ini a meshv:TopicalDescriptor .
+                        ?mesh_ini meshv:active 1 .
+                        ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
                         FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                         ?mesh meshv:treeNumber ?tn .
                         ?mesh a meshv:TopicalDescriptor .
+                        ?mesh meshv:active 1 .
                     }
                     group by ?cid ?mesh
                 } 
