@@ -48,7 +48,8 @@ where
                     ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
+                    ?mesh meshv:active 1 .
                 }
                 group by ?cid
             }
@@ -83,6 +84,7 @@ where
                                 {
                                     ?mesh a meshv:TopicalDescriptor .
                                     ?mesh meshv:treeNumber ?tn .
+                                    ?mesh meshv:active 1 .
                                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                                 }
                                 order by ?mesh
@@ -114,14 +116,6 @@ where
         where
         {
             {
-                select ?mesh 
-                where {
-                    ?mesh a meshv:TopicalDescriptor .
-                    ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-                }
-            }
-            {
                 select ?pmid 
                 where
                 {
@@ -132,6 +126,10 @@ where
             }
             ?endp obo:IAO_0000136 ?pmid .
             ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
+            ?mesh a meshv:TopicalDescriptor .
+            ?mesh meshv:treeNumber ?tn .
+            ?mesh meshv:active 1 .
+            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
         }
     }
 }
@@ -166,6 +164,7 @@ where
                         ?cid cito:isDiscussedBy ?pmid .
                         ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
                         ?mesh a meshv:TopicalDescriptor .
+                        ?mesh meshv:active 1 .
                         ?mesh meshv:treeNumber ?tn .
                         FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))    
                     }
@@ -208,6 +207,7 @@ where
                     ?cid cito:isDiscussedBy ?pmid .
                     ?pmid fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor ?mesh .
                     ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:active 1 .
                     ?mesh meshv:treeNumber ?tn .
                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                 }
@@ -241,6 +241,7 @@ where
                         {
                             ?mesh a meshv:TopicalDescriptor .
                             ?mesh meshv:treeNumber ?tn .
+                            ?mesh meshv:active 1 .
                             FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                         }
                         order by ?mesh
@@ -275,6 +276,7 @@ where
 {
     ?mesh a meshv:TopicalDescriptor .
     ?mesh meshv:treeNumber ?tn .
+    ?mesh meshv:active 1 .
     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
 }
 """
