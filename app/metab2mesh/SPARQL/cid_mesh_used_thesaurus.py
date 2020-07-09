@@ -45,10 +45,11 @@ where
                         offset %d
                     }
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
-                    ?mesh a meshv:TopicalDescriptor .
+                    ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:active 1 .
                 }
                 group by ?cid
             }
@@ -82,6 +83,7 @@ where
                                 where
                                 {
                                     ?mesh a meshv:TopicalDescriptor .
+                                    ?mesh meshv:active 1 .
                                     ?mesh meshv:treeNumber ?tn .
                                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                                 }
@@ -92,7 +94,12 @@ where
                         offset %d
                     }
                     ?endp obo:IAO_0000136 ?pmid .
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                    ?mesh_ini a meshv:TopicalDescriptor .
+                    ?mesh_ini meshv:active 1 .
+                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                    ?mesh meshv:treeNumber ?tn .
+                    
                 }
                 group by ?mesh
             }
@@ -114,14 +121,6 @@ where
         where
         {
             {
-                select ?mesh 
-                where {
-                    ?mesh a meshv:TopicalDescriptor .
-                    ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-                }
-            }
-            {
                 select ?pmid 
                 where
                 {
@@ -131,7 +130,11 @@ where
                 offset %d
             }
             ?endp obo:IAO_0000136 ?pmid .
-            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
+            ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
+            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
+            ?mesh meshv:treeNumber ?tn .
+            ?mesh a meshv:TopicalDescriptor .
+            ?mesh meshv:active 1 .
         }
     }
 }
@@ -164,10 +167,14 @@ where
                             offset %d
                         }              
                         ?cid cito:isDiscussedBy ?pmid .
-                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
-                        ?mesh a meshv:TopicalDescriptor .
+                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                        ?mesh_ini a meshv:TopicalDescriptor .
+                        ?mesh_ini meshv:active 1 .
+                        ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                         ?mesh meshv:treeNumber ?tn .
-                        FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))    
+                        ?mesh a meshv:TopicalDescriptor .
+                        ?mesh meshv:active 1 .
                     }
                     group by ?cid ?mesh
                 } 
@@ -206,10 +213,14 @@ where
                         offset %d
                     }
                     ?cid cito:isDiscussedBy ?pmid .
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:broaderDescriptor+|fabio:hasSubjectTerm/meshv:hasDescriptor|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:broaderDescriptor+) ?mesh .
-                    ?mesh a meshv:TopicalDescriptor .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                    ?mesh_ini a meshv:TopicalDescriptor .
+                    ?mesh_ini meshv:active 1 .
+                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
                     ?mesh meshv:treeNumber ?tn .
-                    FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
+                    ?mesh a meshv:TopicalDescriptor .
+                    ?mesh meshv:active 1 .
                 }
                 group by ?cid ?mesh
             }
@@ -240,6 +251,7 @@ where
                         where
                         {
                             ?mesh a meshv:TopicalDescriptor .
+                            ?mesh meshv:active 1 .
                             ?mesh meshv:treeNumber ?tn .
                             FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
                         }
@@ -274,6 +286,7 @@ select (count(distinct ?mesh) as ?count_MESH)
 where 
 {
     ?mesh a meshv:TopicalDescriptor .
+    ?mesh meshv:active 1 .
     ?mesh meshv:treeNumber ?tn .
     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
 }
