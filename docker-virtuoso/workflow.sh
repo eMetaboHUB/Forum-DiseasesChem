@@ -38,11 +38,17 @@ echo "DB.DBA.XML_SET_NS_DECL ('chembl_rdf', 'http://rdf.ebi.ac.uk/resource/chemb
 # Start loading data :
 echo "DELETE FROM DB.DBA.RDF_QUAD ;" >> share/upload.sh
 
-# echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl', 'http://database/MetaNetX/3.0');" >> share/upload.sh
+# echo "ld_dir_all ('./dumps/MetaNetX/', '*.ttl', 'http://database/ressources/MetaNetX/3.0');" >> share/upload.sh
 
-echo "ld_dir_all ('./dumps/vocabulary/', '*.ttl', 'http://database/inference-rules/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/vocabulary/', '*.rdf', 'http://database/inference-rules/');" >> share/upload.sh
-echo "ld_dir_all ('./dumps/vocabulary/', '*.owl', 'http://database/inference-rules/');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/vocabulary/', 'vocabulary_mesh_1.0.0.ttl', 'http://database/inference-rules');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/vocabulary/', 'skos.rdf', 'http://database/inference-rules');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/vocabulary/', 'fabio.ttl', 'http://database/inference-rules');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/vocabulary/', 'dublin_core_terms.ttl', 'http://database/inference-rules');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/vocabulary/', 'cito.ttl', 'http://database/inference-rules');" >> share/upload.sh
+echo "ld_dir_all ('./dumps/vocabulary/', 'cheminf.owl', 'http://database/inference-rules');" >> share/upload.sh
+
+# On ajoute un graph pour ChEBI seul afin de l'identifier:
+echo "ld_dir_all ('./dumps/vocabulary/', 'chebi.owl', 'http://database/ressources/ChEBI');" >> share/upload.sh
 
 echo "select * from DB.DBA.load_list;" >> share/upload.sh
 echo "rdf_loader_run();" >> share/upload.sh
@@ -50,8 +56,12 @@ echo "checkpoint;" >> share/upload.sh
 echo "select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;" >> share/upload.sh
 
 # Set rules inferences
-echo "RDFS_RULE_SET ('schema-inference-rules', 'http://database/inference-rules/');" >> share/upload.sh
+echo "RDFS_RULE_SET ('schema-inference-rules', 'http://database/inference-rules');" >> share/upload.sh
+echo "RDFS_RULE_SET ('schema-inference-rules', 'http://database/ressources/ChEBI');" >> share/upload.sh
+
 echo "checkpoint;" >> share/upload.sh
+
+
 
 sleep 5
 
