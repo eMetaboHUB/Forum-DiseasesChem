@@ -4,6 +4,7 @@ import sys
 import os.path
 import configparser
 import rdflib
+import subprocess
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
@@ -94,17 +95,27 @@ if(len(g)) != 0:
     ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig")
     print("Ok\n")
 
-print("Export Metadata:")
+# On zip
+try:
+    subprocess.run("gzip -f " + out_path + "/" + file_prefix + "_*.trig", shell = True, check=True, stderr = subprocess.PIPE)
+except subprocess.CalledProcessError as e:
+    print("Error while trying to compress files at " + out_path + "/" + file_prefix + "_*.trig : " + str(e))
+    sys.exit(3)
+
+print("Export Metadata ... ")
 ressource.add_version_attribute(RDF["type"], VOID["Linkset"])
 for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
     ressource.add_version_attribute(VOID["target"], rdflib.URIRef(uri_targeted_ressource))
+
 ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datatype=XSD.long))
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
+ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(input_table_path))
 ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at " + config["METADATA"].get("path_to_git_config")))
 ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + "using a adjusted p-value threshold at " + str(padj_threshold)))
+ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
-print("Export upload_file: ")
-with open(path_to_dumps + "upload_Enrichment.sh", "w") as upload_f:
+print("Ok\nExport upload_file ... ")
+with open(path_to_dumps + "/" + "upload_Enrichment.sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
     upload_f.write("ld_dir_all ('./dumps/" + "/Analyzes/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
     upload_f.write("ld_dir_all ('./dumps/" + "/Analyzes/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
@@ -112,3 +123,4 @@ with open(path_to_dumps + "upload_Enrichment.sh", "w") as upload_f:
     upload_f.write("rdf_loader_run();\n")
     upload_f.write("checkpoint;\n")
     upload_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
+print("Ok")
