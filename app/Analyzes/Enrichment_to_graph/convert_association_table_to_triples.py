@@ -110,7 +110,7 @@ for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
 ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datatype=XSD.long))
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
 ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(input_table_path))
-ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at " + config["METADATA"].get("path_to_git_config")))
+ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at :\nhttps://services.pfem.clermont.inra.fr/gitlab/forum/metdiseasedatabase/blob/develop/" + config["METADATA"].get("path_to_git_config")))
 ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + "using a adjusted p-value threshold at " + str(padj_threshold)))
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
