@@ -117,8 +117,8 @@ ressource.version_graph.serialize(destination= out_path + "void.ttl", format='tu
 print("Ok\nExport upload_file ... ", end = '')
 with open(path_to_dumps + "/" + "upload_Enrichment.sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
-    upload_f.write("ld_dir_all ('./dumps/" + "/Analyzes/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
-    upload_f.write("ld_dir_all ('./dumps/" + "/Analyzes/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
+    upload_f.write("ld_dir_all ('./dumps" + "/Analyzes/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps" + "/Analyzes/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")
     upload_f.write("checkpoint;\n")
