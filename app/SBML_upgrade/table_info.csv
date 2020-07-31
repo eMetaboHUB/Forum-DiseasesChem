@@ -4,5 +4,5 @@ kegg	6	http://identifiers.org/kegg.compound/,https://www.kegg.jp/entry/,https://
 hmdb	18	http://identifiers.org/hmdb/,https://identifiers.org/hmdb:	http://identifiers.org/hmdb/	https://identifiers.org/hmdb:	
 lipidmaps	33	http://identifiers.org/lipidmaps/,https://identifiers.org/lipidmaps:	http://identifiers.org/lipidmaps/	https://identifiers.org/lipidmaps:	
 chembl	1	https://identifiers.org/chembl.compound/,http://rdf.ebi.ac.uk/resource/chembl/molecule/			
-metanetx		http://identifiers.org/metanetx.chemical/,https://rdf.metanetx.org/chem/,https://rdf.metanetx.org/chem/	http://identifiers.org/metanetx.chemical/	https://rdf.metanetx.org/chem/	
+metanetx		http://identifiers.org/metanetx.chemical/,https://rdf.metanetx.org/chem/	http://identifiers.org/metanetx.chemical/	https://rdf.metanetx.org/chem/	
 bigg		http://identifiers.org/bigg.metabolite/,https://identifiers.org/bigg.metabolite:	http://identifiers.org/bigg.metabolite/	https://identifiers.org/bigg.metabolite:	
