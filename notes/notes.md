@@ -848,6 +848,11 @@ J'ai donc changé les associations *skos:exactMatch* en *owl:sameAs* car avec la
 En fait je pouvais aller chercher les synonymes d'uris inférés MAIS on ne pouvais pas aller chercher des uris inférés à partir de synonymes de ce que l'on avait annoté dans la base. Or on pourrait très bien imaginer une ressource qui présente des associations en utilisant des uris synonymes de celles annotés dans le SBML ce qui fait que l'on aurait pas pu faire directement le lien et inférés de nouvelles uris par cette ressource.
 Là où ça devenait problématique c'est que maintenant les uris identifiers.org dans MetaNetX ne sont plus les même que celle dans le SBML, alors même si on les écrivait ensuite dans les fichiers en utilisant les uris identifiers.org du SBML, ce n'était pas opti :/ 
 
+Pour être précis: ça fonctionne car lorsque je crée les graph d'équivalence skos:closeMatch, j'utilise comme uri pattern la première uri de la propriété ressources_uris de ma table table_info qui est toujours l'uri de identifier.org et il s'agit donc de l'uri qui est utilisé dans le SMBL ! Mais en utilsant owl:sameAs, maintenant :
+- On gère aussi les identifiants inférés depuis des synonymes de ceux annotés dans le SBML
+- Tout les synonymes sont implicites pas besoin de les instancier ! :D
+Donc c'est mieux ! :)
+
 J'ai donc opter pour un changementet j'ai choisit de remplacer *skos:exactMatch* par *owl:sameAs*
 Le super avantage de owl:sameAs c'est que Virtuoso le maitrise en activant la règle: *DEFINE input:same-as "yes"* Alors, **toutes** les uris qui sont liés par le prédicats sameAs sont considéré comme identiques dans les requêtes. Ainsi, si tout les synonymes sont considéré comme le "même individu*, toutes les associations les annotations sont partagés entre les synonymes. Ainsi, le liens entre ces synonymes devient implicite dans le graph de connaissance. Deplus, si il est implicite, il n'y a pas besoin de le rajouter et l'on peut supprimer les graph synonymes et infered_uris_synonyms ! On a donc seulement à exporter les équivalences inter-uris que l'on peut faire, et le tour est joué ! :)
 
