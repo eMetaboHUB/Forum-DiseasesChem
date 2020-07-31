@@ -831,7 +831,7 @@ On passe désormais par les treeNumber/parentTreeNumber+ pour récuprer les anc�
 Aussi cela permet de simplifier les requêtes puisque l'on a plus besoin de propager dans les ancêtre pour les CID ou pour compter les individus. En effet, en utilisant broaderDescriptor on pouvait parfois obtenir des ancêtres qui n'était pas dans l'arbre d'origine du terme et donc initialement on pouvait avoir des publications pour lesquelles les termes MeSh n'appartenait pas aux branches considérés, mais, en propageant aux ancêtres, certains pouvait appartenir aux arbres, toujours due à la mauvaise propagation. Maintenant avec le tree Number on a plus ce problème . En effet, tout les ancêtres d'un termes seront sur les même branche que celles définis par les TreeNumber du termes MeSH (Cf. ex EyeBrown) et donc seulement avec le(s) treeNumber(s) su terme, on peut direct savoir si il appartient lui et ces ancêtres à nos branches ou non.
 
 
-## POur les termes Obsolètes.
+## Pour les termes Obsolètes.
 Il semblerait que certains termes soit devenu obsolete et que donc leur position dans la hierarchie MeSH ne doit plus être pris en compte. Il ne faut donc plus prendre en comptes les termes MeSh obsolètes car il ne sont plus utilisé et ce sont des termes que l'on ne peut pas retrouver sur le MeSH browser, en fait, il existe encore uniquemnt dans le MeSH RDF où ils sont annotés comme obsolètes.
 MAIS, il faut faire très attention aux publications qui ont directement un terme obsolète annoté car en propageant certains de ces anciens ancêtres sont toujours actifs, or il n'est plus juste de propager depuis ces éléments car leur position dans la hierarchie a été discrédité. Il faut donc vérifier si les termes initiaux sont actifs, avant de propager dans la hiérarchie, et en propageant dans la hierarchie, ne propager qu'a des éléments encore actifs.
 En effet on pourrait imager le cas où une publi serait annoté avec uniquement un terme MeSH obsolete, on ne prendrait pas en compte donc dans le corpus de la molécule, en revanche en utilisant la propagation aux ancêtres si certains sont actifs, on la prendrait en coocurences et on retournerait aux même problème qu'avant l'utilisation des tree-number où le corpus des molécules pourrait être plus petit que certaines coocurences.
@@ -841,3 +841,14 @@ Ainsi:
 - en propage, on ne propage qu'aux termes actifs
 
 ATTENTION: même si le tree-number possède une propriété obsolete, le terme peut être obsolete et le tree-Number non car il aura été remplacé !!!
+
+## Pour le refactoring de SBML upgrade :
+
+J'ai donc changé les associations *skos:exactMatch* en *owl:sameAs* car avec la nouvelle release de MetaNetX, j'ai vue que finalement ce que j'avais mis en place n'était pas super au point :/
+En fait je pouvais aller chercher les synonymes d'uris inférés MAIS on ne pouvais pas aller chercher des uris inférés à partir de synonymes de ce que l'on avait annoté dans la base. Or on pourrait très bien imaginer une ressource qui présente des associations en utilisant des uris synonymes de celles annotés dans le SBML ce qui fait que l'on aurait pas pu faire directement le lien et inférés de nouvelles uris par cette ressource.
+Là où ça devenait problématique c'est que maintenant les uris identifiers.org dans MetaNetX ne sont plus les même que celle dans le SBML, alors même si on les écrivait ensuite dans les fichiers en utilisant les uris identifiers.org du SBML, ce n'était pas opti :/ 
+
+J'ai donc opter pour un changementet j'ai choisit de remplacer *skos:exactMatch* par *owl:sameAs*
+Le super avantage de owl:sameAs c'est que Virtuoso le maitrise en activant la règle: *DEFINE input:same-as "yes"* Alors, **toutes** les uris qui sont liés par le prédicats sameAs sont considéré comme identiques dans les requêtes. Ainsi, si tout les synonymes sont considéré comme le "même individu*, toutes les associations les annotations sont partagés entre les synonymes. Ainsi, le liens entre ces synonymes devient implicite dans le graph de connaissance. Deplus, si il est implicite, il n'y a pas besoin de le rajouter et l'on peut supprimer les graph synonymes et infered_uris_synonyms ! On a donc seulement à exporter les équivalences inter-uris que l'on peut faire, et le tour est joué ! :)
+
+Pareil pour les annotations structurelle, plus besoin de chercher à vérifier l'uris utilisé pour que ce soit la bonne, vue que les synonymes partagent les annotations, cela marche également pour les inchi et les SMILES !
