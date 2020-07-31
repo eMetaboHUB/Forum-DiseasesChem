@@ -32,7 +32,8 @@ namespaces = {
     "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
     "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
     "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
-    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
+    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#"),
+    "owl": rdflib.Namespace("http://www.w3.org/2002/07/owl#")
 }
 
 
