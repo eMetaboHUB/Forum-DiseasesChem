@@ -66,7 +66,7 @@ class Id_mapping:
     def export_intra_eq(self, path_out, source):
         """
         This function is used to create a graph or URIs equivalences between the different URIs associated to a given ressource. E
-        Between differents URIs of the same ressource (called intra-uris) a skos:exactMatch relation is implemented
+        Between differents URIs of the same ressource (called intra-uris) a owl:sameAs relation is implemented
         - path_out: a path to out files
         - source : a string which defined the origin of the data stores in the IdMapping object, et may be SBML, MetaNetX, BiGG ...
         """
@@ -79,13 +79,13 @@ class Id_mapping:
         for r_name in self.intra_ids_dict.keys():
             print("Treating " + r_name + ":")
             g_name = r_name + "_intra"
-            current_graph = ressource_version_intra.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
+            current_graph = ressource_version_intra.create_data_graph(namespace_list  = ["owl"], namespace_dict = self.namespaces)
             intra_ids = list(self.intra_ids_dict[r_name])
             print("Create intra uris equivalences ...", end = '')
             for id in intra_ids:
                 intra_uris = [rdflib.URIRef(prefix + id) for prefix in self.ressource_uris[r_name]]
                 for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
-                    current_graph.add((current_uri, self.namespaces["skos"]['exactMatch'], next_uri))
+                    current_graph.add((current_uri, self.namespaces["owl"]['sameAs'], next_uri))
             print("Ok\nExport graph for ressource " + r_name + " ...", end = '')
             ressource_version_intra.add_DataDump(g_name + ".trig")
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')

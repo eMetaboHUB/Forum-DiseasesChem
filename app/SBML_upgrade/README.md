@@ -19,7 +19,7 @@ Id-mapping graphs are RDF graphs providing uris equivalences. There are two type
   It defines equivalences between uris from different external ressources, where identifiers correspond to the same molecule. For example, the ChEBI id 37327 is equivalent to Pubchem CID 5372720, in the Id-mapping graph, this equivalence will be represented as : *http://identifiers.org/chebi/CHEBI:37327* *skos:closeMatch* *http://identifiers.org/pubchem.compound/5372720*. *skos:closeMatch* indicates that two concepts are sufficiently similar and that the two can be used interchangeably, nevertheless, this  is not transitive, to avoid spreading  equivalence errors.
 
 * Intra-ressources equivalences:
-  For each identifiers of an external ressource, several uris can identify this entity, using different namespaces. So, Intra-ressources equivalences defines equivalences between uris associated to this same external ressource entity. For exemple, for one ChEBI id 18170, 3 different uris are availables: *http://purl.obolibrary.org/obo/CHEBI_18170*, *https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18170*, *http://identifiers.org/chebi/CHEBI:18170*. In this case *http://identifiers.org/chebi/CHEBI:18170* is used by default in the SBML graph, but *http://purl.obolibrary.org/obo/CHEBI_18170* is the uri which is used in the ChEBI ontology. So, in order to propagate information from the ontology, the uri *http://purl.obolibrary.org/obo/CHEBI_18170* needs to be added into the graph. In the Id-mapping graph this equivalence will be represented as : *https://identifiers.org/CHEBI:18170* *skos:exactMatch* *http://purl.obolibrary.org/obo/CHEBI_18170*. *skos:exactMatch* indicating that the both concepts have exactly the same meaning, so we can pass from one to each other directly without errors, it's a transitive property.
+  For each identifiers of an external ressource, several uris can identify this entity, using different namespaces, but refering to the same semantic individual. So, Intra-ressources equivalences defines equivalences between uris associated to this same external ressource entity. For exemple, for one ChEBI id 18170, 3 different uris are availables: *http://purl.obolibrary.org/obo/CHEBI_18170*, *https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18170*, *http://identifiers.org/chebi/CHEBI:18170*. In this case *http://identifiers.org/chebi/CHEBI:18170* is used by default in the SBML graph, but *http://purl.obolibrary.org/obo/CHEBI_18170* is the uri which is used in the ChEBI ontology. So, in order to propagate information from the ontology, the uri *http://purl.obolibrary.org/obo/CHEBI_18170* needs to be added into the graph. In the Id-mapping graph this equivalence will be represented as : *https://identifiers.org/CHEBI:18170* *owl:sameAs* *http://purl.obolibrary.org/obo/CHEBI_18170*. The built-in OWL property *owl:sameAs* links an individual to an individual. Such an owl:sameAs statement indicates that two URI references actually refer to the same thing: the individuals have the same "identity". 
 
 The set of all external ressources and associated uris used in the process is indicated in the configuration file: *table_info.csv*. 
 The columns are:
@@ -70,7 +70,7 @@ use import_MetaNetX_mapping.py
 
 According to the *table_info.csv* configuration file (*URI used in MetaNetX*), the script will build an Id-mapping graph containing both Intra and Inter uris equivalences from MetaNetX RDF graph.
 
-In MetaNetX RDF graph, equivalences between a MetaNetX uri and external identifiers are provided using *mnx:chemXref* predicated. For example:
+In MetaNetX RDF graph, equivalences between a MetaNetX uri and external identifiers are provided using *mnx:chemXref* predicate. For example:
 *http://identifiers.org/metanetx.chemical/MNXM10* *mnx:chemXref*  *http://identifiers.org/hmdb/HMDB01487*.
 Also, if a MetaNetX uri have several external identifiers, these ressources can be linked through the MetaNetX uri. For example if:
 
@@ -157,17 +157,19 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 use annot_SBML.py
 
 To compute this step, a SBML graph and at least one Id-mapping graph should be imported in the Virtuoso RDF Store, using corresponding update files.
-The SBML graph contains initial external identifier uris that the program will try to extends, and Id-mapping graphs contains Inter/Intra ressources equivalences to compute this process. Used Id-mapping graphs and SBML graph will be mentionned as sources in the *void.ttl* file associated to the annotation graph.
+The SBML graph contains initial external identifier uris that the program will try to extends, and Id-mapping graphs contains Inter/Intra equivalences to compute this task. Used Id-mapping graphs and SBML graph will be mentionned as sources in the *void.ttl* file associated to the annotation graph.
 
 Using imported SBML graph and Id-mapping graphs (*MAPPING_GRAPH* section), this script will extends external ressources, by creating new links using the *bqbiol:is* predicate between species and external identifiers uris.
 
-To do so, three main SPARQL requests are sended to determine:
-  - synonyms uris: From already existing external identifier uris in the SBML graph and using Intra-ressources equivalences (*skos:exactMatch*), provide uris synonyms
-  - Infered uris: From already existing external identifier uris in the SBML and using Inter-ressources equivalences (*skos:closeMatch*) provide new external identifiers uris
-  - Infered uris synonyms: For all infered uris and using Intra-ressources equivalences (*skos:exactMatch*), provide infered-uris synonyms.
+Some Inter-ressource equivalences are provided with uris that are not directly annotated in the SBML, but which are synonyms of annotated uris. Intra-ressource equivalences being represented with the *owl:sameAs* predicate, link between synonyms is implicit in the knowledge database. All uris synonyms of a same individual (like a ChEBI identifier) benefits of all annotations associated to each synonyms, because they are semanticaly the same individual.
 
-Three results files are then exported corresponding to the three SPARQL queries: *synonyms.ttl*, *infered_uris.ttl*, *infered_uris_synonyms.ttl*.
-These resuls files are stored in the Virtuoso shared directory (at *path_to_dumps*) according to the  *path_to_dir_intra_from_dumps* specify in the corresponding section, ready to be loaded.
+So, only Inter-uris equivalences are exported in an annotation graph because Intra equivalences are implicits in the knowledge database, using *owl:sameAs* synonyms.
+
+For example a specie in the SBMl can be annotated with the uris: *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>*. None Inter-ressource equivalences are directly provided in Id-mapping using this uris, but, being the synonyms of the uri *<http://purl.obolibrary.org/obo/CHEBI_16424>* which is the uri used in the MetaNetX database, all annotations associated to this uris can be linked to *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>* to extends annotations in the SBML.
+
+
+One result file is so provided : *infered_uris.ttl*.
+The result files is stored in the Virtuoso shared directory (at *path_to_dumps*) according to the  *path_to_dir_intra_from_dumps* specify in the corresponding section, ready to be loaded.
 To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
 
 ```bash

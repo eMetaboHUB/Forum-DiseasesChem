@@ -51,6 +51,7 @@ data = {
 
 inchi_annotation_request = """
 DEFINE input:inference 'schema-inference-rules'
+DEFINE input:same-as "yes"
 prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
 prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
 prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
@@ -59,7 +60,8 @@ prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 prefix mnx: <https://rdf.metanetx.org/schema/>
 prefix sio: <http://semanticscience.org/resource/>
-prefix voc:  <http://database/ressources/properties#> 
+prefix voc:  <http://database/ressources/properties#>
+prefix owl: <http://www.w3.org/2002/07/owl#> 
 CONSTRUCT {
         ?specie voc:hasInchI ?selected_inchi .
 }
@@ -67,16 +69,15 @@ FROM <%s>
 %s
 where {
         ?specie a SBMLrdf:Species ;
-                SBMLrdf:name ?spe_name .
-        OPTIONAL { ?specie bqbiol:is ?ref_metaNetX . FILTER ( STRSTARTS(STR(?ref_metaNetX), "https://rdf.metanetx.org/chem/")) }
-        OPTIONAL { ?specie bqbiol:is ?ref_chebi . FILTER ( STRSTARTS(STR(?ref_chebi), "http://purl.obolibrary.org/obo/CHEBI_")) }
-        OPTIONAL { ?specie bqbiol:is ?ref_pc . FILTER ( STRSTARTS(STR(?ref_pc), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")) }     
-        { ?ref_metaNetX mnx:inchi ?inchi . }
+                SBMLrdf:name ?spe_name ;
+                bqbiol:is ?ref .
+ 
+        { ?ref mnx:inchi ?inchi . }
         UNION
-        { ?ref_chebi <http://purl.obolibrary.org/obo/chebi/inchi> ?inchi . }
+        { ?ref <http://purl.obolibrary.org/obo/chebi/inchi> ?inchi . }
         UNION
         { 
-        ?ref_pc sio:has-attribute ?ref_pc_desc .
+        ?ref sio:has-attribute ?ref_pc_desc .
         ?ref_pc_desc a sio:CHEMINF_000396 ;
                 sio:has-value ?inchi
         }
@@ -86,6 +87,7 @@ BIND(str(?inchi) as ?selected_inchi)
 
 smiles_annotation_request = """
 DEFINE input:inference 'schema-inference-rules'
+DEFINE input:same-as "yes"
 prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
 prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
 prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
@@ -94,7 +96,8 @@ prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 prefix mnx: <https://rdf.metanetx.org/schema/>
 prefix sio: <http://semanticscience.org/resource/>
-prefix voc:  <http://database/ressources/properties#> 
+prefix voc:  <http://database/ressources/properties#>
+prefix owl: <http://www.w3.org/2002/07/owl#>
 CONSTRUCT {
         ?specie voc:hasSmiles ?selected_smiles .
 }
@@ -102,16 +105,15 @@ FROM <%s>
 %s
 where {
         ?specie a SBMLrdf:Species ;
-                SBMLrdf:name ?spe_name .
-        OPTIONAL { ?specie bqbiol:is ?ref_metaNetX . FILTER ( STRSTARTS(STR(?ref_metaNetX), "https://rdf.metanetx.org/chem/")) }
-        OPTIONAL { ?specie bqbiol:is ?ref_chebi . FILTER ( STRSTARTS(STR(?ref_chebi), "http://purl.obolibrary.org/obo/CHEBI_")) }
-        OPTIONAL { ?specie bqbiol:is ?ref_pc . FILTER ( STRSTARTS(STR(?ref_pc), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")) }        
-        { ?ref_metaNetX mnx:smiles ?smiles . }
+                SBMLrdf:name ?spe_name ;
+                bqbiol:is ?ref .
+ 
+        { ?ref mnx:smiles ?smiles . }
         UNION
-        { ?ref_chebi <http://purl.obolibrary.org/obo/chebi/smiles> ?smiles . }
+        { ?ref <http://purl.obolibrary.org/obo/chebi/smiles> ?smiles . }
         UNION
         { 
-        ?ref_pc sio:has-attribute ?ref_pc_desc .
+        ?ref sio:has-attribute ?ref_pc_desc .
         ?ref_pc_desc a sio:CHEMINF_000376 ;
                 sio:has-value ?smiles
         }
