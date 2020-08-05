@@ -17,25 +17,23 @@ prefix = """
     PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 """
 
-# select (strafter(STR(?cid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\") as ?CID) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
-
 PubChem = """
     select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
-    {0}
+    %s
     where
     {
         {
             select ?pmid
             where{
-                {1} cito:isDiscussedBy ?pmid .
+                %s cito:isDiscussedBy ?pmid .
                 ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
                 ?mesh_ini a meshv:TopicalDescriptor .
                 ?mesh_ini meshv:active 1 .
                 ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
-                {2} meshv:treeNumber ?tn .
+                %s meshv:treeNumber ?tn .
             }
         }
-        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh
+        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh .
         ?mesh a meshv:TopicalDescriptor .
         ?mesh meshv:active 1 .
     }
