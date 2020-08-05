@@ -857,3 +857,8 @@ J'ai donc opter pour un changementet j'ai choisit de remplacer *skos:exactMatch*
 Le super avantage de owl:sameAs c'est que Virtuoso le maitrise en activant la règle: *DEFINE input:same-as "yes"* Alors, **toutes** les uris qui sont liés par le prédicats sameAs sont considéré comme identiques dans les requêtes. Ainsi, si tout les synonymes sont considéré comme le "même individu*, toutes les associations les annotations sont partagés entre les synonymes. Ainsi, le liens entre ces synonymes devient implicite dans le graph de connaissance. Deplus, si il est implicite, il n'y a pas besoin de le rajouter et l'on peut supprimer les graph synonymes et infered_uris_synonyms ! On a donc seulement à exporter les équivalences inter-uris que l'on peut faire, et le tour est joué ! :)
 
 Pareil pour les annotations structurelle, plus besoin de chercher à vérifier l'uris utilisé pour que ce soit la bonne, vue que les synonymes partagent les annotations, cela marche également pour les inchi et les SMILES !
+
+
+## Pour le ChemOnt To MeSh :
+On ne vas pas chercher à déterminer la classe ChemOnt pour les 108 millions de composé PubChem ce serait inutile car deplus, si un utilisateur désire savoir la classe ChemOnt d'un composé, il ira directement sur ClassyFire et pas sur notre endpoint.
+On ne vas récupérer la classe ChemOnt seulement pour les ~ 373836 composés pour lesquels on dispose de litteratures qui nous seront véritablement utile pour faire le ChemOnt To MeSH. Je pense qu'il seront relativement bien annoté et devrait déjà être classifier par ClassyFire, si jamais il nous en manque, on poura toujours appeler l'api en ruby pour les manquants !
