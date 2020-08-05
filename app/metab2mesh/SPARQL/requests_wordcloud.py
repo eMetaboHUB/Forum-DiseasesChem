@@ -40,6 +40,8 @@ PubChem = """
                 ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh .
                 ?mesh a meshv:TopicalDescriptor .
                 ?mesh meshv:active 1 .
+                ?mesh meshv:treeNumber ?tn .
+                FILTER(REGEX(?tn,\"(%s)\")) .
                 
             }
             group by ?mesh

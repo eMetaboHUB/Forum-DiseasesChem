@@ -9,6 +9,7 @@ parser.add_argument("--chemType", help="Type of the chemical identifier: PubChem
 parser.add_argument("--MeSH", help="MeSh identifier involved in the association", type=str)
 parser.add_argument("--config", help="Path to the request configuration file ", type=str)
 parser.add_argument("--out", help="Path to output directory", type=str)
+parser.add_argument("--TreeList", help="List of MeSH code, sperated by a |. Ex: C|A|D|G|B|F|I|J", type = str)
 args = parser.parse_args()
 
 # Parse config file for request parameters
@@ -50,6 +51,7 @@ chem = args.chem
 type = args.chemType
 MeSH = args.MeSH
 out = args.out
+Tree_list = args.TreeList
 
 if(type not in {"PubChem", "ChEBI", "ClassyFire"}):
     print("Error: chemType muste be PubChem ChEBI, or ClassyFire")
@@ -57,7 +59,7 @@ if(type not in {"PubChem", "ChEBI", "ClassyFire"}):
 
 # Request:
 SPARQL_request = getattr(module, type)
-formated_SPARQL_request = SPARQL_request % (graph_from, ("<" + config['NAMESPACES'].get(type) + chem + ">"), ("<" + config['NAMESPACES'].get("MeSH") + MeSH + ">"))
+formated_SPARQL_request = SPARQL_request % (graph_from, ("<" + config['NAMESPACES'].get(type) + chem + ">"), ("<" + config['NAMESPACES'].get("MeSH") + MeSH + ">"), Tree_list)
 
 # Prepare logs: 
 with open(out + "/wordcloud.log", "w") as log_fail:
