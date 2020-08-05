@@ -18,24 +18,32 @@ prefix = """
 """
 
 PubChem = """
-    select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
+    select ?label ?count
     %s
     where
     {
         {
-            select ?pmid
-            where{
-                %s cito:isDiscussedBy ?pmid .
-                ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
-                ?mesh_ini a meshv:TopicalDescriptor .
-                ?mesh_ini meshv:active 1 .
-                ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
-                %s meshv:treeNumber ?tn .
+            select ?mesh (count(distinct ?pmid) as ?count) 
+            where
+            {
+                {
+                    select ?pmid
+                    where{
+                        %s cito:isDiscussedBy ?pmid .
+                        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                        ?mesh_ini a meshv:TopicalDescriptor .
+                        ?mesh_ini meshv:active 1 .
+                        ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                        %s meshv:treeNumber ?tn .
+                    }
+                }
+                ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh .
+                ?mesh a meshv:TopicalDescriptor .
+                ?mesh meshv:active 1 .
+                
             }
+            group by ?mesh
         }
-        ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh .
-        ?mesh a meshv:TopicalDescriptor .
-        ?mesh meshv:active 1 .
+        ?mesh rdfs:label ?label .
     }
-group by ?mesh
 """

@@ -59,6 +59,10 @@ if(type not in {"PubChem", "ChEBI", "ClassyFire"}):
 SPARQL_request = getattr(module, type)
 formated_SPARQL_request = SPARQL_request % (graph_from, ("<" + config['NAMESPACES'].get(type) + chem + ">"), ("<" + config['NAMESPACES'].get("MeSH") + MeSH + ">"))
 
+# Prepare logs: 
+with open(out + "/wordcloud.log", "w") as log_fail:
+    pass
+
 # Send query
 query = prefix + formated_SPARQL_request
 print(query)
@@ -68,7 +72,7 @@ r = requests.post(url = url, headers = header, data = r_data)
 if r.status_code != 200:
     print("Error in request while determining publication involved in the association between chemical: " + chem + " and MeSH Descriptor: " + MeSH + ".\n Check logs at " + out)
     with open(out + "/wordcloud.log", "w") as log_fail:
-        log_fail.write("Request failed for chemical: " + chem + " and MeSh Descriptor: " + MeSH)
+        log_fail.write("Request failed for chemical: " + chem + " and MeSh Descriptor: " + MeSH + "\n")
         log_fail.write(r.text + "\n")
     sys.exit(3)
 
