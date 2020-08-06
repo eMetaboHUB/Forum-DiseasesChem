@@ -4,8 +4,8 @@ from processing_functions import ask_for_graph, import_request_file
 
 
 # Running examples: 
-# Cataract & Galactose: 
-# - python3 app/metab2mesh/create_wordcloud.py --chem="6036" --chemType="PubChem" --MeSH="D002386" --config="app/metab2mesh/config/wordcloud/request_config.ini" --out="/home/mxdelmas/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/Analyzes/wordcloud" --TreeList="C|A|D|G|B|F|I|J"
+# Imidocarb dipropionate & Tick Borne Diseases: 
+# - python3 app/metab2mesh/create_wordcloud.py --chem="9983292" --chemType="PubChem" --MeSH="D017282" --config="app/metab2mesh/config/wordcloud/request_config.ini" --out="/home/mxdelmas/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/Analyzes/wordcloud" --TreeList="C|A|D|G|B|F|I|J"
 # ChEBI:Fluoroalkanoic acid & Female Urogenital and Pregnancy complications
 # - python3 app/metab2mesh/create_wordcloud.py --chem="35551" --chemType="ChEBI" --MeSH="D005261" --config="app/metab2mesh/config/wordcloud/request_config.ini" --out="/home/mxdelmas/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/Analyzes/wordcloud" --TreeList="C|A|D|G|B|F|I|J"
 parser = argparse.ArgumentParser()
@@ -72,7 +72,9 @@ with open(out + "/wordcloud.log", "w") as log_fail:
 
 # Send query
 query = prefix + formated_SPARQL_request
-print(query)
+
+print("Sending request ... ", end = '')
+
 r_data = data
 r_data["query"] = query
 r = requests.post(url = url, headers = header, data = r_data)
@@ -83,6 +85,8 @@ if r.status_code != 200:
         log_fail.write(r.text + "\n")
     sys.exit(3)
 
+print("Ok\nExport MeSH coocurences to out ...", end = '')
+
 lines = r.text.splitlines()
 # Is the file empty ? If not write file at outpath
 if(len(lines) > 1):
@@ -90,4 +94,6 @@ if(len(lines) > 1):
         for l in lines:
             out_f.write(l + "\n")
 else:
-    print("Result for association between chemical: " + chem + " and MeSH Descriptor: " + MeSH + ". Check identifiers or if there really are associations")
+    print("\nResult for association between chemical: " + chem + " and MeSH Descriptor: " + MeSH + ". Check identifiers or if there really are associations")
+
+print("Ok\nExport MeSH coocurences to out ...")
