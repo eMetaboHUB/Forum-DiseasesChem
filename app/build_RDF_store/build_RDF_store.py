@@ -44,6 +44,7 @@ todo_MeSH = config['MESH'].getboolean("todo")
 todo_Reference = config['REFERENCE'].getboolean("todo")
 todo_Compound = config['COMPOUND'].getboolean("todo")
 todo_Descriptor = config['DESCRIPTOR'].getboolean("todo")
+todo_InchiKey = config['INCHIKEY'].getboolean("todo")
 todo_Elink = config['ELINK'].getboolean("todo")
 
 # Write ouput file header :
@@ -81,12 +82,22 @@ if todo_Compound:
 # Descriptors
 if todo_Descriptor:
     descriptor_out_dir = config['DESCRIPTOR'].get('out_dir_name')
-    descriptor_r_name =config['DESCRIPTOR'].get('ressource_name')
+    descriptor_r_name = config['DESCRIPTOR'].get('ressource_name')
     descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
     descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', 'void.ttl', '" + descriptor_uri + "');\n")
+
+# InchiKey
+if todo_InchiKey:
+    inchikey_out_dir = config['INCHIKEY'].get('out_dir_name')
+    inchikey_r_name = config['INCHIKEY'].get('ressource_name')
+    inchikey_dir_on_ftp = config['INCHIKEY'].get('dir_on_ftp')
+    inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, out_path + inchikey_out_dir + "/")
+    with open(out_path + "upload_data.sh", "a") as upload_f:
+        upload_f.write("ld_dir_all ('./dumps/" + inchikey_out_dir + "/" + inchikey_r_name + "/" + inchikey_version + "/', '*.ttl.gz', '" + inchikey_uri + "');\n")
+        upload_f.write("ld_dir_all ('./dumps/" + inchikey_out_dir + "/" + inchikey_r_name + "/" + inchikey_version + "/', 'void.ttl', '" + inchikey_uri + "');\n")
 
 # Elink
 if todo_Elink:
