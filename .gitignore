@@ -79,3 +79,4 @@ unused_dataand_code/**
 docker-virtuoso/save_workflow.sh
 .dockerignore
 docker_resources/**
+paper/**
