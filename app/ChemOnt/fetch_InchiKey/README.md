@@ -9,3 +9,4 @@
 ### results
 
 We obtains 373765 CID - InchiKey annotations. But there are 373835 CID with annotated litterature, so there are 70 CID for which we don't get the associated inchiKey from PubChem.
+Result CID_InchiKeys.csv is stored at data/ChemOnt
