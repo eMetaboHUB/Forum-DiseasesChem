@@ -26,7 +26,7 @@ where
 				?cid cito:isDiscussedBy ?pmid .
 		}
 	}
-	?cid sio:has-attribute ?inchiKey_desc .
+	?inchiKey_desc sio:is-attribute-of ?cid .
 	?inchiKey_desc a sio:CHEMINF_000399 ;
 		sio:has-value ?inchiKey
 }
