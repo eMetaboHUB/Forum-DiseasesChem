@@ -84,7 +84,6 @@ pool.join()
 export_ressource_metatdata(ClassyFire_alternative_p, ClassyFire_direct_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p)
 
 # Compress files:
-
 try:
     subprocess.run("gzip " + outpath + "/ClassyFire/direct-parent/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
     subprocess.run("gzip " + outpath + "/ClassyFire/alternative-parents/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
