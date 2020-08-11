@@ -14,7 +14,8 @@
 
 
 # Examples
-Metab2MeSh [1] was a web server dedicated to the annotation of compounds with biomedical concepts defined in the MeSH Thesaurus, largely appreciated and used in the community [2-6]. Unfortunately, this tool is no longer available since 2019, impacting tools using it as a data provider or to evaluate results relevance. Metab2MeSHBis was created to fill this gap, but, using linked data, it improve several aspects of the original tool, mainly on provided annotations, data accessibility and manipulation. In order to validate our approache, it is critical to ensure that association made by metab2mesh are also conserved in our tool. To do this, we will use the same test cases as in the Metab2MeSH article: diseases related to Cyclic AMP and compouds related to Phenylketonuria.
+
+Metab2MeSh [1] was a web server dedicated to the annotation of compounds with biomedical concepts defined in the MeSH Thesaurus, largely appreciated and used in the community [2-6]. Unfortunately, this tool is no longer available since 2019, impacting tools using it as a data provider or to evaluate results relevance. Metab2MeSHBis was created to fill this gap, but, using linked data, it improve several aspects of the original tool, mainly on provided annotations, data accessibility and manipulation. In order to validate our approache, it is critical to ensure that association made by metab2mesh are also conserved in our tool. To do this, we will use the same test cases as in the Metab2MeSH article: diseases related to Cyclic AMP and compouds related to Phenylketonuria. Data were respectively retrieve from the supplementary Figures 2 and 3.
 
 ## Diseases related to Cyclic AMP
 
