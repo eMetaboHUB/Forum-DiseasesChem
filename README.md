@@ -38,6 +38,9 @@ The vocabulary directory contains files associated to the schema of used ontolog
 - Dublin Core: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.nt
 - Cheminf: http://www.ontobee.org/ontology/CHEMINF
 - skos: https://www.w3.org/2009/08/skos-reference/skos.rdf
+- ChemOnt: http://classyfire.wishartlab.com/downloads
+
+*Warning:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl is actually used.
 
 Download data from docker-ressources and place a copy of *metanetx.ttl* in the MetaNetX directory and place all vocabulary files in the vocabulary directory.
 

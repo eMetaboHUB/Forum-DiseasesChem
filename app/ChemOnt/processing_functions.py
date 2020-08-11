@@ -6,6 +6,10 @@ from rdflib.namespace import RDF, VOID, DCTERMS, XSD
 
 
 def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct_p, path_alternative_p):
+    """
+    This function is used to retrieve all ChemOnt classes associated to each molecules in df. As these processes are run in parralel, size of each created graph need to be exported in this function. 
+    This function return a table of 4 values: nb. triples in direct_parent graph file, nb. subjects in direct_parent graph file, nb. triples in Alternative_parent graph file, nb. subjects in Alternative_parent graph file  
+    """
     print("Treating df " + str(df_index))
     for index, row in df.iterrows():
         classif = get_entity_from_ClassyFire(row['CID'], row['INCHIKEY'])
@@ -57,13 +61,18 @@ def parse_entities(classif):
     return(chemont_ids)
 
 def add_triples(CID, chemont_ids, g_direct_parent, g_alternative_parent):
+    """
+    This function is used to create triples from ChemOnt classification. Direct-parent class is exported in direct-parent graph and, separately alternative classes are exported in alternative-classes graph. 
+    """
     g_direct_parent.add((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + CID), RDF["type"], rdflib.URIRef("http://purl.obolibrary.org/obo/CHEMONTID_" + chemont_ids[0])))
     if len(chemont_ids) > 1:
         for alt_p in chemont_ids[1:]:
             g_alternative_parent.add((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + CID), RDF["type"], rdflib.URIRef("http://purl.obolibrary.org/obo/CHEMONTID_" + alt_p)))
 
 def export_ressource_metatdata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, uri_targeted_ressources, path_direct_p, path_alternative_p):
-
+    """
+    This function is used export metadata for builted graphs
+    """
     # On ajoute les infos pour la première ressource:
     for i in range(1, (len(graph_sizes) + 1)):
         ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".trig")
