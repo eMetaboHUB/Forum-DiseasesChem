@@ -48,7 +48,7 @@ def get_entity_from_ClassyFire(CID, InchiKey):
         with open("ids_no_classify.log", "a") as no_classif_log:
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
         return False
-    # time.sleep(1)
+    time.sleep(1)
     return classif
 
 def parse_entities(classif):
