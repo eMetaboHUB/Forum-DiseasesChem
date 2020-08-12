@@ -75,7 +75,7 @@ if not os.path.exists(path_direct_p):
 if not os.path.exists(path_alternative_p):
     os.makedirs(path_alternative_p)
 
-pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
+pool = mp.Pool(processes = n_processes)
 results = [pool.apply_async(classify_df, args=(i, df_list[i], ClassyFire_direct_p_graph_l[i], ClassyFire_alternative_p_graph_l[i], path_direct_p, path_alternative_p)) for i in range(0, n_processes)]
 graph_sizes = [p.get() for p in results]
 # Close Pool
