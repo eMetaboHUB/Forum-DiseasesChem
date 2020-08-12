@@ -29,7 +29,7 @@ def get_entity_from_ClassyFire(CID, InchiKey):
     - InchiKey: input inchikey
     """
     try:
-        r = requests.get('https://gnps-classyfire.ucsd.edu/entities/%s.json' % (InchiKey),
+        r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey),
                      headers={
                          "Content-Type": "application/json"})
         r.raise_for_status()
