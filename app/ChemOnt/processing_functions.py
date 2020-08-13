@@ -3,7 +3,7 @@ import json
 import time
 import rdflib
 from rdflib.namespace import RDF, VOID, DCTERMS, XSD
-
+import sys
 
 def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct_p, path_alternative_p):
     """
@@ -15,7 +15,10 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
         classif = get_entity_from_ClassyFire(row['CID'], row['INCHIKEY'])
         if not classif:
             continue
-        add_triples(row['CID'], parse_entities(classif), g_direct_parent, g_alternative_parent)
+        chemont_ids = parse_entities(row['CID'], classif)
+        if not chemont_ids:
+            continue
+        add_triples(row['CID'], chemont_ids, g_direct_parent, g_alternative_parent)
     print("Serialyze graphs")
     g_direct_parent.serialize(destination=path_direct_p + "classyfire_direct_parent_" + str(df_index + 1) + ".trig", format='trig')
     g_alternative_parent.serialize(destination=path_alternative_p + "classyfire_alternative_parent_" + str(df_index + 1) + ".trig", format='trig')
@@ -51,13 +54,23 @@ def get_entity_from_ClassyFire(CID, InchiKey):
     time.sleep(1)
     return classif
 
-def parse_entities(classif):
+def parse_entities(CID, classif):
     """
     This function is used to parse a response from ClassyFire and extract direct parents and alternative parents
     This function return a list of CHEMONTID associated to the classification result. The first is always the direct_parent and remaining are alternative parents
     - response: The response of the request
     """
-    chemont_ids = [classif["direct_parent"]['chemont_id'].split(':')[1]] + [alt_p['chemont_id'].split(':')[1] for alt_p in classif["alternative_parents"]]
+    try:
+        chemont_ids = [classif["direct_parent"]['chemont_id'].split(':')[1]] + [alt_p['chemont_id'].split(':')[1] for alt_p in classif["alternative_parents"]]
+    except:
+        print("Error while trying to parse response for CID: " + CID + ", Check logs.")
+        with open("classyFire.log", "a") as f_log:
+            f_log.write("CID " + CID + " - Error while parsing response: ")
+            e = sys.exc_info()[0]
+            f_log.write(str(e) + "\n")
+        with open("classyFire_error_ids.log", "a") as id_log:
+            id_log.write(CID + "\n")
+        return False
     return(chemont_ids)
 
 def add_triples(CID, chemont_ids, g_direct_parent, g_alternative_parent):
