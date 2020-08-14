@@ -51,6 +51,8 @@ def get_entity_from_ClassyFire(CID, InchiKey):
         print("\nRequest timeout was reached (60s)!")
         with open("classyFire.log", "a") as f_log:
             f_log.write("CID " + CID + " - Request Timeout")
+        with open("classyFire_error_ids.log", "a") as id_log:
+                id_log.write(CID + "\n")
         signal.alarm(0)
         return False
     # Check if there was an error while sending request: 
