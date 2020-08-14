@@ -4,6 +4,14 @@ import time
 import rdflib
 from rdflib.namespace import RDF, VOID, DCTERMS, XSD
 import sys
+import signal
+
+# Prepare TimeoutExceptions
+class TimeOutException(Exception):
+   pass
+
+def alarm_handler(signum, frame):
+    raise TimeOutException()
 
 def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct_p, path_alternative_p):
     """
@@ -31,11 +39,20 @@ def get_entity_from_ClassyFire(CID, InchiKey):
     - CID: PubChem compound identifier (use for logs)
     - InchiKey: input inchikey
     """
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(60)
     try:
         r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey),
                      headers={
                          "Content-Type": "application/json"})
         r.raise_for_status()
+    # Check timeout: 
+    except TimeOutException:
+        print("\nRequest timeout was reached (60s)!")
+        with open("classyFire.log", "a") as f_log:
+            f_log.write("CID " + CID + " - Request Timeout")
+        signal.alarm(0)
+        return False
     # Check if there was an error while sending request: 
     except requests.exceptions.RequestException as e:
         print("Error while trying to retrieve classication for CID: " + CID + ", Check logs.")
@@ -44,14 +61,17 @@ def get_entity_from_ClassyFire(CID, InchiKey):
                 f_log.write(str(e) + "\n")
         with open("classyFire_error_ids.log", "a") as id_log:
                 id_log.write(CID + "\n")
+        signal.alarm(0)
         return False
     # Test if the element is classified
     classif = json.loads(r.text)
     if len(classif) == 0:
         with open("ids_no_classify.log", "a") as no_classif_log:
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
+        signal.alarm(0)
         return False
     time.sleep(1)
+    signal.alarm(0)
     return classif
 
 def parse_entities(CID, classif):
