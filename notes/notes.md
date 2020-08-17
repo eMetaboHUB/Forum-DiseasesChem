@@ -866,3 +866,4 @@ Parmi eux, on a pu récupérer 316.087 CID pour lesquels on a eu direc-parent da
 
 ## Pour faire l'enrichissment à partir de l'ontology ChemOnt: 
  - On va utiliser l'entité racine comme source: Chemical entities (CHEMONTID:9999999)
+ - D'arpès mes premiers test, on utilisant seulement les classes Chebi avec plus de 1 CID associés **ET** moins de 1000, on va pouvoir étudié 271 classes chemont
