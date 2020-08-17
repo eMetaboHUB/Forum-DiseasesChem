@@ -48,7 +48,7 @@ def get_entity_from_ClassyFire(CID, InchiKey):
         r.raise_for_status()
     # Check timeout: 
     except TimeOutException:
-        print("\nRequest timeout was reached (60s)!")
+        print("Request timeout was reached (60s)!")
         with open("classyFire.log", "a") as f_log:
             f_log.write("CID " + CID + " - Request Timeout")
         with open("classyFire_error_ids.log", "a") as id_log:
