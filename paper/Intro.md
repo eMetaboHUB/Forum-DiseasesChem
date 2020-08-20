@@ -40,3 +40,12 @@ Pour un autre exemple de l'utilité: Gene Ontology Enrichment Improves Performan
 KG:
 Structure de données machine readable
 Represent data woith complex relation
+
+
+
+On a un KG avec des infos sur les molécules des liens vers la litteature et les topics annotés
+-> Il fat extraire la sur-représentation (over-representation)
+
+molecules to biomedical concepts
+
+Some tools have already been developed to extract and propose gene or drugs candidates related to pathological phenotypes based on literature evidences and databases [KnetMiner, Sosa et al., Malas et al.; Kanza and Frey]. Literature evidences are often extracted from sentenses in PubMed articles using text-mining approches, but these articles are also manualy indexed from their main topics, by the \textit{National Library of Medecine} with MeSH descriptors (Medical Subject Headings), a controled thesaurus of biomedical concepts. A thesaurus is similar to an ontology, it is a structured vocabulary, but have a lower power of reasoning than an ontology [Kim et Beck]. PubMed articles can be linked to PubChem chemical compounds using the \textit{NBCI E-utilities} E-link function by findind related records through the both databases. Pubchem, the world largest free chemistry database, also provide knowledge graphs to semantically represent all available data associated to chemical compounds[Fu et al PubChem RDF]. All these resources can be fererate to build a FAIR knowledge graph that host the information required to proced knowledge discovery analysis in metabolomics.
