@@ -98,7 +98,6 @@
 
 D'autres outils :
 Alkemio
-Samlyser
 Metab2MeSh
 PolySearch
 RELigator (Pons et al.) -> Comme PolySearch en grooos basé sur du text-mining sur les abstract
@@ -110,3 +109,13 @@ ConceptMetab (utilisait metab2mesh)
  (e.g LGscore, Beegle)
 
 Regarder les travaux de DR Swanson
+=======
+Smalheiser
+Samlyser
+Metab2MeSh
+PolySearch
+KnetMiner
+ConceptMetab (utilisait metab2mesh)
+
+
+>>>>>>> feature/ClassyFire

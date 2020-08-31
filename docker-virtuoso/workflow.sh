@@ -50,6 +50,9 @@ echo "ld_dir_all ('./dumps/vocabulary/', 'cheminf.owl', 'http://database/inferen
 # On ajoute un graph pour ChEBI seul afin de l'identifier:
 echo "ld_dir_all ('./dumps/vocabulary/', 'chebi.owl', 'http://database/ressources/ChEBI');" >> share/upload.sh
 
+# On ajoute un graph pour ChemOnt seul afin de l'identifier:
+echo "ld_dir_all ('./dumps/vocabulary/', 'ChemOnt_2_1.ttl', 'http://database/ressources/ChemOnt');" >> share/upload.sh
+
 echo "select * from DB.DBA.load_list;" >> share/upload.sh
 echo "rdf_loader_run();" >> share/upload.sh
 echo "checkpoint;" >> share/upload.sh
@@ -58,6 +61,8 @@ echo "select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;" >> share/uploa
 # Set rules inferences
 echo "RDFS_RULE_SET ('schema-inference-rules', 'http://database/inference-rules');" >> share/upload.sh
 echo "RDFS_RULE_SET ('schema-inference-rules', 'http://database/ressources/ChEBI');" >> share/upload.sh
+echo "RDFS_RULE_SET ('schema-inference-rules', 'http://database/ressources/ChemOnt');" >> share/upload.sh
+
 
 echo "checkpoint;" >> share/upload.sh
 

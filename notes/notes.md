@@ -859,6 +859,30 @@ Le super avantage de owl:sameAs c'est que Virtuoso le maitrise en activant la r�
 Pareil pour les annotations structurelle, plus besoin de chercher à vérifier l'uris utilisé pour que ce soit la bonne, vue que les synonymes partagent les annotations, cela marche également pour les inchi et les SMILES !
 
 
+
+
+
+
+
+
+
+
+
+<<<<<<< HEAD
 ## Pour le ChemOnt To MeSh :
 On ne vas pas chercher à déterminer la classe ChemOnt pour les 108 millions de composé PubChem ce serait inutile car deplus, si un utilisateur désire savoir la classe ChemOnt d'un composé, il ira directement sur ClassyFire et pas sur notre endpoint.
 On ne vas récupérer la classe ChemOnt seulement pour les ~ 373836 composés pour lesquels on dispose de litteratures qui nous seront véritablement utile pour faire le ChemOnt To MeSH. Je pense qu'il seront relativement bien annoté et devrait déjà être classifier par ClassyFire, si jamais il nous en manque, on poura toujours appeler l'api en ruby pour les manquants !
+=======
+
+
+
+
+## Pour ClassyFire et la récupération des classes associés aux identifiants :
+On avait en tout 373765 identifiants PubChem avec de la litterature pour lesquels on disposai d'une InchiKey, soit quasiment tous !
+
+Parmi eux, on a pu récupérer 316.087 CID pour lesquels on a eu direc-parent dans la classification ChemOnt et 315.336 pour lesquels on a également pu trouver un alternative-parent ! Cela représente en gros plus de 84%
+
+## Pour faire l'enrichissment à partir de l'ontology ChemOnt: 
+ - On va utiliser l'entité racine comme source: Chemical entities (CHEMONTID:9999999)
+ - D'arpès mes premiers test, on utilisant seulement les classes Chebi avec plus de 1 CID associés **ET** moins de 1000, on va pouvoir étudié 271 classes chemont
+>>>>>>> feature/ClassyFire
