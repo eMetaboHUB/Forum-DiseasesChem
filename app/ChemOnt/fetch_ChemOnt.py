@@ -43,6 +43,9 @@ namespaces = {
 version = config["PROCESSES"].get("version")
 n_processes = config["PROCESSES"].getint("n_processes")
 outpath = config["OUT"].get("path")
+path_inchiKey = config["INCHIKEYS"].get("path")
+graph_from = config["INCHIKEYS"].get("graph_from").split('\n')
+url = config["PROCESSES"].get("url")
 
 # Init output and log files: 
 with open("classyFire.log", "w") as f_log:
@@ -54,8 +57,17 @@ with open("classyFire_error_ids.log", "w") as f_log:
 with open("ids_no_classify.log", "w") as f_log:
     pass
 
+# test if all graph exist:
+for uri in graph_from:
+    if not ask_for_graph(url, uri):
+        print("Data Graph " + uri + " does not exists")
+        sys.exit(3)
+
+# Send a request to get all CID-InchiLeys annotations available on the RDF-Store:
+get_CID_InchiKeys(url, graph_from, path_inchiKey)
+
 # Read input file
-CID_inchiKeys = pd.read_csv(config["INPUT"].get("path"), sep = "\t", dtype= {'CID': str, 'INCHIKEY':str})
+CID_inchiKeys = pd.read_csv(path_inchiKey, sep = ",", dtype= {'CID': str, 'INCHIKEY':str})
 df_list = np.array_split(CID_inchiKeys, n_processes)
 
 # On initialise les ressources :
@@ -81,7 +93,7 @@ graph_sizes = [p.get() for p in results]
 # Close Pool
 pool.close()
 pool.join()
-export_ressource_metatdata(ClassyFire_alternative_p, ClassyFire_direct_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p)
+export_ressource_metadata(ClassyFire_alternative_p, ClassyFire_direct_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p)
 
 # Compress files:
 try:

@@ -16,10 +16,12 @@ These both types of classes are stored separately in two different graphs.
 - [PROCESSES]
   - n_processes: The number of molecule that will be treated in parralel. The input table will be divided in *n_processes* sub-tables, which will be treated independtly in parralel.
   - version: A version
+  - url: the url of the Virtuoso SPARQL endpoint to access InchiKey annotations
+- [INCHIKEYS]
+  - graph_from: A list of all input graphs (line-separated) needed to access InchiKey annotations. By default, PubChem InchiKeys graphs and PMID-CID graphs to only select compounds with available litterature.
+  - path: a path where the CID-InchiKey association file will be exported
 - [OUT]
   - path: path to output directory (eg. /workdir/share-virtuoso)
-- [INPUT]
-- path: path to input file
 
 
 How to run:

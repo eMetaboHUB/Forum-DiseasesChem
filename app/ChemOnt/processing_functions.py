@@ -104,7 +104,80 @@ def add_triples(CID, chemont_ids, g_direct_parent, g_alternative_parent):
         for alt_p in chemont_ids[1:]:
             g_alternative_parent.add((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + CID), RDF["type"], rdflib.URIRef("http://purl.obolibrary.org/obo/CHEMONTID_" + alt_p)))
 
-def export_ressource_metatdata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, uri_targeted_ressources, path_direct_p, path_alternative_p):
+def get_CID_InchiKeys(url, graph_from, out_file):
+    header = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "text/csv"
+    }
+    data = {
+        "format": "csv",
+    }
+    query = """
+        DEFINE input:inference \"schema-inference-rules\"
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+        PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+        PREFIX voc: <http://myorg.com/voc/doc#>
+        PREFIX cito: <http://purl.org/spar/cito/>
+        PREFIX fabio:	<http://purl.org/spar/fabio/> 
+        PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+        PREFIX void: <http://rdfs.org/ns/void#>
+        PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+        PREFIX sio: <http://semanticscience.org/resource/>
+        PREFIX obo: <http://purl.obolibrary.org/obo/>
+
+        select (strafter(STR(?cid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\") as ?CID) (str(?inchiKey) as ?INCHIKEY)
+        %s
+        where
+        {
+            {
+                select distinct ?cid
+                    where {
+                        ?cid cito:isDiscussedBy ?pmid .
+                }
+            }
+            ?inchiKey_desc sio:is-attribute-of ?cid .
+            ?inchiKey_desc a sio:CHEMINF_000399 ;
+                sio:has-value ?inchiKey
+        }
+    """
+    data["query"] = query %("\n".join(["FROM <" + uri + ">" for uri in graph_from]))
+    r = requests.post(url = url, headers = header, data = data)
+    if r.status_code != 200:
+        print("Error in request while trying to request for inchiKeys, exit.\n")
+        print(r.text)
+        sys.exit(3)
+    print("Write results in " + out_file)
+    with open(out_file, "w") as f_out:
+        f_out.write(r.text)
+
+def ask_for_graph(url, graph_uri):
+    """
+    This function is used to test if graph a exist without erase
+    - url: Virtuoso SPARQL endpoint url
+    - graph_uri: the graph uri to be tested
+    """
+    header = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "text/html"
+    }
+    data = {
+        "format": "html",
+        "query": "ASK WHERE { GRAPH <" + graph_uri + "> { ?s ?p ?o } }"
+    }
+    r = requests.post(url = url, headers = header, data = data)
+    if r.status_code != 200:
+        print("Error in request while trying to check if graph " + graph_uri + " exists.\nImpossible to continue, exit.\n")
+        print(r.text)
+        sys.exit(3)
+    if r.text == "true":
+        return True
+    return False
+
+def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, uri_targeted_ressources, path_direct_p, path_alternative_p):
     """
     This function is used export metadata for builted graphs
     """

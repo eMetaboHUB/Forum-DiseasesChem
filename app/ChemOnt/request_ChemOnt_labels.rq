@@ -14,21 +14,9 @@ PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 
-
-
-
-select (strafter(STR(?cid),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?CID) (str(?inchiKey) as ?INCHIKEY)
-where
-{
-	{
-		select distinct ?cid
-			where {
-				?cid cito:isDiscussedBy ?pmid .
-		}
-	}
-	?inchiKey_desc sio:is-attribute-of ?cid .
-	?inchiKey_desc a sio:CHEMINF_000399 ;
-		sio:has-value ?inchiKey
+select (strafter(STR(?chemont),"http://purl.obolibrary.org/obo/CHEMONTID_") as ?CHEMONT) (str(?chemont_label) as ?CHEMONT_NAME) 
+FROM <http://database/ressources/ChemOnt>
+WHERE {
+    ?chemont a owl:Class ;
+        rdfs:label ?chemont_label .
 }
-
-
