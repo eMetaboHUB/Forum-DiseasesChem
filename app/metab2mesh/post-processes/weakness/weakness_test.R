@@ -11,7 +11,7 @@ option_list <- list(
 );
 
 
-compute_weakness_features <- function(COOC, TOTAL_PMID_CID, TOTAL_PMID_MESH, TOTAL_PMID, pv_th, alpha_CI, log_file, line_number){
+compute_weakness_features <- function(COOC, TOTAL_PMID_CID, TOTAL_PMID_MESH, TOTAL_PMID, pv_th, alpha_CI){
   # On calcule l'intervalle de Jeffreys en utilisant une Beta avec un prio non-informatif, comme dans la doc
   CI <- c(qbeta(p = alpha_CI/2, shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5), qbeta(p = 1 - (alpha_CI/2), shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5))
   min <- round(CI[1] * TOTAL_PMID_CID)
@@ -32,12 +32,6 @@ compute_weakness_features <- function(COOC, TOTAL_PMID_CID, TOTAL_PMID_MESH, TOT
     # On cherche le point le plus proche du seuil mais qui reste significatif, nous donnant l'effectif limite pour inférer une association au seuil imposés
     test_closest <- res[res$p_value <= pv_th, ]
     point_closest_to_th <- test_closest[1, ]$coocurence
-    # Si le closest point présente une coocurence strictement supérieure à la coocurence observé alors on return false avec Warning pour indiquer qu'elle était initialement pas significative
-    # Car on ne s'interrese qu'au faux positifs !
-    if(point_closest_to_th > COOC){
-      writeLines(paste("At line ", line_number, " association was not initially significant, impossible to determine weakness features !"), log_file)
-      return(c(FALSE, NA, NA, NA, NA))
-    }
     # On détermine la proba minimale associé à cet effectif en prenant en compte l'approximation
     approx <- (point_closest_to_th + (point_closest_to_th - 1))/2
     p_from_closest_point <- pbeta(approx/TOTAL_PMID_CID, shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5, lower.tail = FALSE)
@@ -68,8 +62,15 @@ n <- nrow(data)
 results <- as.data.frame(matrix(numeric(0), ncol = 5, nrow = n, dimnames = list(NULL, c("th_reached", "nb_lim", "nb_removed", "proba", "entropy"))))
 
 
-for( i in 1:n){
-  results[i, ] <- compute_weakness_features(data[i, 3], data[i, 4], data[i, 5], data[i, 6], pv_th, alpha_CI, log, i)
+for(i in 1:n){
+  # Si l'association n'est pas intialement signifcative on passe car on ne s'interresse qu'au faux positifs :
+  if(data[i, ]$p.adj <= pv_th){
+    writeLines(paste("At line ", i, " association was not initially significant, impossible to determine weakness features !"), log)
+    results[i, ] <- c(FALSE, NA, NA, NA, NA)
+  }
+  else{
+    results[i, ] <- compute_weakness_features(data[i, 3], data[i, 4], data[i, 5], data[i, 6], pv_th, alpha_CI)
+  }
 }
 close(log)
 data <- cbind(data, results)
