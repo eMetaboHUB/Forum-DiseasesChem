@@ -1,4 +1,5 @@
-library(optparse, lib.loc="~/work/R")
+library(optparse)
+library(dplyr)
 
 option_list <- list(
   make_option(c("-f", "--file"), type="character", default=NULL,
@@ -32,6 +33,7 @@ compute_weakness_features <- function(COOC, TOTAL_PMID_CID, TOTAL_PMID_MESH, TOT
     test_closest <- res[res$p_value <= pv_th, ]
     point_closest_to_th <- test_closest[1, ]$coocurence
     # Si le closest point présente une coocurence strictement supérieure à la coocurence observé alors on return false avec Warning pour indiquer qu'elle était initialement pas significative
+    # Car on ne s'interrese qu'au faux positifs !
     if(point_closest_to_th > COOC){
       writeLines(paste("At line ", line_number, " association was not initially significant, impossible to determine weakness features !"), log_file)
       return(c(FALSE, NA, NA, NA, NA))
@@ -56,7 +58,7 @@ alpha_CI <- opt$alphaCI
 
 
 splited_path <- strsplit(path_in, "\\.")
-path_out <- paste0(splited_path[[1]][1], "_results.csv")
+path_out <- paste0(splited_path[[1]][1], "_weakness.csv")
 log <- file(paste0(splited_path[[1]][1], ".log"), "w")
 
 # Read data :
