@@ -884,3 +884,55 @@ Parmi eux, on a pu récupérer 316.087 CID pour lesquels on a eu direc-parent da
 ## Pour faire l'enrichissment à partir de l'ontology ChemOnt: 
  - On va utiliser l'entité racine comme source: Chemical entities (CHEMONTID:9999999)
  - D'arpès mes premiers test, on utilisant seulement les classes Chebi avec plus de 1 CID associés **ET** moins de 1000, on va pouvoir étudié 271 classes chemont
+
+
+## Résultats ClassyFire:
+On retrouve beaucoup de classes ClassyFire qui correspondent à des classes ChEBi pour lesquelles on a pu déjà observer une associations avec la PKU. Par exemple, on retrouve les pterins et classes dérivés particulièrement associé à la PKU également avec ClassyFire, par contre on ne retrouve pas la famille des acides aminés aromatiques car elle n'existe pas dans ClassyFire. On va cependant retrouvé des classes de plus haut niveau comme alpha-amino acid par exemple.
+On a pas directement la classe apla-amino acids and derivates car celle ci contient trop de composé pour être prise en compte
+
+Au niveau des différences observés il faut considérer que ChEBI et ClassyFire n'ont pas du tout les même manière d'annoté les compoés ce qui fait que finalemrnt n ne peut pas vraiment comparer la manière dont ChEBI associé une classe ChEBI à un composé par rapport à comment le fait ClassyFire
+
+Pour les nouvelles classes qui sont apparu, beaucoup ne sont simplement pas représentées dans l'ontologie ChEBI.
+Par exemple le Trihydroxybutyrophenone, synonyme de sapropterin, (CID) très fortement associé à la PKU **est un ortho acid** (http://classyfire.wishartlab.com/entities/GWXXFGWOWOJEEX-UHFFFAOYSA-N). **C'est aussi un Orthocarboxylic acid derivatives**
+
+Aussi, le 2,4,5-Trihydroxybutyrophenone **est un Hydroxyquinols and derivatives** (http://classyfire.wishartlab.com/entities/SRUQARLMFOLRDN-UHFFFAOYSA-N)
+
+La biopterin **est une Hydroxypyrimidines** (http://classyfire.wishartlab.com/entities/LHQIJBMDNUYRAM-UHFFFAOYSA-N)
+
+Lez tryptophan et ces dérivés (CID: 1148, 9060, 1826, 6305 etc ...) font parti des Indolyl carboxylic acids and derivatives (http://classyfire.wishartlab.com/entities/QIVBCDIJIAJPQS-VIFPVBQESA-N)
+
+
+Dans la classe Chemont *Serotonins* définie comme "Compounds containing a serotonin moiety, which consists of an indole that bears an aminoethyl a position 2 and a hydroxyl group at position 5." on retrouve par exemple le Tryptophan et la serototine. La sérotonine peut en effet être produite à partir du tryptophan, où la sérotonine conserve cette partie commune avec le tryptophane décrite dans la classe. On peut en effet voir plusieurs articles metionnant des disorders dans la synthèse de serotonine chez les patients atteints de PKU
+
+Voici la requête que j'ai utilisé pour déterminer cela, par exemple : 
+    DEFINE input:inference "schema-inference-rules"
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+    PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+    PREFIX voc: <http://myorg.com/voc/doc#>
+    PREFIX cito: <http://purl.org/spar/cito/>
+    PREFIX fabio:	<http://purl.org/spar/fabio/> 
+    PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+    PREFIX void: <http://rdfs.org/ns/void#>
+    PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+    PREFIX sio: <http://semanticscience.org/resource/>
+    PREFIX obo: <http://purl.obolibrary.org/obo/>
+    PREFIX chemont: <http://purl.obolibrary.org/obo/CHEMONTID_>         
+
+
+select ?cid count(distinct ?pmid)
+where
+{
+                    ?cid a+ <http://purl.obolibrary.org/obo/CHEMONTID_0001236> .
+                    ?cid cito:isDiscussedBy ?pmid .
+                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                    ?mesh_ini a meshv:TopicalDescriptor .
+                    ?mesh_ini meshv:active 1 .
+                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                    FILTER(REGEX(?tn,"(C|A|D|G|B|F|I|J)")) .
+                    <http://id.nlm.nih.gov/mesh/D010661> meshv:treeNumber ?tn . 
+}
+group by ?cid
