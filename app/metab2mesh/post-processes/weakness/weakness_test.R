@@ -61,7 +61,6 @@ data <- read.table(path_in, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 n <- nrow(data)
 results <- as.data.frame(matrix(numeric(0), ncol = 5, nrow = n, dimnames = list(NULL, c("th_reached", "nb_lim", "nb_removed", "proba", "entropy"))))
 
-
 for(i in 1:n){
   # Si l'association n'est pas intialement signifcative on passe car on ne s'interresse qu'au faux positifs :
   if(data[i, ]$p.adj <= pv_th){
