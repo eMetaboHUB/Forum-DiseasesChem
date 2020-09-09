@@ -37,7 +37,7 @@ compute_weakness_features <- function(COOC, TOTAL_PMID_CID, TOTAL_PMID_MESH, TOT
     p_from_closest_point <- pbeta(approx/TOTAL_PMID_CID, shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5, lower.tail = FALSE)
     # Suivant l'intervalle choisit l'approximation peut renvoyer 1 (On cherche P(p > plim))
     Entropy <- if_else(p_from_closest_point == 1, true = 0, false = -(p_from_closest_point*log2(p_from_closest_point)) - ((1 - p_from_closest_point) * log2((1 - p_from_closest_point))))
-    return(c(as.logical(TRUE), point_closest_to_th, (COOC - (point_closest_to_th - 1)) , p_from_closest_point, Entropy))
+    return(c(TRUE, point_closest_to_th, (COOC - (point_closest_to_th - 1)) , p_from_closest_point, Entropy))
   }
 }
 
@@ -50,7 +50,6 @@ path_in <- opt$file
 pv_th <- opt$threshold
 alpha_CI <- opt$alphaCI
 
-print(pv_th)
 
 splited_path <- strsplit(path_in, "\\.")
 path_out <- paste0(splited_path[[1]][1], "_weakness.csv")
