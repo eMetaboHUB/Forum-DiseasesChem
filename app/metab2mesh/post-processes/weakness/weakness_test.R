@@ -50,6 +50,7 @@ path_in <- opt$file
 pv_th <- opt$threshold
 alpha_CI <- opt$alphaCI
 
+print(pv_th)
 
 splited_path <- strsplit(path_in, "\\.")
 path_out <- paste0(splited_path[[1]][1], "_weakness.csv")
@@ -63,7 +64,7 @@ results <- as.data.frame(matrix(numeric(0), ncol = 5, nrow = n, dimnames = list(
 
 for(i in 1:n){
   # Si l'association n'est pas intialement signifcative on passe car on ne s'interresse qu'au faux positifs :
-  if(data[i, ]$p.adj <= pv_th){
+  if(data[i, ]$p.adj > pv_th){
     writeLines(paste("At line ", i, " association was not initially significant, impossible to determine weakness features !"), log)
     results[i, ] <- c(FALSE, NA, NA, NA, NA)
   }
