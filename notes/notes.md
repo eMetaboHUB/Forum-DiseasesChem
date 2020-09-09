@@ -64,6 +64,10 @@ Le mieux semble être
 
 Dans tout les cas je pense que le mieux et le plus robuste est de faire exactement ce que fait PubChem !:) En reconstruisant la bonne requêe avec le nom du terme MeSH et son type
 
+ pccompound_pubmed	Select compounds that have depositor-provided cross-references to PubMed articles
+ pccompound_pubmed_mesh	Select compounds associated with PubMed abstracts that are annotated with common MeSH annotations
+ pccompound_pubmed_publisher	Select compounds that have cross-references to PubMed articles, provided to PubMed by publishers
+
 **Ce que je me dis :**
 Si on a récupérer le RDF de meSH pour faire ce travail, il sera interressant de le raccorder direct au RDf de pubChem.
 Si dans une étape ultérieure, on a crée des liens CID - PMID (Compound:CIDxxx cito:isDiscussedBy reference:PIMDyyy), je pense qu'il serait très utile pour que les **nouveaux** liens que l'on a pu créer avec les requêtes PubMed à la manière *NLM Curated*, de construire également des triplets pour enrichir notre RDF Compound:CIDxxx cito:isDiscussedBy reference:NewPMIDFromQueryPubMed
@@ -902,7 +906,7 @@ La biopterin **est une Hydroxypyrimidines** (http://classyfire.wishartlab.com/en
 Lez tryptophan et ces dérivés (CID: 1148, 9060, 1826, 6305 etc ...) font parti des Indolyl carboxylic acids and derivatives (http://classyfire.wishartlab.com/entities/QIVBCDIJIAJPQS-VIFPVBQESA-N)
 
 
-Dans la classe Chemont *Serotonins* définie comme "Compounds containing a serotonin moiety, which consists of an indole that bears an aminoethyl a position 2 and a hydroxyl group at position 5." on retrouve par exemple le Tryptophan et la serototine. La sérotonine peut en effet être produite à partir du tryptophan, où la sérotonine conserve cette partie commune avec le tryptophane décrite dans la classe. On peut en effet voir plusieurs articles metionnant des disorders dans la synthèse de serotonine chez les patients atteints de PKU
+Dans la classe Chemont *Serotonins* définie comme "Compounds containing a serotonin moiety, which consists of an indole that bears an aminoethyl a position 2 and a hydroxyl group at position 5." on retrouve par exemple le Tryptophan et la serototine. La sérotonine peut en effet être produite à partir du tryptophan, conservant cette partie commune avec le tryptophane décrite dans la classe. On peut en effet voir plusieurs articles metionnant des disorders dans la synthèse de serotonine chez les patients atteints de PKU
 
 Voici la requête que j'ai utilisé pour déterminer cela, par exemple : 
     DEFINE input:inference "schema-inference-rules"
