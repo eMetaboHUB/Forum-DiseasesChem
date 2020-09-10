@@ -90,4 +90,5 @@ parallel::stopCluster(cl)
 
 print(paste("Export table at ", path_out))
 data <- cbind(data, results[])
+colnames(data)[seq.int(to = length(colnames(data)), length.out = 5)] <- c("Is_Threshold_reached", "COOC_closest_to_threshold", "Nb_articles_to_removed_assos", "proba_of_sucess", "Entropy")
 write.table(data, path_out, sep = ',', row.names = FALSE, col.names = TRUE)
