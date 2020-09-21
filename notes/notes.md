@@ -940,3 +940,31 @@ where
                     <http://id.nlm.nih.gov/mesh/D010661> meshv:treeNumber ?tn . 
 }
 group by ?cid
+
+
+## Compter le nombre de composé PubChem qui disposent d'une classe CheEBI:
+
+    DEFINE input:inference "schema-inference-rules"
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+    PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+    PREFIX voc: <http://myorg.com/voc/doc#>
+    PREFIX cito: <http://purl.org/spar/cito/>
+    PREFIX fabio:	<http://purl.org/spar/fabio/> 
+    PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+    PREFIX void: <http://rdfs.org/ns/void#>
+    PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+    PREFIX sio: <http://semanticscience.org/resource/>
+    PREFIX obo: <http://purl.obolibrary.org/obo/>
+    PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+
+select count(distinct ?cid)
+from <http://database/ressources/ChEBI>
+from <http://database/ressources/PubChem/compound/2020-04-24>
+where{
+ ?cid a ?chebi .
+ ?chebi rdfs:subClassOf+ chebi:24431 .
+}
