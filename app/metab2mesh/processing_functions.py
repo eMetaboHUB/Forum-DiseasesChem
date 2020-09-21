@@ -246,7 +246,7 @@ def launch_from_config(prefix, header, data, url, config, key, out_path, module)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
-def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, out_path, file_size):
+def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, out_path, split):
     """
     This function is used to build the final data.frame containg all results for next computation. As this table can be really huge and post processes need also to be parallelized, the table is separated in sub-table with a number of lines fixed by file_size.
     Columns are: Modalities of X, Modalities of Y, Total number of individuals with modality X and Y, Total number of individuals with modality X, Total number of individuals with modality Y, Total number of individuals. 
@@ -256,7 +256,7 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, ou
     - path_to_Y: path to counts for modalities Y directory
     - U_size: the total number of individuals
     - out_path: path to the output directory
-    - file_size: the number of lines is each outputed sub-table.
+    - split: bool (True/False) if the result file must be splited in smaller files. File size is set with the file_size config attribute.
     """
     X_name = config['X'].get('name')
     Y_name = config['Y'].get('name')
@@ -289,8 +289,14 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, ou
         metadata_f.write("Number of available coocurences between %s and %s: %d\n" %(X_name, Y_name, len(cid_mesh)))
         graph_from = ", ".join(["<" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
         metadata_f.write("List of sources graph :%s\n" %(graph_from))
-    for i, start in enumerate(range(0, df_size, file_size)):
-        data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i), index = False)
+    # If split = True, the result file in split in n several files with a size of file_size
+    if split:
+        file_size = config['DEFAULT'].getint('file_size')
+        for i, start in enumerate(range(0, df_size, file_size)):
+            data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i), index = False)
+    # The result is fully writen on one file
+    else:
+        data.to_csv(out_path + 'metab2mesh.csv', index = False)
     return data
 
 def ask_for_graph(url, graph_uri):
