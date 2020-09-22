@@ -30,16 +30,24 @@ RUN apt update && \
     apt autoremove -y &&\
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-    
+
+# INSTALL R AND PACKAGES
+RUN apt update && \
+    apt-get install -y r-base
+
+RUN R -e "install.packages('optparse', repos = 'http://cran.us.r-project.org')"
+RUN R -e "install.packages('bigstatsr', repos = 'http://cran.us.r-project.org')"
+RUN R -e "install.packages('parallel', repos = 'http://cran.us.r-project.org')"
+RUN R -e "install.packages('foreach', repos = 'http://cran.us.r-project.org')"
+RUN R -e "install.packages('R.utils', repos = 'http://cran.us.r-project.org')"
+
 # SET WORK DIRECTORY
 RUN mkdir /workdir \
     /workdir/share-virtuoso/ \
     /workdir/out/ \
     /workdir/config/ \
-    /workdir/data \
-    /workdir/data/HumanGEM \
-    /workdir/data/MetaNetX \
     /workdir/app \
+    /workdir/data \
     /workdir/app/SBML_upgrade \
     /workdir/app/build_RDF_store \
     /workdir/app/metab2mesh \
@@ -61,9 +69,6 @@ COPY app/metab2mesh/post-processes/* /workdir/app/metab2mesh/post-processes/
 COPY app/metab2mesh/SPARQL/*.py /workdir/app/metab2mesh/SPARQL/
 
 COPY app/ChemOnt/*.py /workdir/app/ChemOnt/
-
-COPY docker_resources/HumanGEM.ttl /workdir/data/HumanGEM/HumanGEM.ttl
-COPY docker_resources/metanetx.ttl /workdir/data/MetaNetX/metanetx.ttl
 
 # SET WORK DIR.
 WORKDIR /workdir
