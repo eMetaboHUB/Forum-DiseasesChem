@@ -36,11 +36,11 @@ parallel_on_chunck <- function(dataChunk, n_cores){
         fisher.test(x = matrice, alternative = "greater")
       },
       error = function(e){
-        print(paste(c(X, Y, e)))
+        print(paste(c(X, Y, e), collapse = " "))
         return(NULL)
       },
       warning = function(w){
-        print(paste(c(X, Y, w)))
+        print(paste(c(X, Y, w), collapse = " "))
         return(NULL)
       }
     )
@@ -49,7 +49,7 @@ parallel_on_chunck <- function(dataChunk, n_cores){
       suppressWarnings(chisq.test(matrice)$statistic)
     },
     error = function(e){
-      print(paste(c(X, Y, e)))
+      print(paste(c(X, Y, e), collapse = " "))
       return(NULL)
     })
     # parse and write results :
@@ -73,7 +73,7 @@ parallel_on_chunck <- function(dataChunk, n_cores){
   }
   
   n <- nrow(dataChunk)
-  cl <- parallel::makeCluster(n_cores)
+  cl <- parallel::makeCluster(n_cores, outfile = "")
   doParallel::registerDoParallel(cl)
   results <- FBM(n, 4)
   print("Computing ....")
@@ -143,5 +143,5 @@ while(reached_chunck < nlines){
   
 }
 close(con)
-
+print("End !")
 
