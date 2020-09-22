@@ -54,5 +54,5 @@ For all associations, compute the weakness procedure: If the association is sign
 - parallel: the number of cores that should be used
 
 ```bash
-Rscript app/metab2mesh/post-processes/compute_fisher_exact_test_V2.R --file="/path/to/input" --threshold=th --alphaCI=alpha --chunksize=nchunk --parallel=ncores
+Rscript app/metab2mesh/post-processes/weakness_test.R --file="/path/to/input" --threshold=th --alphaCI=alpha --chunksize=nchunk --parallel=ncores
 ```
