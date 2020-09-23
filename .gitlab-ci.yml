@@ -29,6 +29,7 @@ cache:
 ###########################################################
 # stages
 stages:
+  - get_resources
   - init
   - docker_env
   - test
@@ -39,7 +40,7 @@ stages:
 
 # job to fetch resources from pydio
 get resources:
-  stage: init
+  stage: get_resources
   tags:
     - docker
   image: cirrusci/wget
