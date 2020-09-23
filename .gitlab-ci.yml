@@ -67,6 +67,7 @@ get resources:
 
 update git repo:
   stage: init
+  image: pfem/ssh-utils
   tags:
     - docker
   #only:
@@ -135,6 +136,7 @@ test:
 # build artifact for dev. branches
 relaunch scripts:
   stage: deploy
+  image: pfem/ssh-utils
   tags:
     - docker
   #only:
