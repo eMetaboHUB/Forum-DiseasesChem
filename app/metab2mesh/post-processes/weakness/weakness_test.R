@@ -119,12 +119,13 @@ while(reached_chunck < nlines){
   print(paste("Treating chunk", reached_chunck))
   # read chunk
   dataChunk <- read.table(con, nrows = chunksize, skip = 0, header = FALSE, fill = TRUE, sep = ",")
-  # On réinjecte les headers
+  # On réinjecte les headers pour pouvoir mappé la colonnes p.adj
   colnames(dataChunk) <- headers
   # Computation
   results <- parallel_on_chunck(dataChunk, n_cores, pv_th, alpha_CI)
   dataChunk <- cbind(dataChunk, results)
   out <- file(description=path_out, open="a")
+  # On écrit en append SANS les headers
   write.table(dataChunk, out, sep = ',', row.names = FALSE, col.names = FALSE, append = TRUE)
   close(out)
   # On incrémente le chunk

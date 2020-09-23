@@ -25,7 +25,7 @@ U_name <- opt$Uname
 path_out <- opt$p_out
 
 # Add columns names and adjusted p.value
-metab2mesh <- read.table(path_metab2mesh, sep = ",", stringsAsFactors = FALSE)
+metab2mesh <- read.table(path_metab2mesh, sep = ",", stringsAsFactors = FALSE, header = TRUE) #  J'ai rajouté Header = True, car avec la nouvelle version du calcul en parallèle, on a direct le header
 colnames(metab2mesh) <- c(X_name, Y_name, "COOC", paste0("TOTAL_", U_name, "_", X_name), paste0("TOTAL_", U_name, "_", Y_name), paste0("TOTAL_", U_name), "p.value", "odds_ratio", "Fold_change", "Chisq_stat")
 metab2mesh$p.adj <- p.adjust(metab2mesh$p.value, method = "BH")
 

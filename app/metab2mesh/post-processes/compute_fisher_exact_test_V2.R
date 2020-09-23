@@ -136,6 +136,7 @@ while(reached_chunck < nlines){
   results <- parallel_on_chunck(dataChunk, n_cores)
   dataChunk <- cbind(dataChunk, results)
   out <- file(description=path_out, open="a")
+  # On écrit en append SANS les headers
   write.table(dataChunk, out, sep = ',', row.names = FALSE, col.names = FALSE, append = TRUE)
   close(out)
   # On incrémente le chunk
