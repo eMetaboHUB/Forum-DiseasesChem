@@ -48,6 +48,7 @@ get resources:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_DOCKER || mkdir -p $CACHE_DOCKER
+    - ls $CACHE_DOCKER
     - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl docker_resources/
     - test -f $CACHE_DOCKER/metanetx.ttl && cp -r $CACHE_DOCKER/metanetx.ttl docker_resources/
     - test -f $CACHE_DOCKER/vocabulary.zip && cp -r $CACHE_DOCKER/vocabulary.zip docker_resources/
