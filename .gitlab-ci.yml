@@ -48,7 +48,7 @@ get resources:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_DOCKER || mkdir -p $CACHE_DOCKER
-    - test -d $CACHE_DOCKER/docker_resources/ || mkdir -p $CACHE_DOCKER/docker_resources/
+    - test -d $CI_PROJECT_DIR/docker_resources/ || mkdir -p $CI_PROJECT_DIR/docker_resources/
     - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl
     - test -f $CACHE_DOCKER/metanetx.ttl && cp -r $CACHE_DOCKER/metanetx.ttl $CI_PROJECT_DIR/docker_resources/metanetx.ttl
     - test -f $CACHE_DOCKER/vocabulary.zip && cp -r $CACHE_DOCKER/vocabulary.zip $CI_PROJECT_DIR/docker_resources/vocabulary.zip
@@ -95,15 +95,15 @@ docker env:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
-    - test -d $CI_PROJECT_DIR/docker_resources/ || mkdir -p $CI_PROJECT_DIR/docker_resources/
-    - cp $CACHE_BASH/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl
-    - cp $CACHE_BASH/metanetx.ttl $CI_PROJECT_DIR/docker_resources/metanetx.ttl
-    - cp $CACHE_BASH/vocabulary.zip $CI_PROJECT_DIR/docker_resources/vocabulary.zip
+    - test -d docker_resources/ || mkdir -p docker_resources/
+    - cp $CACHE_BASH/HumanGEM.ttl docker_resources/HumanGEM.ttl
+    - cp $CACHE_BASH/metanetx.ttl docker_resources/metanetx.ttl
+    - cp $CACHE_BASH/vocabulary.zip docker_resources/vocabulary.zip
     - echo "[info] unzip files ";
-    - rm -rf $CI_PROJECT_DIR/docker_resources/vocabulary/*
-    - unzip $CI_PROJECT_DIR/docker_resources/vocabulary.zip -d $CI_PROJECT_DIR/docker_resources/
-    - ls -al $CI_PROJECT_DIR/docker_resources/vocabulary/
-    - ls -al $CI_PROJECT_DIR/docker_resources/
+    - rm -rf docker_resources/vocabulary/*
+    - unzip docker_resources/vocabulary.zip -d docker_resources/
+    - ls -al docker_resources/vocabulary/
+    - ls -al docker_resources/
   script:
     - echo "==================================";
     - echo "[info] run 'docker build image' ";
