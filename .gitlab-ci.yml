@@ -94,9 +94,9 @@ docker env:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
-    - cp -r $CACHE_BASH/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl
-    - cp -r $CACHE_BASH/metanetx.ttl $CI_PROJECT_DIR/docker_resources/metanetx.ttl
-    - cp -r $CACHE_BASH/vocabulary.zip $CI_PROJECT_DIR/docker_resources/vocabulary.zip
+    - cp $CACHE_BASH/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl
+    - cp $CACHE_BASH/metanetx.ttl $CI_PROJECT_DIR/docker_resources/metanetx.ttl
+    - cp $CACHE_BASH/vocabulary.zip $CI_PROJECT_DIR/docker_resources/vocabulary.zip
     - echo "[info] unzip files ";
     - rm -rf $CI_PROJECT_DIR/docker_resources/vocabulary/*
     - unzip $CI_PROJECT_DIR/docker_resources/vocabulary.zip -d $CI_PROJECT_DIR/docker_resources/
