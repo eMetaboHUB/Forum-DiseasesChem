@@ -7,8 +7,7 @@ function runBuild() {
 
 CONTAINER_NAME=metdisease_app
 
-mkdir -p ${RESOURCES_DIR}
-mkdir -p ${LOGSDIR}
+mkdir -p ${RESOURCES_DIR} ${LOGSDIR} ./data_tmp
 
 COMPOSE_FILE=docker-compose-app.yml
 

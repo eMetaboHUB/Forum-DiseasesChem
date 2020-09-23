@@ -1,5 +1,7 @@
 #!/bin/bash
 
+RESOURCES_DIR=./share
+
 # necessite ./share/updload.sh
 
 # USAGE (1) : ${0} start                  # start virtuoso and load data with script ./share/updload.sh
@@ -14,10 +16,6 @@ then
 fi
 
 CMD=$1
-
-RESOURCES_DIR=./share/
-UPDATA_FILE=update.sh
-
 
 COMPOSE_PROJECT_NAME="metdisease"
 LISTEN_PORT="9980"
@@ -109,10 +107,11 @@ EOF
                 ${COMPOSE_CMD} up -d
                 waitStarted
                 echo " -- Container started."
-				
-				docker exec \
+				for f in $(ls ${RESOURCES_DIR}/*.sh) ; do
+					docker exec \
                         ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/${UPDATA_FILE}
+                        isql-v 1111 dba "${PASSWORD}" ./dumps/$(basename ${f})
+				done
             fi
         ;;
         stop)
@@ -129,7 +128,6 @@ EOF
                 set -e
                 rm -rf "${DATA}"
                 rm -rf "${DATA}_dumps"
-				rm -rf ${RESOURCES_DIR}
             else
                 echo " -- Instance not present. Skipping cleaning."
             fi
