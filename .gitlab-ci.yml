@@ -94,6 +94,7 @@ docker env:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
+    - test -d $CI_PROJECT_DIR/docker_resources/ || mkdir -p $CI_PROJECT_DIR/docker_resources/
     - cp $CACHE_BASH/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl
     - cp $CACHE_BASH/metanetx.ttl $CI_PROJECT_DIR/docker_resources/metanetx.ttl
     - cp $CACHE_BASH/vocabulary.zip $CI_PROJECT_DIR/docker_resources/vocabulary.zip
