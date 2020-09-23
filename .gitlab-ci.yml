@@ -95,14 +95,14 @@ docker env:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
-    - cp -r $CACHE_BASH/HumanGEM.ttl docker_resources/
-    - cp -r $CACHE_BASH/metanetx.ttl docker_resources/
-    - cp -r $CACHE_BASH/vocabulary.zip docker_resources/
+    - cp -r $CACHE_BASH/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/
+    - cp -r $CACHE_BASH/metanetx.ttl $CI_PROJECT_DIR/docker_resources/
+    - cp -r $CACHE_BASH/vocabulary.zip $CI_PROJECT_DIR/docker_resources/
     - echo "[info] unzip files ";
-    - rm -rf docker_resources/vocabulary/*
-    - unzip docker_resources/vocabulary.zip -d docker_resources/
-    - ls -al docker_resources/vocabulary/
-    - ls -al docker_resources/
+    - rm -rf $CI_PROJECT_DIR/docker_resources/vocabulary/*
+    - unzip $CI_PROJECT_DIR/docker_resources/vocabulary.zip -d $CI_PROJECT_DIR/docker_resources/
+    - ls -al $CI_PROJECT_DIR/docker_resources/vocabulary/
+    - ls -al $CI_PROJECT_DIR/docker_resources/
   script:
     - echo "==================================";
     - echo "[info] run 'docker build image' ";
