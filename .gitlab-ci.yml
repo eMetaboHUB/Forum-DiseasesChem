@@ -142,6 +142,13 @@ relaunch scripts:
   #only:
     #refs:
       #- master
+  before_script:
+    - echo "==================================";
+    - echo "[info] init SSH key";
+    - mkdir -p ~/.ssh
+    - eval $(ssh-agent -s)
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 -d)
   script:
     - echo "==================================";
     - echo "[info] run w.sh on remote server ";
