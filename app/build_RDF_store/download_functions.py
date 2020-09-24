@@ -6,7 +6,7 @@ import glob
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 
-def download_pubChem(dir, request_ressource, out_path):
+def download_pubChem(dir, request_ressource, out_path, out_log):
     """
     This function is used to download PubChem rdf files from the ftp server and create a new version of the associated ressource.
     - dir: the path to the directory/file to fetch in the ftp server from ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/
@@ -15,7 +15,7 @@ def download_pubChem(dir, request_ressource, out_path):
     The function return the version created and the uri of this new version. in case of errors during wget downloading, errors are printed in dl_pubchem_*.log
     """
     # Intialyze .log files
-    with open("dl_pubchem_" + request_ressource + ".log", "wb") as f_log:
+    with open(out_log + "dl_pubchem_" + request_ressource + ".log", "wb") as f_log:
         pass
     # On télécharge le fichier void et les données
     print("Trying to check last available version of PubChem RDF on ftp ...")
@@ -27,7 +27,7 @@ def download_pubChem(dir, request_ressource, out_path):
         ftp.quit()
     except ftplib.all_errors as ftplib_e:
         print("Errors while trying to connect to NCBI PubChem FTP server at ftp.ncbi.nlm.nih.gov, check dl_pubchem_" + request_ressource + ".log")
-        with open("dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write("\n" + str(ftplib_e) + "\n")
         sys.exit(3)
     # Parse data to create pubchem version
@@ -54,7 +54,7 @@ def download_pubChem(dir, request_ressource, out_path):
     except subprocess.CalledProcessError as e:
         print("Error during trying to download PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
         print(e)
-        with open("dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to read Pubchem void.ttl file ...", end = '')
@@ -66,7 +66,7 @@ def download_pubChem(dir, request_ressource, out_path):
     except subprocess.CalledProcessError as e:
         print("Error during trying to remove PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
         print(e)
-        with open("dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to dowload Pubchem " + dir + " directory ...", end = '')
@@ -76,7 +76,7 @@ def download_pubChem(dir, request_ressource, out_path):
     except subprocess.CalledProcessError as e:
         print("Error during trying to dowload PubChem " + dir + " directory, check dl_pubchem_" + request_ressource + ".log")
         print(e)
-        with open("dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to build Pubchem " + request_ressource + " new ressource version ...", end = '')
@@ -93,7 +93,7 @@ def download_pubChem(dir, request_ressource, out_path):
     print("Ok\nEnd !")
     return ressource_version.version, str(ressource_version.uri_version)
 
-def download_MeSH(out_dir, namespaces_dict):
+def download_MeSH(out_dir, namespaces_dict, out_log):
     """
     This function is used to download the last version of the MeSH RDF from NIH ftp server, the void.ttl file is also use to bring metadata information about the dowloaded version.
     But contrary to PubChem the modification date is not include in the void.ttl file. So, version is determine from the modification date of the file.
@@ -103,7 +103,7 @@ def download_MeSH(out_dir, namespaces_dict):
     The function return the version and the uri of this new version.
     """
     # Intialyze .log files
-    with open("dl_mesh.log", "wb") as f_log:
+    with open(out_log + "dl_mesh.log", "wb") as f_log:
         pass
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -116,7 +116,7 @@ def download_MeSH(out_dir, namespaces_dict):
         ftp.quit()
     except ftplib.all_errors as ftplib_e:
         print("Errors while trying to connect to NCBI mesh FTP server at ftp.nlm.nih.gov, check dl_mesh.log")
-        with open("dl_mesh.log", "a") as f_log:
+        with open(out_log + "dl_mesh.log", "a") as f_log:
             f_log.write("\n" + str(ftplib_e) + "\n")
         sys.exit(3)
     # parse date to get last version
@@ -142,7 +142,7 @@ def download_MeSH(out_dir, namespaces_dict):
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MeSH void.ttl file, check dl_mesh.log")
         print(e)
-        with open("dl_mesh.log", "ab") as f_log:
+        with open(out_log + "dl_mesh.log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Trying to read MeSH void.ttl file ...", end = '')
@@ -155,7 +155,7 @@ def download_MeSH(out_dir, namespaces_dict):
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MeSH mesh.nt file, check dl_mesh.log")
         print(e)
-        with open("dl_mesh.log", "ab") as f_log:
+        with open(out_log + "dl_mesh.log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nTrying to parse MeSH original metadata ...", end = '')
@@ -185,7 +185,7 @@ def download_MeSH(out_dir, namespaces_dict):
     except subprocess.CalledProcessError as e:
         print("Error during trying to remove files, check dl_mesh.log")
         print(e)
-        with open("dl_mesh.log", "ab") as f_log:
+        with open(out_log + "dl_mesh.log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nEnd")

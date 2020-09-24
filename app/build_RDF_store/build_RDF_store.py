@@ -39,6 +39,7 @@ namespaces = {
 # Reading paths :
 # General
 out_path = config['GENERAL'].get('path_out')
+addtional_files_out_path = config['GENERAL'].get('additional_files_out_path')
 # Reading booleans :
 todo_MeSH = config['MESH'].getboolean("todo")
 todo_Reference = config['REFERENCE'].getboolean("todo")
@@ -54,7 +55,7 @@ with open(out_path + "upload_data.sh", "w") as upload_f:
 # MeSH
 if todo_MeSH:
     mesh_out_dir = config['MESH'].get('out_dir_name')
-    mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces)
+    mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces, addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
@@ -64,7 +65,7 @@ if todo_Reference:
     reference_out_dir = config['REFERENCE'].get('out_dir_name')
     reference_r_name = config['REFERENCE'].get('ressource_name')
     reference_dir_on_ftp = config['REFERENCE'].get('dir_on_ftp')
-    reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/")
+    reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
@@ -74,7 +75,7 @@ if todo_Compound:
     compound_out_dir = config['COMPOUND'].get('out_dir_name')
     compound_r_name = config['COMPOUND'].get('ressource_name')
     compound_dir_on_ftp = config['COMPOUND'].get('dir_on_ftp')
-    compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/")
+    compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
@@ -84,7 +85,7 @@ if todo_Descriptor:
     descriptor_out_dir = config['DESCRIPTOR'].get('out_dir_name')
     descriptor_r_name = config['DESCRIPTOR'].get('ressource_name')
     descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
-    descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/")
+    descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', 'void.ttl', '" + descriptor_uri + "');\n")
@@ -94,7 +95,7 @@ if todo_InchiKey:
     inchikey_out_dir = config['INCHIKEY'].get('out_dir_name')
     inchikey_r_name = config['INCHIKEY'].get('ressource_name')
     inchikey_dir_on_ftp = config['INCHIKEY'].get('dir_on_ftp')
-    inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, out_path + inchikey_out_dir + "/")
+    inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, out_path + inchikey_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:
         upload_f.write("ld_dir_all ('./dumps/" + inchikey_out_dir + "/" + inchikey_r_name + "/" + inchikey_version + "/', '*.ttl.gz', '" + inchikey_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + inchikey_out_dir + "/" + inchikey_r_name + "/" + inchikey_version + "/', 'void.ttl', '" + inchikey_uri + "');\n")
@@ -106,7 +107,6 @@ if todo_Elink:
     pmid_cid_version = config['ELINK'].get('version')
     pack_size = config['ELINK'].getint('pack_size')
     timeout = config['ELINK'].getint('timeout')
-    addtional_files_out_path = config['ELINK'].get('additional_files_out_path')
     max_triples_by_files = config['ELINK'].getint('max_triples_by_files')
     # Building requests
     query_builder = eutils.QueryService(cache = False,
