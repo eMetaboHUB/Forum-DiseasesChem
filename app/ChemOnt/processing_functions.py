@@ -5,6 +5,10 @@ import rdflib
 from rdflib.namespace import RDF, VOID, DCTERMS, XSD
 import sys
 import signal
+import glob
+import datetime
+import gzip
+import csv
 
 # Prepare TimeoutExceptions
 class TimeOutException(Exception):
@@ -13,17 +17,17 @@ class TimeOutException(Exception):
 def alarm_handler(signum, frame):
     raise TimeOutException()
 
-def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct_p, path_alternative_p):
+def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct_p, path_alternative_p, path_out):
     """
     This function is used to retrieve all ChemOnt classes associated to each molecules in df. As these processes are run in parralel, size of each created graph need to be exported in this function. 
     This function return a table of 4 values: nb. triples in direct_parent graph file, nb. subjects in direct_parent graph file, nb. triples in Alternative_parent graph file, nb. subjects in Alternative_parent graph file  
     """
     print("Treating df " + str(df_index))
     for index, row in df.iterrows():
-        classif = get_entity_from_ClassyFire(row['CID'], row['INCHIKEY'])
+        classif = get_entity_from_ClassyFire(row['CID'], row['INCHIKEY'], path_out)
         if not classif:
             continue
-        chemont_ids = parse_entities(row['CID'], classif)
+        chemont_ids = parse_entities(row['CID'], classif, path_out)
         if not chemont_ids:
             continue
         add_triples(row['CID'], chemont_ids, g_direct_parent, g_alternative_parent)
@@ -32,7 +36,7 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
     g_alternative_parent.serialize(destination=path_alternative_p + "classyfire_alternative_parent_" + str(df_index + 1) + ".trig", format='trig')
     return [len(g_direct_parent), len(set([str(s) for s in g_direct_parent.subjects()])), len(g_alternative_parent), len(set([str(s) for s in g_alternative_parent.subjects()]))]
 
-def get_entity_from_ClassyFire(CID, InchiKey):
+def get_entity_from_ClassyFire(CID, InchiKey, path_out):
     """
     This function is used to send a query to  classyfire.wishartlab.com/entities/INCHIKEY.json to retrieve classiication result for a compound, given his InchiKey.
     This function return the classification is json format or False if there was an error. Logs and ids for which the request failed are reported in classyFire.log and classyFire_error_ids.log
@@ -41,6 +45,8 @@ def get_entity_from_ClassyFire(CID, InchiKey):
     """
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.alarm(60)
+    # Sleep before each request
+    time.sleep(1)
     try:
         r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey),
                      headers={
@@ -49,26 +55,26 @@ def get_entity_from_ClassyFire(CID, InchiKey):
     # Check timeout: 
     except TimeOutException:
         print("Request timeout was reached (60s)!")
-        with open("classyFire.log", "a") as f_log:
+        with open(path_out + "classyFire.log", "a") as f_log:
             f_log.write("CID " + CID + " - Request Timeout")
-        with open("classyFire_error_ids.log", "a") as id_log:
+        with open(path_out + "classyFire_error_ids.log", "a") as id_log:
                 id_log.write(CID + "\n")
         signal.alarm(0)
         return False
     # Check if there was an error while sending request: 
     except requests.exceptions.RequestException as e:
         print("Error while trying to retrieve classication for CID: " + CID + ", Check logs.")
-        with open("classyFire.log", "a") as f_log:
+        with open(path_out + "classyFire.log", "a") as f_log:
                 f_log.write("CID " + CID + " - HTTP response status codes: ")
                 f_log.write(str(e) + "\n")
-        with open("classyFire_error_ids.log", "a") as id_log:
+        with open(path_out + "classyFire_error_ids.log", "a") as id_log:
                 id_log.write(CID + "\n")
         signal.alarm(0)
         return False
     # Test if the element is classified
     classif = json.loads(r.text)
     if len(classif) == 0:
-        with open("ids_no_classify.log", "a") as no_classif_log:
+        with open(path_out + "ids_no_classify.log", "a") as no_classif_log:
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
         signal.alarm(0)
         return False
@@ -76,7 +82,7 @@ def get_entity_from_ClassyFire(CID, InchiKey):
     signal.alarm(0)
     return classif
 
-def parse_entities(CID, classif):
+def parse_entities(CID, classif, path_out):
     """
     This function is used to parse a response from ClassyFire and extract direct parents and alternative parents
     This function return a list of CHEMONTID associated to the classification result. The first is always the direct_parent and remaining are alternative parents
@@ -86,11 +92,11 @@ def parse_entities(CID, classif):
         chemont_ids = [classif["direct_parent"]['chemont_id'].split(':')[1]] + [alt_p['chemont_id'].split(':')[1] for alt_p in classif["alternative_parents"]]
     except:
         print("Error while trying to parse response for CID: " + CID + ", Check logs.")
-        with open("classyFire.log", "a") as f_log:
+        with open(path_out + "classyFire.log", "a") as f_log:
             f_log.write("CID " + CID + " - Error while parsing response: ")
             e = sys.exc_info()[0]
             f_log.write(str(e) + "\n")
-        with open("classyFire_error_ids.log", "a") as id_log:
+        with open(path_out + "classyFire_error_ids.log", "a") as id_log:
             id_log.write(CID + "\n")
         return False
     return(chemont_ids)
@@ -104,55 +110,71 @@ def add_triples(CID, chemont_ids, g_direct_parent, g_alternative_parent):
         for alt_p in chemont_ids[1:]:
             g_alternative_parent.add((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + CID), RDF["type"], rdflib.URIRef("http://purl.obolibrary.org/obo/CHEMONTID_" + alt_p)))
 
-def get_CID_InchiKeys(url, graph_from, out_file):
-    header = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "text/csv"
-    }
-    data = {
-        "format": "csv",
-    }
-    query = """
-        DEFINE input:inference \"schema-inference-rules\"
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-        PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
-        PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
-        PREFIX voc: <http://myorg.com/voc/doc#>
-        PREFIX cito: <http://purl.org/spar/cito/>
-        PREFIX fabio:	<http://purl.org/spar/fabio/> 
-        PREFIX owl: <http://www.w3.org/2002/07/owl#> 
-        PREFIX void: <http://rdfs.org/ns/void#>
-        PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-        PREFIX sio: <http://semanticscience.org/resource/>
-        PREFIX obo: <http://purl.obolibrary.org/obo/>
 
-        select (strafter(STR(?cid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID\") as ?CID) (str(?inchiKey) as ?INCHIKEY)
-        %s
-        where
-        {
-            {
-                select distinct ?cid
-                    where {
-                        ?cid cito:isDiscussedBy ?pmid .
-                }
-            }
-            ?inchiKey_desc sio:is-attribute-of ?cid .
-            ?inchiKey_desc a sio:CHEMINF_000399 ;
-                sio:has-value ?inchiKey
-        }
+def get_creation_date(path):
     """
-    data["query"] = query %("\n".join(["FROM <" + uri + ">" for uri in graph_from]))
-    r = requests.post(url = url, headers = header, data = data)
-    if r.status_code != 200:
-        print("Error in request while trying to request for inchiKeys, exit.\n")
-        print(r.text)
-        sys.exit(3)
-    print("Write results in " + out_file)
-    with open(out_file, "w") as f_out:
-        f_out.write(r.text)
+    This function return the creation date from the path to the related directory, shared to Vituoso
+    """
+    metadata = rdflib.Graph()
+    metadata.parse(path + "/void.ttl", format = "turtle")
+    # As there is only one date attrivute, we can diretly extract the first using date
+    created_date = next(metadata.objects(None, DCTERMS["created"])).toPython()
+    return created_date
+
+
+def get_graph_list(path_to_share, version, path_from_share, regex):
+    if not version:
+        print("None version of InChiLey was defined, trying to select the last ...")
+        all_versions_path = glob.glob(path_to_share + path_from_share + "*")
+        all_creation_date = [get_creation_date(p) for p in all_versions_path]
+        most_recent_date = sorted(all_creation_date)[-1]
+        most_recent_dir = all_versions_path[all_creation_date.index(most_recent_date)]
+    else:
+        most_recent_dir = path_to_share + path_from_share + version
+    file_list = glob.glob(most_recent_dir + "/" + regex)
+    return file_list
+
+
+def extract_CID_InchiKey(path_to_share, pmids_cids_graph_list, inchikeys_graph_list,  path_out):
+    # Inti output file
+    with open(path_out, "w") as out:
+        out_writer = csv.writer(out, delimiter = ',')
+        m = out_writer.writerow(['CID', 'INCHIKEY'])
+    # Init variables
+    available_cids = set()
+    for pmid_cid_f_input in pmids_cids_graph_list:
+        # release memory
+        g_pmid_cid = None
+        # Import pmid_cid graph
+        print("Importing " + pmid_cid_f_input + " ...")
+        g_pmid_cid = rdflib.ConjunctiveGraph()
+        with gzip.open(pmid_cid_f_input, "rb") as f:
+            g_pmid_cid.parse(f, format = "trig")
+        # Get all objects
+        extracted_objects = [uri.toPython().split('http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID')[1] for uri in list(g_pmid_cid.objects())]
+        available_cids = available_cids.union(extracted_objects)
+    # Then, we browse inchikey files to select CID - inchikey association for which the CID has an associated corpus
+    for inchikey_f_input in inchikeys_graph_list:
+        g_inchikey = None
+        g_inchikey = rdflib.Graph()
+        print("treating file " + inchikey_f_input + " ...")
+        # Add InchiKeys triples to the graph
+        with gzip.open(inchikey_f_input, "rb") as f:
+            g_inchikey.parse(f, format = "turtle")
+        # Get cid - inchikey associations
+        cids_inchikeys = list(g_inchikey.subject_objects(rdflib.URIRef("http://semanticscience.org/resource/is-attribute-of")))
+        inchikeys = [cid_inchikey[0].toPython().split("http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/")[1] for cid_inchikey in cids_inchikeys]
+        cids = [cid_inchikey[1].toPython().split("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")[1] for cid_inchikey in cids_inchikeys]
+        with open(path_out, "a") as out:
+            out_writer = csv.writer(out, delimiter = ',')
+            for cid_index in range(0, len(cids)):
+                if cids[cid_index] in available_cids:
+                    m = out_writer.writerow([cids[cid_index], inchikeys[cid_index]])
+    print("End procedure CID - InchiKeys associations !")
+
+
+def get_CID_InchiKeys(url, graph_from, out_file):
+    return None
 
 def ask_for_graph(url, graph_uri):
     """

@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import multiprocessing as mp
 import subprocess
+import rdflib
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 from processing_functions import *
@@ -42,29 +43,27 @@ namespaces = {
 # Get initial parameters
 version = config["PROCESSES"].get("version")
 n_processes = config["PROCESSES"].getint("n_processes")
-outpath = config["OUT"].get("path")
-path_inchiKey = config["INCHIKEYS"].get("path")
-graph_from = config["INCHIKEYS"].get("graph_from").split('\n')
-url = config["PROCESSES"].get("url")
+path_to_share = config["PROCESSES"].get("path_to_share")
+path_out = config["PROCESSES"].get("out")
+inchikey_v = config["INCHIKEYS"].get("version")
+pmids_cids_v = config["PMID_CID"].get("version")
 
 # Init output and log files: 
-with open("classyFire.log", "w") as f_log:
+with open(path_out + "classyFire.log", "w") as f_log:
     pass
 
-with open("classyFire_error_ids.log", "w") as f_log:
+with open(path_out + "classyFire_error_ids.log", "w") as f_log:
     pass
 
-with open("ids_no_classify.log", "w") as f_log:
+with open(path_out + "ids_no_classify.log", "w") as f_log:
     pass
 
-# test if all graph exist:
-for uri in graph_from:
-    if not ask_for_graph(url, uri):
-        print("Data Graph " + uri + " does not exists")
-        sys.exit(3)
 
-# Send a request to get all CID-InchiLeys annotations available on the RDF-Store:
-get_CID_InchiKeys(url, graph_from, path_inchiKey)
+pmids_cids_graph_list = get_graph_list(path_to_share, inchikey_v, "PMID_CID/", "*.trig.gz")
+inchikeys_graph_list = get_graph_list(path_to_share, pmids_cids_v, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  # pc_inchikey2compound_*.ttl.gz
+# Create CID - InchiLKey:
+path_inchiKey = path_out + "CID_InchiKeys.csv"
+extract_CID_InchiKey(path_to_share, pmids_cids_graph_list, inchikeys_graph_list, path_inchiKey)
 
 # Read input file
 CID_inchiKeys = pd.read_csv(path_inchiKey, sep = ",", dtype= {'CID': str, 'INCHIKEY':str})
@@ -79,8 +78,8 @@ ClassyFire_direct_p_graph_l = [ClassyFire_direct_p.create_data_graph(["compound"
 ClassyFire_alternative_p_graph_l = [ClassyFire_alternative_p.create_data_graph(["compound", "classyfire"], namespaces) for i in range(0, n_processes)]
 
 # On initialise les path où exporter les graphs :
-path_direct_p = outpath + "/" + ClassyFire_direct_p.ressource + "/" + ClassyFire_direct_p.version + "/"
-path_alternative_p = outpath + "/" + ClassyFire_alternative_p.ressource + "/" + ClassyFire_alternative_p.version + "/"
+path_direct_p = path_to_share + "/" + ClassyFire_direct_p.ressource + "/" + ClassyFire_direct_p.version + "/"
+path_alternative_p = path_to_share + "/" + ClassyFire_alternative_p.ressource + "/" + ClassyFire_alternative_p.version + "/"
 if not os.path.exists(path_direct_p):
     os.makedirs(path_direct_p)
 
@@ -88,7 +87,7 @@ if not os.path.exists(path_alternative_p):
     os.makedirs(path_alternative_p)
 
 pool = mp.Pool(processes = n_processes)
-results = [pool.apply_async(classify_df, args=(i, df_list[i], ClassyFire_direct_p_graph_l[i], ClassyFire_alternative_p_graph_l[i], path_direct_p, path_alternative_p)) for i in range(0, n_processes)]
+results = [pool.apply_async(classify_df, args=(i, df_list[i], ClassyFire_direct_p_graph_l[i], ClassyFire_alternative_p_graph_l[i], path_direct_p, path_alternative_p, path_out)) for i in range(0, n_processes)]
 graph_sizes = [p.get() for p in results]
 # Close Pool
 pool.close()
@@ -97,15 +96,15 @@ export_ressource_metadata(ClassyFire_alternative_p, ClassyFire_direct_p, graph_s
 
 # Compress files:
 try:
-    subprocess.run("gzip " + outpath + "/ClassyFire/direct-parent/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
-    subprocess.run("gzip " + outpath + "/ClassyFire/alternative-parents/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
+    subprocess.run("gzip " + path_to_share + "/ClassyFire/direct-parent/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
+    subprocess.run("gzip " + path_to_share + "/ClassyFire/alternative-parents/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
 except subprocess.CalledProcessError as e:
     print("Error while trying to compress files")
     print(e)
     sys.exit(3)
 
 # Write ouput file header :
-with open(outpath + "/upload_ClassyFire.sh", "w") as upload_f:
+with open(path_to_share + "/upload_ClassyFire.sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
     upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', '*.trig.gz', '');\n")
     upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', 'void.ttl', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
