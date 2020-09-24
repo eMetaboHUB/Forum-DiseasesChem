@@ -3,7 +3,7 @@
 BASEDIR=$(dirname $0)
 
 pushd $BASEDIR
-
+echo " -- current dir :"$(pwd)
 # download/build rdf resources 
 ./w1_build_rdf_store.sh
 # download rdf resources 
