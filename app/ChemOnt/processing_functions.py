@@ -45,7 +45,6 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
     """
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.alarm(60)
-    # Sleep before each request
     time.sleep(1)
     try:
         r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey),
@@ -78,7 +77,6 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
         signal.alarm(0)
         return False
-    time.sleep(1)
     signal.alarm(0)
     return classif
 
@@ -170,6 +168,9 @@ def extract_CID_InchiKey(path_to_share, pmids_cids_graph_list, inchikeys_graph_l
             for cid_index in range(0, len(cids)):
                 if cids[cid_index] in available_cids:
                     m = out_writer.writerow([cids[cid_index], inchikeys[cid_index]])
+    # Release all memory
+    g_inchikey = None
+    g_pmid_cid = None
     print("End procedure CID - InchiKeys associations !")
 
 
