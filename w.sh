@@ -1,6 +1,6 @@
 #!/bin/bash
 
-basedir=$(dirname $0)
+BASEDIR=$(dirname $0)
 
 pushd $BASEDIR
 
