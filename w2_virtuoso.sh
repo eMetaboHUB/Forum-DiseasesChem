@@ -18,7 +18,7 @@ fi
 CMD=$1
 
 COMPOSE_PROJECT_NAME="metdisease"
-LISTEN_PORT="9980"
+LISTEN_PORT="9985"
 PASSWORD="FORUM-Met-Disease-DB"
 GRAPH="http://default#"
 ALLOW_UDPATE="true"
