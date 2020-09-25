@@ -62,7 +62,3 @@ run from workdir:
 ```python
 python3 app/build_RDF_store/build_RDF_store.py --config="/path/to/config_file.ini"
 ```
-
-* * *
-**WARNING:**  For the REFERENCE directory:
-Files *pc_reference2chemical_disease_00000*.ttl.gz* contains information about Supplementary MeSH (Diseases and Chemicals) which are also used to index publications, this MeSH are not TopicalDescriptor, but only MeSH concepts.  The issue is that the link between a PubMed publications and a supplementary MeSH is described using the predicate *cito:discusses*, which is also the predicate used to describe the link between a Compound (CID) and a Pubmed publications. SPARQL queries used to construct contingency table need to take this into consideration.
