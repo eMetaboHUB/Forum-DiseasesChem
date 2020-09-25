@@ -28,7 +28,7 @@ where
         where
         {
             {
-                select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/CHEMONTID_\") as ?CHEMONT) (count(distinct ?pmid) as ?count) 
+                select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\") as ?CHEMONT) (count(distinct ?pmid) as ?count) 
                 where 
                 {
                     {
@@ -171,7 +171,7 @@ where
         where 
         {
                 {
-                    select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/CHEMONTID_\") as ?CHEMONT) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
+                    select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\") as ?CHEMONT) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
                     where {
                         {
                             select ?chemont 
@@ -224,7 +224,7 @@ where
         where
         {
             {
-                select (concat(strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/CHEMONTID_\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
+                select (concat(strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
                 where 
                 {
                     {
@@ -308,7 +308,7 @@ where
 
 
 ChemOnt_Names = """
-select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/CHEMONTID_\") as ?CHEMONT) (?chemont_label as ?CHEMONT_NAMES)
+select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\") as ?CHEMONT) (?chemont_label as ?CHEMONT_NAMES)
 %s
 where
 {
