@@ -44,7 +44,7 @@ function virtuosoControler() {
 
     echo " -- Generating docker-compose"
     COMPOSE_FILE=docker-compose-${LISTEN_PORT}.yml
-    COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}"
+    COMPOSE_CMD="sudo -n docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}"
     CONTAINER_NAME="${COMPOSE_PROJECT_NAME}_virtuoso_${LISTEN_PORT}"
     NETWORK_NAME="virtuoso_${LISTEN_PORT}_net"
     OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"

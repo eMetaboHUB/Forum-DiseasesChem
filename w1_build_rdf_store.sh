@@ -23,8 +23,8 @@ services:
         command: python3 app/build_RDF_store/build_RDF_store.py --config="app/build_RDF_store/config/config.ini"
 EOF
 
-docker-compose -f ${COMPOSE_FILE} build
-docker-compose -f ${COMPOSE_FILE} up
+sudo -n docker-compose -f ${COMPOSE_FILE} build
+sudo -n docker-compose -f ${COMPOSE_FILE} up
 rm -rf ${COMPOSE_FILE}
 }
 
