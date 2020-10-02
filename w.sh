@@ -5,7 +5,8 @@ BASEDIR=$(dirname $0)
 
 # go to the directory where this script is
 pushd $BASEDIR
-
+    #clean directory
+    ./w2_virtuoso.sh clean
     # download/build rdf resources 
     ./w1_build_rdf_store.sh
     # download rdf resources 

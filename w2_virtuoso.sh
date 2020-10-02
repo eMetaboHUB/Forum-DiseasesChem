@@ -56,8 +56,8 @@ services:
         image: tenforce/virtuoso
         container_name: ${CONTAINER_NAME}
         environment:
-            VIRT_Parameters_NumberOfBuffers: 27200   # See virtuoso/README.md to adapt value of this line
-            VIRT_Parameters_MaxDirtyBuffers: 20000    # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_NumberOfBuffers: 2720000   # http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
+            VIRT_Parameters_MaxDirtyBuffers: 2000000   # => Config 32GB 
             VIRT_Parameters_MaxCheckpointRemap: 6800
             VIRT_Parameters_TN_MAX_memory: 20000000
             VIRT_SPARQL_ResultSetMaxRows: 100000000
@@ -121,19 +121,19 @@ EOF
             if [ -d ${DATA} ]; then
                 ${COMPOSE_CMD} down
                 set +e
-                docker run --rm \
+                sudo docker run --rm \
                     --mount type=bind,source="${DATA}",target=/data \
                     tenforce/virtuoso \
                     bash -c "rm -rf /tmp/data /usr/local/virtuoso-opensource/share/virtuoso/vad/dumps/"
                 set -e
-                rm -rf "${DATA}"
-                rm -rf "${DATA}_dumps"
+                sudo rm -rf "${DATA}"
+                sudo rm -rf "${DATA}_dumps"
             else
                 echo " -- Instance not present. Skipping cleaning."
             fi
         ;;
         *)
-            rm ${COMPOSE_FILE}
+            sudo rm ${COMPOSE_FILE}
             echo "Error: unsupported command $CMD"
             exit 1
         ;;
