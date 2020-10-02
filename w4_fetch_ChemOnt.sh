@@ -9,7 +9,7 @@ CONTAINER_NAME=metdisease_app
 
 mkdir -p ${RESOURCES_DIR} ${LOGSDIR} ./data_tmp
 
-COMPOSE_FILE=docker-compose-app-build-rdf-store.yml
+COMPOSE_FILE=docker-compose-app-chemont.yml
 
 cat << EOF | tee ${COMPOSE_FILE} > /dev/null
 version: '3.3'
@@ -20,7 +20,7 @@ services:
         volumes:
            - ${RESOURCES_DIR}:/workdir/share-virtuoso/
            - ${LOGSDIR}:/workdir/out/
-        command: python3 app/build_RDF_store/build_RDF_store.py --config="app/build_RDF_store/config/config.ini"
+        command: python3 app/ChemOnt/fetch_ChemOnt.py --config="app/ChemOnt/config/2020-08-14/config.ini"
 EOF
 
 sudo -n docker-compose -f ${COMPOSE_FILE} build

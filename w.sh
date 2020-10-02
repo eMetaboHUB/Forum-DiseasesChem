@@ -13,6 +13,10 @@ pushd $BASEDIR
     ./w1_2_pydio_files.sh $1
     # start and load virtuoso with rdf data in the "share" directory
     ./w2_virtuoso.sh start
+    # test database if fill and ok
+
+    #chemOnt 
+    #./w4_fetch_ChemOnt.sh
 
 popd
 

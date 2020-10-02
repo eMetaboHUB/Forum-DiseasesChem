@@ -56,8 +56,8 @@ services:
         image: tenforce/virtuoso
         container_name: ${CONTAINER_NAME}
         environment:
-            VIRT_Parameters_NumberOfBuffers: 2720000   # http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
-            VIRT_Parameters_MaxDirtyBuffers: 2000000   # => Config 32GB 
+            VIRT_Parameters_NumberOfBuffers: 27200   # http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
+            VIRT_Parameters_MaxDirtyBuffers: 20000   # => Config 32GB 
             VIRT_Parameters_MaxCheckpointRemap: 680000
             VIRT_Parameters_TN_MAX_memory: 2000000000
             VIRT_SPARQL_ResultSetMaxRows: 10000000000
