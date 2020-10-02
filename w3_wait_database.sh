@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ENDPOINT="http://endpoint-metabolomics.ara.inrae.fr/met_disease_v2/sparql"
-NB_GRAPH_LOADED_BEFORE_CHEMONT=5
-WAIT_SEC=5s
+NB_GRAPH_LOADED_BEFORE_CHEMONT=7
+WAIT_SEC=20s
 
 LOG_GRAPH_VIRTUOSO=$0.graph_loaded.txt
 ERROR_FILE=$0.find_error.txt
