@@ -9,7 +9,8 @@ variables:
   # SSH / SCP
   SSH_OPTS: " -q -t "
   SSH_USER: "gitlab-bot"
-  SSH_HOST: "147.99.132.187"
+  SSH_HOST: "endpoint-metabolomics.ara.inrae.fr"
+  SSH_PATH: "/forum/metdiseasedatabase"
   # fetch data
   WGET_URL: "https://pfem.clermont.inra.fr/pydio/public/7af464"
   WGET_LOGIN: "--user none --password $PYDIO_PASSWD"
@@ -28,16 +29,17 @@ cache:
 ###########################################################
 # stages
 stages:
-  - get_resources
+  - init
   - docker_env
   - test
+  - deploy
 
 ###########################################################
 # jobs
 
 # job to fetch resources from pydio
 get resources:
-  stage: get_resources
+  stage: init
   tags:
     - docker
   image: cirrusci/wget
@@ -45,21 +47,44 @@ get resources:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_DOCKER || mkdir -p $CACHE_DOCKER
-    - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl docker_resources/
-    - test -f $CACHE_DOCKER/metanetx.ttl && cp -r $CACHE_DOCKER/metanetx.ttl docker_resources/
-    - test -f $CACHE_DOCKER/vocabulary.zip && cp -r $CACHE_DOCKER/vocabulary.zip docker_resources/
+    - test -d $CI_PROJECT_DIR/docker_resources/ || mkdir -p $CI_PROJECT_DIR/docker_resources/
+    - test -f $CACHE_DOCKER/HumanGEM.ttl && cp -r $CACHE_DOCKER/HumanGEM.ttl $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl
+    - test -f $CACHE_DOCKER/metanetx.ttl && cp -r $CACHE_DOCKER/metanetx.ttl $CI_PROJECT_DIR/docker_resources/metanetx.ttl
+    - test -f $CACHE_DOCKER/vocabulary.zip && cp -r $CACHE_DOCKER/vocabulary.zip $CI_PROJECT_DIR/docker_resources/vocabulary.zip
   script:
     - echo "==================================";
     - echo "[info] get resources from Pydio";
-    - test -f docker_resources/HumanGEM.ttl || wget $WGET_LOGIN $WGET_URL/dl/HumanGEM.ttl -P docker_resources/
-    - test -f docker_resources/metanetx.ttl || wget $WGET_LOGIN $WGET_URL/dl/metanetx.ttl -P docker_resources/
-    - test -f docker_resources/vocabulary.zip || wget -O docker_resources/vocabulary.zip $WGET_LOGIN $WGET_URL/dl/vocabulary
+    - test -f $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl || wget $WGET_LOGIN $WGET_URL/dl/HumanGEM.ttl -P $CI_PROJECT_DIR/docker_resources/
+    - test -f $CI_PROJECT_DIR/docker_resources/metanetx.ttl || wget $WGET_LOGIN $WGET_URL/dl/metanetx.ttl -P $CI_PROJECT_DIR/docker_resources/
+    - test -f $CI_PROJECT_DIR/docker_resources/vocabulary.zip || wget -O $CI_PROJECT_DIR/docker_resources/vocabulary.zip $WGET_LOGIN $WGET_URL/dl/vocabulary
   after_script:
     - echo "==================================";
     - echo "[info] save cache ";
-    - cp -r docker_resources/HumanGEM.ttl $CACHE_DOCKER/
-    - cp -r docker_resources/metanetx.ttl $CACHE_DOCKER/
-    - cp -r docker_resources/vocabulary.zip $CACHE_DOCKER/
+    - cp -r $CI_PROJECT_DIR/docker_resources/HumanGEM.ttl $CACHE_DOCKER/HumanGEM.ttl
+    - cp -r $CI_PROJECT_DIR/docker_resources/metanetx.ttl $CACHE_DOCKER/metanetx.ttl
+    - cp -r $CI_PROJECT_DIR/docker_resources/vocabulary.zip $CACHE_DOCKER/vocabulary.zip
+
+update git repo:
+  stage: init
+  image: pfem/ssh-utils
+  tags:
+    - docker
+  only:
+    refs:
+      - tags
+  before_script:
+    - echo "==================================";
+    - echo "[info] init SSH key";
+    - mkdir -p ~/.ssh
+    - eval $(ssh-agent -s)
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 -d)
+  script:
+    - echo "==================================";
+    - echo "[info] update git repository on $SSH_HOST ";
+    - ssh $SSH_OPTS $SSH_USER@$SSH_HOST "/home/gitlab-bot/update-metdiseasedatabase-sh"
+  after_script:
+    - echo "==================================";
 
 # job to build the docker env.
 docker env:
@@ -70,9 +95,10 @@ docker env:
     - echo "==================================";
     - echo "[info] load cache ";
     - test -d $CACHE_BASH || mkdir -p $CACHE_BASH
-    - cp -r $CACHE_BASH/HumanGEM.ttl docker_resources/
-    - cp -r $CACHE_BASH/metanetx.ttl docker_resources/
-    - cp -r $CACHE_BASH/vocabulary.zip docker_resources/
+    - test -d docker_resources/ || mkdir -p docker_resources/
+    - cp $CACHE_BASH/HumanGEM.ttl docker_resources/HumanGEM.ttl
+    - cp $CACHE_BASH/metanetx.ttl docker_resources/metanetx.ttl
+    - cp $CACHE_BASH/vocabulary.zip docker_resources/vocabulary.zip
     - echo "[info] unzip files ";
     - rm -rf docker_resources/vocabulary/*
     - unzip docker_resources/vocabulary.zip -d docker_resources/
@@ -105,3 +131,24 @@ test:
     - python3 $CI_PROJECT_DIR/app/metab2mesh/SPARQL/cid_mesh.py
     - python3 $CI_PROJECT_DIR/app/SBML_upgrade/Id_mapping.py
     - python3 $CI_PROJECT_DIR/app/SBML_upgrade/processing_functions.py
+
+# build artifact for dev. branches
+relaunch scripts:
+  stage: deploy
+  image: pfem/ssh-utils
+  tags:
+    - docker
+  only:
+    refs:
+      - tags
+  before_script:
+    - echo "==================================";
+    - echo "[info] init SSH key";
+    - mkdir -p ~/.ssh
+    - eval $(ssh-agent -s)
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 -d)
+  script:
+    - echo "==================================";
+    - echo "[info] run deploy_endpoint.sh on remote server ";
+    - ssh $SSH_OPTS $SSH_USER@$SSH_HOST " $SSH_PATH/deploy_endpoint.sh -pt $PYDIO_PASSWD ";

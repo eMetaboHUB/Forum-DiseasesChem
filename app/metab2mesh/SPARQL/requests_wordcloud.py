@@ -73,7 +73,6 @@ ChEBI = """
                         ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
                         %s meshv:treeNumber ?tn .
                     }
-                    group by ?chebi ?mesh
                 }
                 ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh .
                 ?mesh a meshv:TopicalDescriptor .
