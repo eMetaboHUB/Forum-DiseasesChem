@@ -58,15 +58,15 @@ services:
         environment:
             VIRT_Parameters_NumberOfBuffers: 2720000   # http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
             VIRT_Parameters_MaxDirtyBuffers: 2000000   # => Config 32GB 
-            VIRT_Parameters_MaxCheckpointRemap: 6800
-            VIRT_Parameters_TN_MAX_memory: 20000000
-            VIRT_SPARQL_ResultSetMaxRows: 100000000
-            VIRT_SPARQL_MaxDataSourceSize: 100000000
+            VIRT_Parameters_MaxCheckpointRemap: 680000
+            VIRT_Parameters_TN_MAX_memory: 2000000000
+            VIRT_SPARQL_ResultSetMaxRows: 10000000000
+            VIRT_SPARQL_MaxDataSourceSize: 10000000000
             VIRT_Flags_TN_MAX_memory: 20000000
             VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
             VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
-            VIRT_SPARQL_MaxQueryExecutionTime: 500          # 5 min
-            VIRT_Parameters_MaxMemPoolSize: 2000000
+            VIRT_SPARQL_MaxQueryExecutionTime: 50000          # 5 min
+            VIRT_Parameters_MaxMemPoolSize: 200000000
             VIRT_HTTPServer_EnableRequestTrap: 0
             VIRT_Parameters_ThreadCleanupInterval: 1
             VIRT_Parameters_ResourcesCleanupInterval: 1
