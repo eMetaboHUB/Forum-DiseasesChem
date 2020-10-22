@@ -18,7 +18,7 @@ prefix = """
 """
 
 PubChem = """
-    select ?label ?count
+    select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) ?label ?count
     %s
     where
     {
@@ -53,7 +53,7 @@ PubChem = """
 # (strafter(STR(?chebi),\"http://purl.obolibrary.org/obo/CHEBI_\") as ?CHEBI) (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) (count(distinct ?pmid) as ?count) 
 
 ChEBI = """
-    select ?label ?count
+    select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) ?label ?count
     %s
     where
     {
@@ -65,7 +65,7 @@ ChEBI = """
                     select ?pmid
                     where
                     {        
-                        ?cid a+ %s .
+                        ?cid a %s .
                         ?cid cito:isDiscussedBy ?pmid .
                         ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
                         ?mesh_ini a meshv:TopicalDescriptor .
