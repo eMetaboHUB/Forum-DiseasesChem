@@ -9,7 +9,9 @@ option_list <- list(
   make_option(c("-c", "--chunksize"), type="numeric", default=NULL,
               help="chunk size while reading", metavar="numeric"),
   make_option(c("-p", "--parallel"), type="numeric", default=NULL,
-              help="Number of cores allowed for parallelisation", metavar="numeric")
+              help="Number of cores allowed for parallelisation", metavar="numeric"),
+  make_option(c("-o", "--p_out"), type="character", default=NULL,
+              help="path to out file", metavar="character")
 );
 
 
@@ -94,8 +96,7 @@ chunksize <- opt$chunksize
 
 # Prepare files :
 path_in <- opt$file
-splited_path <- strsplit(path_in, "\\.")
-path_out <- paste0(splited_path[[1]][1], "_results.csv")
+path_out <- opt$p_out
 
 # Get total number of lines. Remove 1 for header:
 nlines <- R.utils::countLines(path_in)[1] - 1

@@ -14,7 +14,9 @@ option_list <- list(
   make_option(c("-c", "--chunksize"), type="numeric", default=NULL,
               help="chunk size while reading", metavar="numeric"),
   make_option(c("-p", "--parallel"), type="numeric", default=NULL,
-              help="Number of cores allowed for parallelisation", metavar="numeric")
+              help="Number of cores allowed for parallelisation", metavar="numeric"),
+  make_option(c("-o", "--p_out"), type="character", default=NULL,
+              help="path to out file", metavar="character")
 );
 
 parallel_on_chunck <- function(dataChunk, n_cores, pv_th, alpha_CI){
@@ -25,40 +27,32 @@ parallel_on_chunck <- function(dataChunk, n_cores, pv_th, alpha_CI){
     CI <- c(qbeta(p = alpha_CI/2, shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5), qbeta(p = 1 - (alpha_CI/2), shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5))
     min <- round(CI[1] * TOTAL_PMID_CID)
     max <- round(CI[2] * TOTAL_PMID_CID)
+    # On test si le seuil est franchi à la borne minimale
+    min_p <- phyper(q = min - 1, m = TOTAL_PMID_MESH - (COOC - min), n = (TOTAL_PMID - TOTAL_PMID_MESH), k = TOTAL_PMID_CID - (COOC - min), lower.tail = FALSE)
+    # Si la p-value à la borne est toujours significative, alors on ne cherche pas à calculer car cela veut dire que le test passe pour tous les scénarios
+    if(min_p <= pv_th){
+        return(NA)
+    }
+    # Sinon on fait le test
     predicted_proba <- vector(mode = "numeric", length = (max - min + 1))
     # On calcule toute les valeurs dand l'intervalle
     for(i in 1:(length(predicted_proba))){
       predicted_proba[i] <- phyper(q = min + i - 2, m = TOTAL_PMID_MESH - (COOC - (min + i - 1)), n = (TOTAL_PMID - TOTAL_PMID_MESH), k = TOTAL_PMID_CID - (COOC - (min + i - 1)), lower.tail = FALSE)
     }
     res <- data.frame(coocurence = seq(min, max), p_value = predicted_proba)
-    # On détermine si le seuil a été atteint dans l'intervalle. Sachant qu'on passe le seuil de p-value, on a juste a testé la borne supérieure de l'IC: 
-    th_reached <- (res$p_value[1] > pv_th)
-    if(! th_reached){
-      # Le seuil n'a pas été atteint, pas besoin de chercher le point le plus proche
-      return(c(FALSE, NA, NA, NA, NA))
-    }
-    else{
-      # On cherche le point le plus proche du seuil mais qui reste significatif, nous donnant l'effectif limite pour inférer une association au seuil imposés
-      test_closest <- res[res$p_value <= pv_th, ]
-      point_closest_to_th <- test_closest[1, ]$coocurence
-      # On détermine la proba minimale associé à cet effectif en prenant en compte l'approximation
-      approx <- (point_closest_to_th + (point_closest_to_th - 1))/2
-      p_from_closest_point <- pbeta(approx/TOTAL_PMID_CID, shape1 = COOC + 0.5, shape2 = (TOTAL_PMID_CID - COOC) + 0.5, lower.tail = FALSE)
-      # Suivant l'intervalle choisit l'approximation peut renvoyer 1 (On cherche P(p > plim))
-      Entropy <- ifelse(p_from_closest_point == 1, yes = 0, no = -(p_from_closest_point*log2(p_from_closest_point)) - ((1 - p_from_closest_point) * log2((1 - p_from_closest_point))))
-      return(c(TRUE, point_closest_to_th, (COOC - (point_closest_to_th - 1)) , p_from_closest_point, Entropy))
-    }
+    test_closest <- res[res$p_value <= pv_th, ]
+    point_closest_to_th <- test_closest[1, ]$coocurence
+    return(COOC - point_closest_to_th + 1)
   }
     
   n <- nrow(dataChunk)
   cl <- parallel::makeCluster(n_cores, outfile = "")
   doParallel::registerDoParallel(cl)
-  results <- FBM(n, 5)
+  results <- FBM(n, 1)
   print("Computing ....")
   tmp <- foreach(i = 1:n, .combine = 'c') %dopar% {
-    if(dataChunk[i, ]$p.adj > pv_th){
-      print(paste("At line ", i, " association was not initially significant, impossible to determine weakness features !"))
-      results[i, ] <- c(FALSE, NA, NA, NA, NA)
+    if(dataChunk[i, ]$q.value > pv_th){
+      results[i, ] <- c(NA)
     }
     else{
       results[i, ] <- compute_weakness_features(dataChunk[i, 3], dataChunk[i, 4], dataChunk[i, 5], dataChunk[i, 6], pv_th, alpha_CI)
@@ -81,8 +75,7 @@ alpha_CI <- opt$alphaCI
 n_cores <- opt$parallel
 chunksize <- opt$chunksize
 
-splited_path <- strsplit(path_in, "\\.")
-path_out <- paste0(splited_path[[1]][1], "_weakness.csv")
+path_out <- opt$p_out
 
 # Get total number of lines. Remove 1 for header:
 nlines <- R.utils::countLines(path_in)[1] - 1
@@ -104,7 +97,7 @@ results <- parallel_on_chunck(dataChunk, n_cores, pv_th, alpha_CI)
 
 # On cbind par rapport au chunk
 dataChunk <- cbind(dataChunk, results)
-colnames(dataChunk)[seq.int(to = length(colnames(dataChunk)), length.out = 5)] <- c("Is_Threshold_reached", "COOC_closest_to_threshold", "Nb_articles_to_removed_assos", "proba_of_sucess", "Entropy")
+colnames(dataChunk)[length(names(dataChunk))] <- c("n_weak")
 
 # On écrit avec les headers
 out <- file(description=path_out, open="w")
