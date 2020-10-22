@@ -49,7 +49,7 @@ parallel_on_chunck <- function(dataChunk, n_cores, pv_th, alpha_CI){
       return(c(TRUE, point_closest_to_th, (COOC - (point_closest_to_th - 1)) , p_from_closest_point, Entropy))
     }
   }
-  
+    
   n <- nrow(dataChunk)
   cl <- parallel::makeCluster(n_cores, outfile = "")
   doParallel::registerDoParallel(cl)
