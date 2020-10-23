@@ -20,7 +20,6 @@ All used configuration files are stored in the *config* directory.
   - ressource: The name of the association ressource (eg. EnrichmentAnalysis/CID_MESH) 
   - version = The version of this ressource
   - targets = URIs of graphs targeted by this analysis (eg. PubChem and MESH graph URIs)
-  - path_to_git_config = The path to the associated configuration file in the Git architecture from thr root (eg. app/Analyzes/.../.../config.ini)
 - [PARSER] 
   - chunk_size: The chunk size used to read the enrichment result file (eg. 1000000)
   - padj_threshold = The adjusted p-value threshold (eg. 0.000001)
@@ -45,11 +44,13 @@ All used configuration files are stored in the *config* directory.
 ### Run
 
 ```bash
-python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config="path/to/config.ini" --input="path/to/input" --uri="ftp://path/to/input" --version="version"
+python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config="path/to/config.ini" --input="path/to/input" --uri="ftp://path/to/input" --version="version" --out="path/to/out"
 ```
 - config: path to the configuration file
 - input: path to the input result table
 - uri: url of the input table on the ftp server, same as used to upload it 
 - version: the analysis version
+
+**/!\ WARNING:** the path to the configuration file **MUST** be the relative path from the repository root, such as *app/Analyzes/.../.../config.ini* to correspond to the path of the file on the GitLab repo.
 
 All triples will be exported in the Docker Virtuoso share directory. A file named *upload_Enrichment.sh* can then be used to load triples into Virtuoso.

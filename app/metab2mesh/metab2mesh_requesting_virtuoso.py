@@ -4,6 +4,7 @@ import argparse, sys, os, requests, json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--out", help="path to output directory")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -19,7 +20,7 @@ except configparser.Error as e:
 
 # Initialyse global paramters:
 url = config['VIRTUOSO'].get('url')
-out_path = config['DEFAULT'].get('out_path')
+out_path = args.out
 request_file_name = config['DEFAULT'].get('request_file')
 # Get module for sparql queries :
 module = import_request_file(request_file_name)

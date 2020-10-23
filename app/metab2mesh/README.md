@@ -41,7 +41,6 @@ The data.frame is printed in *df_out_dir* at *out_path*
 #### config file :
 
 - [DEFAULT]
-  - out_path: /path/to/output/directory/
   - df_out_dir: name of metab2mesh data.frame output directory
   - file_size: number of lines per outputed data.frames
   - request_file: the name of the *sparql_queries.py* file containg queries variable. This file **must** be place in the dedicated SPARQL directory
@@ -80,7 +79,9 @@ The data.frame is printed in *df_out_dir* at *out_path*
 
 run from workdir:
 ```python
-python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config="/path/to/config.ini"
+python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config="/path/to/config.ini" --out="path/to/out"
 ```
+- config: path to the configuration file
+- out: path to the output directory
 
 Using the same workflow to parallelize queries, additional queries (Get MESH Names, etc ...) are provided in the additional_request.py and config parameters are the same.

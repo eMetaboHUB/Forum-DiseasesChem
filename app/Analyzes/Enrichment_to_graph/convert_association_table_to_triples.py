@@ -15,6 +15,7 @@ parser.add_argument("--config", help="path to the configuration file")
 parser.add_argument("--input", help="path to the input result table")
 parser.add_argument("--uri", help="uri on the input table on the ftp")
 parser.add_argument("--version", help="Analysis version")
+parser.add_argument("--out", help="path to output directory")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -32,11 +33,11 @@ except configparser.Error as e:
 input_table_path = args.input
 source = args.uri
 version = args.version
+path_to_dumps = args.out
 chunk_size = config['PARSER'].getint('chunk_size')
 column_parsed = config['PARSER'].get('column')
 threshold = config['PARSER'].getfloat('threshold')
 ressource_name = config["METADATA"]["ressource"]
-path_to_dumps = config['OUT'].get('path_to_dumps')
 file_prefix = config['OUT'].get('file_prefix')
 
 out_path = path_to_dumps + "/Analyzes/" + ressource_name + "/" + version + "/"
@@ -117,7 +118,7 @@ for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
 ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datatype=XSD.long))
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
 ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
-ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at: https://services.pfem.clermont.inra.fr/gitlab/forum/metdiseasedatabase/blob/develop/" + config["METADATA"].get("path_to_git_config")))
+ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at: https://services.pfem.clermont.inra.fr/gitlab/forum/metdiseasedatabase/blob/develop/" + args.config))
 ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + " using a threshold on " + column_parsed + " at " + str(threshold)))
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
