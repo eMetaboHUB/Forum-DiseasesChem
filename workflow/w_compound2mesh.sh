@@ -36,14 +36,14 @@ echo " - compute compound2mesh"
 
 OUT_M="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/"
 
-# python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOGSDIR/post_processes.log
+python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOGSDIR/post_processes.log
 
 echo " - compute fisher exact tests"
 
 IN_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/results/metab2mesh.csv"
 OUT_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher.csv"
 
-# Rscript app/metab2mesh/post-processes/compute_fisher_exact_test_V2.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOGSDIR/post_processes.log
+Rscript app/metab2mesh/post-processes/compute_fisher_exact_test_V2.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOGSDIR/post_processes.log
 
 # Compute post-processes (eg. q.value)
 echo " - Compute benjamini and Holchberg procedure"
@@ -70,4 +70,4 @@ echo " - Convert significant relations to triples"
 
 IN_T=$OUT_W
 
-python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --input=$IN_T --uri=$FTP --version=$VERSION --out=$RESOURCES_DIR
+python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --input=$IN_T --uri=$FTP --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOGSDIR/post_processes.log
