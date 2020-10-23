@@ -12,6 +12,9 @@ from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--input", help="path to the input result table")
+parser.add_argument("--uri", help="uri on the input table on the ftp")
+parser.add_argument("--version", help="Analysis version")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -26,10 +29,12 @@ except configparser.Error as e:
     sys.exit(3)
 
 # Get args
-input_table_path = config['INPUT_TABLE'].get('path')
+input_table_path = args.input
+source = args.uri
+version = args.version
 chunk_size = config['PARSER'].getint('chunk_size')
-padj_threshold = config['PARSER'].getfloat('padj_threshold')
-version = config["METADATA"]["version"]
+column_parsed = config['PARSER'].get('column')
+threshold = config['PARSER'].getfloat('threshold')
 ressource_name = config["METADATA"]["ressource"]
 path_to_dumps = config['OUT'].get('path_to_dumps')
 file_prefix = config['OUT'].get('file_prefix')
@@ -72,7 +77,7 @@ print("Starting read file by chunk of size " + str(chunk_size))
 df_chunk = pd.read_csv(input_table_path, chunksize=chunk_size)
 for chunk in df_chunk:
     print("Filtering chunk ... ", end = '')
-    filtered_data = chunk[(chunk['p.adj'] <= padj_threshold)]
+    filtered_data = chunk[(chunk[column_parsed] <= threshold)]
     filtered_data = filtered_data[L]
     print("Ok\nConverting data to triples ... ", end = '')
     for i in range(len(filtered_data)):
@@ -111,9 +116,9 @@ for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
 
 ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datatype=XSD.long))
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
-ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(input_table_path))
+ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
 ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at: https://services.pfem.clermont.inra.fr/gitlab/forum/metdiseasedatabase/blob/develop/" + config["METADATA"].get("path_to_git_config")))
-ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + "using a adjusted p-value threshold at " + str(padj_threshold)))
+ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + " using a threshold on " + column_parsed + " at " + str(threshold)))
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
 print("Ok\nExport upload_file ... ", end = '')
