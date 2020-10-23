@@ -66,6 +66,8 @@ f_i = 1
 n_subjects = 0
 n_objects = 0
 
+# a = requests.put("https://pfem.clermont.inra.fr/pydio/public/7af464/test.csv", data=open("data/metab2mesh/with_Mesh_Thesaurus/2020-07-07/tutu.csv", 'r').read(), auth=("none","F0rum_p455w0rd"))
+
 print("Starting read file by chunk of size " + str(chunk_size))
 df_chunk = pd.read_csv(input_table_path, chunksize=chunk_size)
 for chunk in df_chunk:
@@ -115,7 +117,7 @@ ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph con
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
 print("Ok\nExport upload_file ... ", end = '')
-with open(path_to_dumps + "/" + "upload_Enrichment.sh", "w") as upload_f:
+with open(path_to_dumps + "/" + "upload_Enrichment_" + config['SUBJECTS'].get('name') + "_" + config['OBJECTS'].get('name') + ".sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
     upload_f.write("ld_dir_all ('./dumps" + "/Analyzes/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
     upload_f.write("ld_dir_all ('./dumps" + "/Analyzes/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
