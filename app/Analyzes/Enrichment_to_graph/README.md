@@ -45,7 +45,11 @@ All used configuration files are stored in the *config* directory.
 ### Run
 
 ```bash
-python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config="path/to/config.ini"
+python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config="path/to/config.ini" --input="path/to/input" --uri="ftp://path/to/input" --version="version"
 ```
+- config: path to the configuration file
+- input: path to the input result table
+- uri: url of the input table on the ftp server, same as used to upload it 
+- version: the analysis version
 
 All triples will be exported in the Docker Virtuoso share directory. A file named *upload_Enrichment.sh* can then be used to load triples into Virtuoso.
