@@ -5,6 +5,8 @@ LOGSDIR=./logs-app
 
 mkdir -p $LOGSDIR
 
+#EG. bash workflow/w_compound2mesh.sh -v test -m app/metab2mesh/config/CHEBI_MESH_Thesaurus_Onto/test/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-07-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share
+
 # -v: la version de l'analyse CID/CHEBI/CHEMONT to mesh
 # -m: le chemin vers le fichier de configuration de l'analyse compound2mesh (eg. app/metab2mesh/config/CID_MESH_Thesaurus/test/config.ini)
 # -t: le chemin vers le fichier de configuration du processus association-to-triples (eg. app/Analyzes/Enrichment_to_graph/config/CID_MESH/2020-07-07/config.ini)
