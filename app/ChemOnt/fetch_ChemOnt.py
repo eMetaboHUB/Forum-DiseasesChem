@@ -12,6 +12,9 @@ import argparse, configparser
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--out", help="path to output directory")
+parser.add_argument("--log", help="path to log and additional files directory")
+parser.add_argument("--version", help="version of the PMID-CID ressource, if none, the date is used")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -41,12 +44,10 @@ namespaces = {
 }
 
 # Get initial parameters
-version = config["PROCESSES"].get("version")
+version = args.version
 n_processes = config["PROCESSES"].getint("n_processes")
-path_to_share = config["PROCESSES"].get("path_to_share")
-path_out = config["PROCESSES"].get("out")
-inchikey_v = config["INCHIKEYS"].get("version")
-pmids_cids_v = config["PMID_CID"].get("version")
+path_to_share = args.out + "/"
+path_out = args.log + "/"
 
 # Init output and log files: 
 with open(path_out + "classyFire.log", "w") as f_log:
@@ -59,8 +60,8 @@ with open(path_out + "ids_no_classify.log", "w") as f_log:
     pass
 
 
-pmids_cids_graph_list = get_graph_list(path_to_share, inchikey_v, "PMID_CID/", "*.trig.gz")
-inchikeys_graph_list = get_graph_list(path_to_share, pmids_cids_v, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  # pc_inchikey2compound_*.ttl.gz
+pmids_cids_graph_list = get_graph_list(path_to_share, "PMID_CID/", "*.trig.gz")
+inchikeys_graph_list = get_graph_list(path_to_share, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  # pc_inchikey2compound_*.ttl.gz
 # Create CID - InchiLKey:
 path_inchiKey = path_out + "CID_InchiKeys.csv"
 extract_CID_InchiKey(path_to_share, pmids_cids_graph_list, inchikeys_graph_list, path_inchiKey)

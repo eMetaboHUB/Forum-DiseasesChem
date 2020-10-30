@@ -6,19 +6,20 @@ LOGSDIR=./logs-app
 
 mkdir -p $LOGSDIR
 
+# Test: bash workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -p F0rum_p455w0rd -s ./share-virtuoso
+
 # -b: path to the config file of build_rdf_store
 # -v: la version de l'analyse CID/CHEBI/CHEMONT to mesh
 # -p: pydio pwd
-# -d: le chemin vers le répertoire où écrire les données (eg. ./data)
 # -s: le chemin vers le répertoire de partage de Virtuoso où écrire les triplets (eg/ ./docker-virtuoso/share)
 
-while getopts b:v:p:d:s: flag
+while getopts b:c:v:p:s: flag
 	do
 	    case "${flag}" in
             b) CONFIG_BUILD_RDF_STORE=${OPTARG};;
+			c) CONFIG_CHEMONT=${OPTARG};;
             v) VERSION=${OPTARG:-};;
             p) PYDIO_PASSWD=${OPTARG};;
-			d) DATA=${OPTARG};;
 			s) RESOURCES_DIR=${OPTARG};;
 	    esac
 	done
@@ -45,4 +46,12 @@ echo "2) Build rdf store"
 LOG_RDF="${LOGSDIR}/build_rdf_store.log"
 echo "" > $LOG_RDF
 
-python3 app/build_RDF_store/build_RDF_store.py --config=$CONFIG_BUILD_RDF_STORE --out=$RESOURCES_DIR --log=$DATA --version=$VERSION 2>&1 | tee -a $LOG_RDF
+python3 app/build_RDF_store/build_RDF_store.py --config=$CONFIG_BUILD_RDF_STORE --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_RDF
+
+echo "3) Create Chemont ressource"
+
+# Init logs
+LOG_CHEMONT="${LOGSDIR}/chemont.log"
+echo "" > $LOG_CHEMONT
+
+python3 app/ChemOnt/fetch_ChemOnt.py --config=$CONFIG_CHEMONT --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_CHEMONT

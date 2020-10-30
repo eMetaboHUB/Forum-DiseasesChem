@@ -15,19 +15,17 @@ These both types of classes are stored separately in two different graphs.
 ### Config file
 - [PROCESSES]
   - n_processes: The number of molecule that will be treated in parralel. The input table will be divided in *n_processes* sub-tables, which will be treated independtly in parralel.
-  - version: A version. If nothing is indicated, date will be used
-  - path: path to the Virtuoso shared directory (eg. /workdir/share-virtuoso/)
-  - out: path to the out directory, for logs and additional files /workdir/out/
-- [INCHIKEYS]
-  - version: the version associated to a specific PubChem inchikey graph, like in Virtuoso shared directory. **Or** if nothing, the most recent one will be choosed. *Set version at nothing is recommended for the workflow*
-- [PMID_CID]
-  - version: the version associated to a specific PMID - CID graph, like in Virtuoso shared directory. **Or** if nothing, the most recent one will be choosed. *Set version at nothing is recommended for the workflow*
 
 
 How to run:
 ```python
-python3 app/ChemOnt/fetch_ChemOnt.py --config="path/to/config.ini"
+python3 app/ChemOnt/fetch_ChemOnt.py --config="path/to/config.ini" --out="/path/to/out/dir" --log="path/to/log/dir" --version="version"
 ```
+
+- config: path to the configuration file
+- out: path to output directory, should be the docker-virtuoso shared directory
+- log: path to the log directory
+- version: The version of the builded ressource. If nothing is indicated, date will be used
 
 At the end of the process, a *upload_ClassyFire.sh* file is also build in the output directory. This file contains all the *ISQL* commands that should be execute by Virtuoso to properly load all graphs and metadata.
 

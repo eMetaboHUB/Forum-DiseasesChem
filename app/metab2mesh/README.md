@@ -79,7 +79,7 @@ The data.frame is printed in *df_out_dir* at *out_path*
 
 run from workdir:
 ```python
-python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config="/path/to/config.ini" --out="path/to/out"
+python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config="/path/to/config.ini" --out="path/to/out/dir"
 ```
 - config: path to the configuration file
 - out: path to the output directory
