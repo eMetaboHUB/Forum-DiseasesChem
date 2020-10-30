@@ -7,6 +7,9 @@ from download_functions import download_MeSH, download_pubChem
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--out", help="path to output directory")
+parser.add_argument("--log", help="path to log and additional files directory")
+parser.add_argument("--version", help="version of the PMID-CID ressource, if none, the date is used")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -38,8 +41,8 @@ namespaces = {
 
 # Reading paths :
 # General
-out_path = config['GENERAL'].get('path_out')
-addtional_files_out_path = config['GENERAL'].get('additional_files_out_path')
+out_path = args.out + "/"
+addtional_files_out_path = args.log + "/"
 # Reading booleans :
 todo_MeSH = config['MESH'].getboolean("todo")
 todo_Reference = config['REFERENCE'].getboolean("todo")
@@ -49,26 +52,31 @@ todo_InchiKey = config['INCHIKEY'].getboolean("todo")
 todo_Elink = config['ELINK'].getboolean("todo")
 
 # Write ouput file header :
-with open(out_path + "upload_data.sh", "w") as upload_f:
+with open(out_path + "upload_data.sh", "w") as upload_f, open(out_path + "pre_upload.sh", "w") as pre_upload:
     upload_f.write("delete from DB.DBA.load_list ;\n")
+    pre_upload.write("delete from DB.DBA.load_list ;\n")
 
 # MeSH
 if todo_MeSH:
     mesh_out_dir = config['MESH'].get('out_dir_name')
     mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces, addtional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f:
+    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
-
+        # Also for pre-upload:
+        pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
+        
 # References
 if todo_Reference:
     reference_out_dir = config['REFERENCE'].get('out_dir_name')
     reference_r_name = config['REFERENCE'].get('ressource_name')
     reference_dir_on_ftp = config['REFERENCE'].get('dir_on_ftp')
     reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/", addtional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f:
+    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
+        # Also for pre-upload:
+        pre_upload.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
 
 # Compounds
 if todo_Compound:
@@ -76,9 +84,12 @@ if todo_Compound:
     compound_r_name = config['COMPOUND'].get('ressource_name')
     compound_dir_on_ftp = config['COMPOUND'].get('dir_on_ftp')
     compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/", addtional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f:
+    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
+        # For pre-upload, we need just type to compute with ChEBI:
+        pre_upload.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*_type*.ttl.gz', '" + compound_uri + "');\n")
+
 
 # Descriptors
 if todo_Descriptor:
@@ -104,7 +115,7 @@ if todo_InchiKey:
 if todo_Elink:
     run_as_test = config['ELINK'].getboolean('run_as_test')
     apiKey = config['ELINK'].get('api_key')
-    pmid_cid_version = config['ELINK'].get('version')
+    pmid_cid_version = args.version
     pack_size = config['ELINK'].getint('pack_size')
     timeout = config['ELINK'].getint('timeout')
     max_triples_by_files = config['ELINK'].getint('max_triples_by_files')
@@ -236,18 +247,26 @@ if todo_Elink:
     pmid_cid_uri_version = pmid_cid.ressource_version.uri_version
     pmid_cid_endpoint_uri_version = pmid_cid.ressource_version_endpoint.uri_version
     # Write in upload file :
-    with open(out_path + "upload_data.sh", "a") as upload_f:
+    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
         upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
         upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
         upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
         upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
+        # For pre-upload, we need just type to compute with ChEBI:
+        pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
 
 # Write ouput file footer :
 print("Write output file")
-with open(out_path + "upload_data.sh", "a") as upload_f:
+with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")
     upload_f.write("checkpoint;\n")
     upload_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
+    # The same for pre-upload.sh
+    pre_upload.write("select * from DB.DBA.load_list;\n")
+    pre_upload.write("rdf_loader_run();\n")
+    pre_upload.write("checkpoint;\n")
+    pre_upload.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
 
 print("End")
