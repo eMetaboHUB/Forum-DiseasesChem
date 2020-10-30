@@ -16,9 +16,6 @@ mkdir -p $LOGSDIR
 
 
 
-# Init logs
-echo "" > $LOGSDIR/post_processes.log
-
 while getopts v:m:t:u:d:s: flag
 	do
 	    case "${flag}" in
@@ -31,21 +28,24 @@ while getopts v:m:t:u:d:s: flag
 	    esac
 	done
 
-# Compute compound 2 mesh
+# Init logs
+LOG="${LOGSDIR}/post_processes_${RESSOURCE_NAME}.log"
+
+echo "" > $LOG
 
 # Compute fisher exact tests
 echo " - compute compound2mesh"
 
 OUT_M="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/"
 
-python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOGSDIR/post_processes.log
+python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
 
 echo " - compute fisher exact tests"
 
 IN_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/results/metab2mesh.csv"
 OUT_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher.csv"
 
-Rscript app/metab2mesh/post-processes/compute_fisher_exact_test_V2.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOGSDIR/post_processes.log
+Rscript app/metab2mesh/post-processes/compute_fisher_exact_test_V2.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOG
 
 # Compute post-processes (eg. q.value)
 echo " - Compute benjamini and Holchberg procedure"
@@ -53,14 +53,14 @@ echo " - Compute benjamini and Holchberg procedure"
 IN_Q=$OUT_F
 OUT_Q="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher_q.csv"
 
-Rscript app/metab2mesh/post-processes/post_process_metab2mesh.R --p_metab2mesh=$IN_Q --p_out=$OUT_Q 2>&1 | tee -a $LOGSDIR/post_processes.log
+Rscript app/metab2mesh/post-processes/post_process_metab2mesh.R --p_metab2mesh=$IN_Q --p_out=$OUT_Q 2>&1 | tee -a $LOG
 
 # Compute weakness test
 echo " - Compute weakness tests"
 
 IN_W=$OUT_Q
 OUT_W="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher_q_w.csv"
-Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=1e-6 --alphaCI=0.05 --chunksize=100000 --parallel=5 --p_out=$OUT_W 2>&1 | tee -a $LOGSDIR/post_processes.log
+Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=1e-6 --alphaCI=0.05 --chunksize=100000 --parallel=5 --p_out=$OUT_W 2>&1 | tee -a $LOG
 
 # Upload step - Skip for now
 #TODO
@@ -72,4 +72,4 @@ echo " - Convert significant relations to triples"
 
 IN_T=$OUT_W
 
-python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --input=$IN_T --uri=$FTP --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOGSDIR/post_processes.log
+python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --input=$IN_T --uri=$FTP --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG

@@ -11,9 +11,6 @@ mkdir -p $LOGSDIR
 # -d: le chemin vers le répertoire où écrire les données (eg. ./data)
 # -s: le chemin vers le répertoire de partage de Virtuoso où écrire les triplets (eg/ ./docker-virtuoso/share)
 
-# Init logs
-echo "" > $LOGSDIR/post_processes.log
-
 while getopts v:p:d:s: flag
 	do
 	    case "${flag}" in
@@ -31,9 +28,11 @@ ARCHIVE_TAR_GZ_PYDIO=upload.tar.gz
 URL_PYDIO_TTL="https://pfem.clermont.inra.fr/pydio/public/7af464/dl/"
 OPTION_PYDIO_INRAE="-u none:$PYDIO_PASSWD"
 
-echo $RESOURCES_DIR
-echo "wget --user none --password ${PYDIO_PASSWD} ${URL_PYDIO_TTL}${ARCHIVE_TAR_GZ_PYDIO} -P ${RESOURCES_DIR}/"
-wget --user none --password ${PYDIO_PASSWD} -P ${RESOURCES_DIR}/ ${URL_PYDIO_TTL}${ARCHIVE_TAR_GZ_PYDIO} 
-tar xvf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ_PYDIO} -C ${RESOURCES_DIR}
-rm -rf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ_PYDIO}
+# Init log
+LOG_VOC="${LOGSDIR}/get_pydio.log"
+echo "" > $LOG_VOC
 
+echo "wget --user none --password ${PYDIO_PASSWD} ${URL_PYDIO_TTL}${ARCHIVE_TAR_GZ_PYDIO} -P ${RESOURCES_DIR}/"
+wget --user none --password ${PYDIO_PASSWD} -P ${RESOURCES_DIR}/ ${URL_PYDIO_TTL}${ARCHIVE_TAR_GZ_PYDIO} 2>&1 | tee -a $LOG_VOC
+tar xvf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ_PYDIO} -C ${RESOURCES_DIR} 2>&1 | tee -a $LOG_VOC
+rm -rf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ_PYDIO} 2>&1 | tee -a $LOG_VOC
