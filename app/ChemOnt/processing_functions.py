@@ -130,7 +130,7 @@ def get_graph_list(path_to_share, path_from_share, regex):
     return file_list
 
 
-def extract_CID_InchiKey(path_to_share, pmids_cids_graph_list, inchikeys_graph_list,  path_out):
+def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out):
     # Inti output file
     with open(path_out, "w") as out:
         out_writer = csv.writer(out, delimiter = ',')
