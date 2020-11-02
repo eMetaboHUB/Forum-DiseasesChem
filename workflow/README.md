@@ -250,3 +250,8 @@ The created upload files contains different information:
 - *pre_upload.sh*: is a light version of *upload_data.sh* using only PubChem Compounds triples indicating compound types and without loading PubChem Descriptor.
 - *upload_ClassyFire.sh*: contains triples indicating the chemont classes of PubChem compounds with annotated literature
 - *upload_Enrichment_ANALYSIS.sh*: contains triples instanciating relation between chemical entities and MeSh descriptors, there are *upload_Enrichment_CID_MESH.sh*, *upload_Enrichment_CHEBI_MESH.sh*, *upload_Enrichment_CHEMONT_MESH.sh* for the different chemical entities
+
+
+## Share directory export:
+
+Be sure to remove the *pre_upload.sh* before compressing the share directory

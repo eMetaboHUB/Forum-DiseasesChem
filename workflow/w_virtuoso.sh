@@ -49,7 +49,7 @@ function virtuosoControler() {
 
     echo " -- Generating docker-compose"
     COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
-    COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}"
+    COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
     CONTAINER_NAME="${COMPOSE_PROJECT_NAME}_virtuoso_${LISTEN_PORT}"
     NETWORK_NAME="virtuoso_${LISTEN_PORT}_net"
     OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"
