@@ -65,6 +65,7 @@ if todo_MeSH:
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
         # Also for pre-upload:
         pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
         
 # References
 if todo_Reference:
@@ -77,6 +78,7 @@ if todo_Reference:
         upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
         # Also for pre-upload:
         pre_upload.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
+        pre_upload.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
 
 # Compounds
 if todo_Compound:
@@ -89,6 +91,7 @@ if todo_Compound:
         upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
         # For pre-upload, we need just type to compute with ChEBI:
         pre_upload.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*_type*.ttl.gz', '" + compound_uri + "');\n")
+        pre_upload.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
 
 
 # Descriptors
@@ -254,7 +257,9 @@ if todo_Elink:
         upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
         # For pre-upload, we need just type to compute with ChEBI:
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
 
 # Write ouput file footer :
 print("Write output file")
