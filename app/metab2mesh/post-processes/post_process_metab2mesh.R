@@ -1,5 +1,5 @@
 library(optparse)
-library(tidyverse)
+library(readr)
 
 option_list <- list(
   make_option(c("-i", "--p_metab2mesh"), type="character", default=NULL,

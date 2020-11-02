@@ -41,8 +41,8 @@ The data.frame is printed in *df_out_dir* at *out_path*
 #### config file :
 
 - [DEFAULT]
-  - df_out_dir: name of metab2mesh data.frame output directory
-  - file_size: number of lines per outputed data.frames
+  - split: a boolean (True/False) that indicates if the resulting table should be split in smaller parts while exporting
+  - file_size: number of lines per outputed table, if split is set to True
   - request_file: the name of the *sparql_queries.py* file containg queries variable. This file **must** be place in the dedicated SPARQL directory
 - [VIRTUOSO]
   - url: url of the Virtuoso SPARQL endpoint
