@@ -42,7 +42,7 @@ where
                                     ?cid a+ ?chemont
                                 }
                                 group by ?chemont
-                                having(count (distinct ?cid) <= 100 && count(distinct ?cid) > 1)
+                                having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                 order by ?chemont
                             }
                         }
@@ -184,7 +184,7 @@ where
                                         ?cid a+ ?chemont
                                     }
                                     group by ?chemont
-                                    having(count (distinct ?cid) <= 100 && count(distinct ?cid) > 1)
+                                    having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                     order by ?chemont
                                 }
                             }
@@ -238,7 +238,7 @@ where
                                     ?cid a+ ?chemont
                                 }
                                 group by ?chemont
-                                having(count (distinct ?cid) <= 100 && count(distinct ?cid) > 1)
+                                having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
                                 order by ?chemont
                             }
                         }
@@ -280,7 +280,7 @@ where
             ?cid a+ ?chemont
         }
         group by ?chemont
-        having(count (distinct ?cid) <= 100 && count(distinct ?cid) > 1)
+        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
     }
 }
 """
@@ -319,7 +319,7 @@ where
             ?cid a+ ?chemont
         }
         group by ?chemont
-        having(count (distinct ?cid) <= 100 && count(distinct ?cid) > 1)
+        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
     }
     ?chemont rdfs:label ?chemont_label
 }

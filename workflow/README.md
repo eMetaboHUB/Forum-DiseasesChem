@@ -109,7 +109,7 @@ For each analysis, there are two main configuration files:
 To compute associations between chemical entities and MeSH descriptors, you can use: w_compound2mesh.sh
 
 *Option details:*
-  - v: version of the analysis. This is optional, if nothing is set, the date will be used
+  - v: version of the analysis.
   - m: path to the configuration file of the analysis requesting Virtuoso
   - t: path to the configuration file to convert association to triples
   - u: name of the computed resource
