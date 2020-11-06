@@ -4,6 +4,7 @@ import argparse, sys, os, requests, json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--out", help="path to output directory")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):
@@ -19,7 +20,7 @@ except configparser.Error as e:
 
 # Initialyse global paramters:
 url = config['VIRTUOSO'].get('url')
-out_path = config['DEFAULT'].get('out_path')
+out_path = args.out
 request_file_name = config['DEFAULT'].get('request_file')
 # Get module for sparql queries :
 module = import_request_file(request_file_name)
@@ -68,4 +69,4 @@ cid_pmid_out_path = out_path + config['X']['out_dir'] + "/"
 mesh_pmid_out_path = out_path + config['Y']['out_dir'] + "/"
 univers_out_path = out_path + config['U']['out_dir'] + "/"
 
-df_metab2mesh = prepare_data_frame(config, cid_mesh_out_path , cid_pmid_out_path , mesh_pmid_out_path, univers_out_path, out_path + config['DEFAULT'].get('df_out_dir') + "/", config['DEFAULT'].getboolean("split"))
+df_metab2mesh = prepare_data_frame(config, cid_mesh_out_path , cid_pmid_out_path , mesh_pmid_out_path, univers_out_path, out_path +  "results/", config['DEFAULT'].getboolean("split"))

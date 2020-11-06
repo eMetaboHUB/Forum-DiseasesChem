@@ -40,33 +40,26 @@ RUN R -e "install.packages('bigstatsr', repos = 'http://cran.us.r-project.org')"
 RUN R -e "install.packages('parallel', repos = 'http://cran.us.r-project.org')"
 RUN R -e "install.packages('foreach', repos = 'http://cran.us.r-project.org')"
 RUN R -e "install.packages('R.utils', repos = 'http://cran.us.r-project.org')"
+RUN R -e "install.packages('readr', repos = 'http://cran.us.r-project.org')"
+
 
 # SET WORK DIRECTORY
 RUN mkdir /workdir \
     /workdir/share-virtuoso/ \
     /workdir/out/ \
-    /workdir/config/ \
-    /workdir/data \
     /workdir/app \
-    /workdir/app/SBML_upgrade \
-    /workdir/app/build_RDF_store \
-    /workdir/app/metab2mesh \
-    /workdir/app/metab2mesh/post-processes \
-    /workdir/app/metab2mesh/SPARQL \
-    /workdir/app/ChemOnt
+    /workdir/workflow
     
 
 # COPY FILES
 COPY app /workdir/app
+COPY workflow /workdir/workflow
 
 # REMOVE PYCACHE
 RUN find /workdir/app | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 # SET WORK DIR.
 WORKDIR /workdir
-
-# TEST CMD
-# python3 Get_CID_PMID_associations.py
 
 # SET ENTRYPOINT
 # ENTRYPOINT ["python3", ""]

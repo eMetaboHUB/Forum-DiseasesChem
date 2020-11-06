@@ -53,12 +53,16 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
   - run_as_test: a boolean (True/False) indicating if the Elink processes have to be run as test (only the first 30000 pmids) or full
   - pack_size: the number of identifiers that will be send in the Elink request. For CID - PMID, 5000 is recommended. (please refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html)
   - api_key: an apiKey provided by a NCBI account 
-  - version: The version of the builded ressource. If nothing is indicated, date will be used
   - timeout: The period (in seconds) after which a request will be canceled if too long. For CID - PMID, 600 is recommended.
   - additional_files_out_path: a path to a directory where the *additional_files* directory will be created.
   - max_triples_by_files: The maximum number of associations exported in a file. For CID - PMID, 5000000 is recommended.
 
 run from workdir:
 ```python
-python3 app/build_RDF_store/build_RDF_store.py --config="/path/to/config_file.ini"
+python3 app/build_RDF_store/build_RDF_store.py --config="/path/to/config_file.ini" --out="path/to/out/dir" --log="path/to/log/dir" --version="version"
 ```
+
+- config: path to the configuration file
+- out: path to output directory, should be the docker-virtuoso shared directory
+- log: path to the log directory
+- version: The version of the builded ressource. If nothing is indicated, date will be used

@@ -120,20 +120,17 @@ def get_creation_date(path):
     return created_date
 
 
-def get_graph_list(path_to_share, version, path_from_share, regex):
-    if not version:
-        print("None version of InChiLey was defined, trying to select the last ...")
-        all_versions_path = glob.glob(path_to_share + path_from_share + "*")
-        all_creation_date = [get_creation_date(p) for p in all_versions_path]
-        most_recent_date = sorted(all_creation_date)[-1]
-        most_recent_dir = all_versions_path[all_creation_date.index(most_recent_date)]
-    else:
-        most_recent_dir = path_to_share + path_from_share + version
+def get_graph_list(path_to_share, path_from_share, regex):
+    all_versions_path = glob.glob(path_to_share + path_from_share + "*")
+    all_creation_date = [get_creation_date(p) for p in all_versions_path]
+    most_recent_date = sorted(all_creation_date)[-1]
+    most_recent_dir = all_versions_path[all_creation_date.index(most_recent_date)]
+    
     file_list = glob.glob(most_recent_dir + "/" + regex)
     return file_list
 
 
-def extract_CID_InchiKey(path_to_share, pmids_cids_graph_list, inchikeys_graph_list,  path_out):
+def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out):
     # Inti output file
     with open(path_out, "w") as out:
         out_writer = csv.writer(out, delimiter = ',')

@@ -94,6 +94,6 @@ if(len(lines) > 1):
         for l in lines:
             out_f.write(l + "\n")
 else:
-    print("\nResult for association between chemical: " + chem + " and MeSH Descriptor: " + MeSH + ". Check identifiers or if there really are associations")
+    print("\nNo results for association between chemical: " + chem + " and MeSH Descriptor: " + MeSH + ". Check identifiers or if there really are associations")
 
 print("Ok\nExport MeSH coocurences to out ...")

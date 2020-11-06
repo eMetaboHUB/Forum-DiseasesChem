@@ -1,7 +1,5 @@
 #!/bin/bash
 
-RESOURCES_DIR=./share
-
 # necessite ./share/updload.sh
 
 # USAGE (1) : ${0} start                  # start virtuoso and load data with script ./share/updload.sh
@@ -9,19 +7,26 @@ RESOURCES_DIR=./share
 # USAGE (3) : ${0} clean                  # remove docker directory
 
 
-if [ "$#" -ne  "1" ]
-then
-     echo "what to do (start | stop | clean)"
-     exit
-fi
+while getopts d:s: flag;
+	do
+	    case "${flag}" in
+			d) DOCKER_DIR=${OPTARG};;
+            s) PATH_TO_SHARED_DIR_FROM_D=${OPTARG};;
+	    esac
+	done
 
-CMD=$1
+echo $DOCKER_DIR
+echo $PATH_TO_SHARED_DIR_FROM_D
+
+CMD=${@:$OPTIND:1}
+
+echo $CMD
 
 COMPOSE_PROJECT_NAME="metdisease"
-LISTEN_PORT="9985"
+LISTEN_PORT="9980"
 PASSWORD="FORUM-Met-Disease-DB"
 GRAPH="http://default#"
-ALLOW_UDPATE="true"
+ALLOW_UDPATE="false"
 
 
 function waitStarted() {
@@ -43,12 +48,13 @@ function virtuosoControler() {
     echo " --"
 
     echo " -- Generating docker-compose"
-    COMPOSE_FILE=docker-compose-${LISTEN_PORT}.yml
-    COMPOSE_CMD="sudo -n docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}"
+    COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
+    COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
     CONTAINER_NAME="${COMPOSE_PROJECT_NAME}_virtuoso_${LISTEN_PORT}"
     NETWORK_NAME="virtuoso_${LISTEN_PORT}_net"
     OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"
-    DATA=$(realpath ${CONTAINER_NAME}_data)
+    RESOURCES_DIR="${DOCKER_DIR}/${PATH_TO_SHARED_DIR_FROM_D}"
+    DATA="${DOCKER_DIR}/data/virtuoso"
     cat << EOF | tee ${COMPOSE_FILE} > /dev/null
 version: '3.3'
 services:
@@ -56,13 +62,13 @@ services:
         image: tenforce/virtuoso
         container_name: ${CONTAINER_NAME}
         environment:
-            VIRT_Parameters_NumberOfBuffers: 4000000   # http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
-            VIRT_Parameters_MaxDirtyBuffers: 3000000   # => Config 48GB 
+            VIRT_Parameters_NumberOfBuffers: 2720000   # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_MaxDirtyBuffers: 2000000    # See virtuoso/README.md to adapt value of this line
             VIRT_Parameters_MaxCheckpointRemap: 680000
             VIRT_Parameters_TN_MAX_memory: 2000000000
             VIRT_SPARQL_ResultSetMaxRows: 10000000000
             VIRT_SPARQL_MaxDataSourceSize: 10000000000
-            VIRT_Flags_TN_MAX_memory: 20000000
+            VIRT_Flags_TN_MAX_memory: 2000000000
             VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
             VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
             VIRT_SPARQL_MaxQueryExecutionTime: 50000          # 5 min
@@ -74,12 +80,11 @@ services:
             VIRT_Parameters_ThreadsPerQuery: 1
             VIRT_Parameters_AdjustVectorSize: 1
             VIRT_Parameters_MaxQueryMem: 2G
-            VIRT_Database_LockFile: virtuoso.lck
             DBA_PASSWORD: "${PASSWORD}"
             SPARQL_UPDATE: "${ALLOW_UDPATE}"
             DEFAULT_GRAPH: "${GRAPH}"
         volumes:
-           - ./share:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps
+           - ${RESOURCES_DIR}:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps
            - ${DATA}:/data
         ports:
            - ${LISTEN_PORT}:8890
@@ -99,7 +104,6 @@ EOF
             else
                 echo " -- Generating new compose instance."             
                 echo "---------------------------------" 
-                echo "$(ls)"
 
                 echo " -- Pull Images"
                 ${COMPOSE_CMD} pull
@@ -107,11 +111,19 @@ EOF
                 ${COMPOSE_CMD} up -d
                 waitStarted
                 echo " -- Container started."
-				for f in $(ls ${RESOURCES_DIR}/*.sh) ; do
+                echo " -- Load vocabulary."
 					docker exec \
                         ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/$(basename ${f})
-				done
+                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh   #$(basename ${f})
+                echo " -- Load data."
+                    docker exec \
+                        ${CONTAINER_NAME} \
+                        isql-v 1111 dba "${PASSWORD}" ./dumps/pre_upload.sh
+                echo " -- Load ClassyFire."
+                    docker exec \
+                            ${CONTAINER_NAME} \
+                            isql-v 1111 dba "${PASSWORD}" ./dumps/upload_ClassyFire.sh
+				
             fi
         ;;
         stop)
@@ -138,7 +150,7 @@ EOF
             exit 1
         ;;
     esac
-    rm ${COMPOSE_FILE}
+    # rm ${COMPOSE_FILE}
     exit 0
 }
 
