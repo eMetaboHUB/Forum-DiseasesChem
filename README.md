@@ -110,6 +110,8 @@ eg.
 workflow/w_virtuoso.sh -d ./docker-virtuoso -s share start
 ```
 
+*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to required the KG during the computation is http://localhost**:9980**/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
+
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
   - s: path to the shared directory **from** the virtuoso directory (eg. *share* if you use the proposed settings)
