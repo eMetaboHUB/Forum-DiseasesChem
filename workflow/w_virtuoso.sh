@@ -138,8 +138,8 @@ EOF
                     tenforce/virtuoso \
                     bash -c "rm -rf /tmp/data /usr/local/virtuoso-opensource/share/virtuoso/vad/dumps/"
                 set -e
-                rm -rf "${DATA}"
-                rm -rf "${DATA}_dumps"
+                sudo rm -rf "${DATA}"
+                sudo rm -rf "${DATA}_dumps"
             else
                 echo " -- Instance not present. Skipping cleaning."
             fi
