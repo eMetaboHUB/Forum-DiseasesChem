@@ -133,19 +133,19 @@ EOF
             if [ -d ${DATA} ]; then
                 ${COMPOSE_CMD} down
                 set +e
-                sudo docker run --rm \
+                docker run --rm \
                     --mount type=bind,source="${DATA}",target=/data \
                     tenforce/virtuoso \
                     bash -c "rm -rf /tmp/data /usr/local/virtuoso-opensource/share/virtuoso/vad/dumps/"
                 set -e
-                sudo rm -rf "${DATA}"
-                sudo rm -rf "${DATA}_dumps"
+                rm -rf "${DATA}"
+                rm -rf "${DATA}_dumps"
             else
                 echo " -- Instance not present. Skipping cleaning."
             fi
         ;;
         *)
-            sudo rm ${COMPOSE_FILE}
+            rm ${COMPOSE_FILE}
             echo "Error: unsupported command $CMD"
             exit 1
         ;;
