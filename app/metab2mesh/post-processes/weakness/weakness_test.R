@@ -34,12 +34,12 @@ parallel_on_chunck <- function(dataChunk, n_cores, pv_th, alpha_CI){
         return(NA)
     }
     # Sinon on fait le test
-    predicted_proba <- vector(mode = "numeric", length = (max - min + 1))
-    # On calcule toute les valeurs dand l'intervalle
+    predicted_proba <- vector(mode = "numeric", length = (COOC - min + 1))
+    # On calcule entre la borne minimale et la coocurence observée. L'expression n'est pas très explicite, mais le but est d'exprimé en fonction de i pour remplir le vecteur.
     for(i in 1:(length(predicted_proba))){
       predicted_proba[i] <- phyper(q = min + i - 2, m = TOTAL_PMID_MESH - (COOC - (min + i - 1)), n = (TOTAL_PMID - TOTAL_PMID_MESH), k = TOTAL_PMID_CID - (COOC - (min + i - 1)), lower.tail = FALSE)
     }
-    res <- data.frame(coocurence = seq(min, max), p_value = predicted_proba)
+    res <- data.frame(coocurence = seq(min, COOC), p_value = predicted_proba)
     test_closest <- res[res$p_value <= pv_th, ]
     point_closest_to_th <- test_closest[1, ]$coocurence
     return(COOC - point_closest_to_th + 1)
