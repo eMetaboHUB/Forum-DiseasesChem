@@ -44,7 +44,7 @@ threshold = config['PARSER'].getfloat('threshold')
 ressource_name = config["METADATA"]["ressource"]
 file_prefix = config['OUT'].get('file_prefix')
 
-out_path = path_to_dumps + "/Analyzes/" + ressource_name + "/" + version + "/"
+out_path = path_to_dumps + "/" + ressource_name + "/" + version + "/"
 
 if not os.path.exists(out_path):
     os.makedirs(out_path)
@@ -93,7 +93,7 @@ for chunk in df_chunk:
         n_subjects += len(set([str(s) for s in g.subjects()]))
         n_objects += len(g)
         g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".trig", format='trig')
-        ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig", ftp)
+        ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig.gz", ftp)
         g = ressource.create_data_graph(namespaces.keys(), namespaces)
         f_i += 1
     print("Ok\n", end = '')
@@ -104,7 +104,7 @@ if(len(g)) != 0:
     n_subjects += len(set([str(s) for s in g.subjects()]))
     n_objects += len(g)
     g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".trig", format='trig')
-    ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig", ftp)
+    ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig.gz", ftp)
     print("Ok\n")
 
 # On zip
@@ -127,8 +127,8 @@ ressource.version_graph.serialize(destination= out_path + "void.ttl", format='tu
 print("Ok\nExport upload_file ... ", end = '')
 with open(path_to_dumps + "/" + "upload_Enrichment_" + config['SUBJECTS'].get('name') + "_" + config['OBJECTS'].get('name') + ".sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
-    upload_f.write("ld_dir_all ('./dumps" + "/Analyzes/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
-    upload_f.write("ld_dir_all ('./dumps" + "/Analyzes/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")
     upload_f.write("checkpoint;\n")

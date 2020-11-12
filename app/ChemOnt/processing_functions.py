@@ -203,17 +203,17 @@ def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, gra
     """
     # On ajoute les infos pour la première ressource:
     for i in range(1, (len(graph_sizes) + 1)):
-        ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".trig", ftp)
-        ClassyFire_alternative_p.add_DataDump("classyfire_alternative_parent_" + str(i) + ".trig", ftp)
+        ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".trig.gz", ftp)
+        ClassyFire_alternative_p.add_DataDump("classyfire_alternative_parent_" + str(i) + ".trig.gz", ftp)
     ClassyFire_direct_p.add_version_attribute(RDF["type"], VOID["Linkset"])
     ClassyFire_alternative_p.add_version_attribute(RDF["type"], VOID["Linkset"])
     for uri_targeted_ressource in uri_targeted_ressources:
         ClassyFire_direct_p.add_version_attribute(VOID["target"], uri_targeted_ressource)
         ClassyFire_alternative_p.add_version_attribute(VOID["target"], uri_targeted_ressource)
-    ClassyFire_direct_p.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providing links between PubChem compounds and their class according to ChemOnt ontology from ClassyFire. The provided class correspond to the \"Direct Parent\", representing the dominant class in the molecule"))
+    ClassyFire_direct_p.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providing links between PubChem compounds and their class according to ChemOnt ontology from ClassyFire. The provided class correspond to the Direct Parent, representing the dominant class in the molecule"))
     ClassyFire_direct_p.add_version_attribute(DCTERMS["title"], rdflib.Literal("ChemOnt Classification - Direct parent"))
     # On ajoute les infos pour la seconde ressource, les endpoint:
-    ClassyFire_alternative_p.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providing links between PubChem compounds and their classes according to ChemOnt ontology from ClassyFire. The provided classes correspond to the \"Alternative Parents\", representing classes describing the molecule but which not have an ancestor–descendant relationship with each other or with the Direct Parent"))
+    ClassyFire_alternative_p.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providing links between PubChem compounds and their classes according to ChemOnt ontology from ClassyFire. The provided classes correspond to the Alternative Parents, representing classes describing the molecule but which not have an ancestor–descendant relationship with each other or with the Direct Parent"))
     ClassyFire_alternative_p.add_version_attribute(DCTERMS["title"], rdflib.Literal("ChemOnt Classification - Alternative parents"))
     # On exporte le graph des metadata :
     print(" Export version graph with metadata ...\n", end = '')

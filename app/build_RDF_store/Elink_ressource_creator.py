@@ -259,13 +259,13 @@ class Elink_ressource_creator:
                 # On export les graphs :
                 try:
                     self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".trig", format='trig')
-                    self.ressource_version.add_DataDump(g_linked_id_name + ".trig", ftp)
+                    self.ressource_version.add_DataDump(g_linked_id_name + ".trig.gz", ftp)
                 except Exception as e:
                     print("Error while trying to serialize linked id graph at " + path_out_1 + g_linked_id_name + " : " +str(e))
                     sys.exit(3)
                 try:
                     self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".trig", format='trig')
-                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig", ftp)
+                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig.gz", ftp)
                 except Exception as e:
                     print("Error while trying to serialize linked id graph endpoint at " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)
