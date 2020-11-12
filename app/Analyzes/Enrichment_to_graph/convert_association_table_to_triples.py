@@ -120,7 +120,7 @@ for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
     ressource.add_version_attribute(VOID["target"], rdflib.URIRef(uri_targeted_ressource))
 ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datatype=XSD.long))
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
-ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on repository at : " + args.config + ". You can also find the initial table of results on the ftp server."))
+ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on repository at : " + args.config + ". You can also find the initial table of results on the ftp server at " + ftp + "."))
 ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + " using a threshold on " + column_parsed + " at " + str(threshold)))
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
