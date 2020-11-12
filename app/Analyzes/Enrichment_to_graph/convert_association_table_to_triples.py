@@ -13,10 +13,14 @@ from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
 parser.add_argument("--input", help="path to the input result table")
-parser.add_argument("--uri", help="uri on the input table on the ftp")
 parser.add_argument("--version", help="Analysis version")
 parser.add_argument("--out", help="path to output directory")
 args = parser.parse_args()
+
+# parser.add_argument("--uri", help="uri on the input table on the ftp")
+# source = args.uri
+# ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
+
 
 if not os.path.exists(args.config):
     print("Config file : " + args.config + " does not exist")
@@ -31,7 +35,6 @@ except configparser.Error as e:
 
 # Get args
 input_table_path = args.input
-source = args.uri
 version = args.version
 path_to_dumps = args.out
 chunk_size = config['PARSER'].getint('chunk_size')
@@ -114,11 +117,9 @@ print("Export Metadata ... ", end = '')
 ressource.add_version_attribute(RDF["type"], VOID["Linkset"])
 for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
     ressource.add_version_attribute(VOID["target"], rdflib.URIRef(uri_targeted_ressource))
-
 ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datatype=XSD.long))
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
-ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
-ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on the Git at: https://services.pfem.clermont.inra.fr/gitlab/forum/metdiseasedatabase/blob/develop/" + args.config))
+ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on repository at : " + args.config + ". You can also find the initial table of results on the ftp server."))
 ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + " using a threshold on " + column_parsed + " at " + str(threshold)))
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 

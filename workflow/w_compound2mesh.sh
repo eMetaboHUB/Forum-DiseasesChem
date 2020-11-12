@@ -62,14 +62,13 @@ IN_W=$OUT_Q
 OUT_W="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher_q_w.csv"
 Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=1e-6 --alphaCI=0.05 --chunksize=100000 --parallel=5 --p_out=$OUT_W 2>&1 | tee -a $LOG
 
-# Upload step - Skip for now
-#TODO
-FTP="ftp://data/anayse/version"
-
+# Upload step: Aboard
+# FTP="ftp://data/anayse/version"
+# --uri=$FTP
 # Create triples
 
 echo " - Convert significant relations to triples"
 
 IN_T=$OUT_W
 
-python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --input=$IN_T --uri=$FTP --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG
+python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --input=$IN_T --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG
