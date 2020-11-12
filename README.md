@@ -36,8 +36,11 @@ Two possibility to build the triplestore:
 If you want to use the docker image, first build it :
 
 ```bash
-docker build -t forum/processes .
+docker build -t forum/processes \
+  --build-arg USER_ID=$(id -u) \
+  --build-arg GROUP_ID=$(id -g) .
 ```
+This allow us to build an image with correct permissions that correspond to the local host. (https://vsupalov.com/docker-shared-permissions/)
 
 Then, you can launch it using:
 

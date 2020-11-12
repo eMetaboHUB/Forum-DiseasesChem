@@ -10,7 +10,7 @@
 while getopts d:s: flag;
 	do
 	    case "${flag}" in
-			d) DOCKER_DIR=${OPTARG};;
+	    d) DOCKER_DIR=${OPTARG};;
             s) PATH_TO_SHARED_DIR_FROM_D=${OPTARG};;
 	    esac
 	done
@@ -112,9 +112,9 @@ EOF
                 waitStarted
                 echo " -- Container started."
                 echo " -- Load vocabulary."
-					docker exec \
+		    docker exec \
                         ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh   #$(basename ${f})
+                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh
                 echo " -- Load data."
                     docker exec \
                         ${CONTAINER_NAME} \
@@ -123,7 +123,6 @@ EOF
                     docker exec \
                             ${CONTAINER_NAME} \
                             isql-v 1111 dba "${PASSWORD}" ./dumps/upload_ClassyFire.sh
-				
             fi
         ;;
         stop)
@@ -131,15 +130,13 @@ EOF
         ;;
         clean)
             if [ -d ${DATA} ]; then
-                ${COMPOSE_CMD} down
+		${COMPOSE_CMD} down
                 set +e
                 docker run --rm \
-                    --mount type=bind,source="${DATA}",target=/data \
+                    --mount type=bind,source="${DOCKER_DIR}",target=/cache \
                     tenforce/virtuoso \
-                    bash -c "rm -rf /tmp/data /usr/local/virtuoso-opensource/share/virtuoso/vad/dumps/"
+                    bash -c "rm -r /cache/data"
                 set -e
-                sudo rm -rf "${DATA}"
-                sudo rm -rf "${DATA}_dumps"
             else
                 echo " -- Instance not present. Skipping cleaning."
             fi
@@ -150,7 +147,6 @@ EOF
             exit 1
         ;;
     esac
-    # rm ${COMPOSE_FILE}
     exit 0
 }
 

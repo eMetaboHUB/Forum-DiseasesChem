@@ -11,13 +11,20 @@ MAINTAINER Nils Paulhe <nils.paulhe@inrae.fr>
 ###  - has a custom work directory in `/workdir`.
 ### 
 
+# USER SETTINGS
+ARG USER_ID
+ARG GROUP_ID
+
+RUN addgroup --gid $GROUP_ID user
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+
 # SETTINGS
 ARG DEBIAN_FRONTEND=noninteractive
 
 # INSTALL STUFF
 RUN apt update && \
     apt install -y \
-    wget curl \
+    wget curl vim htop \
     libxml2 libxml2-dev libxslt1-dev gcc \
     python3 python3-dev python3-setuptools python3-pip &&\
     pip3 install eutils==0.6.0 &&\
@@ -59,6 +66,7 @@ COPY workflow /workdir/workflow
 RUN find /workdir/app | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 # SET WORK DIR.
+USER user
 WORKDIR /workdir
 
 # SET ENTRYPOINT
