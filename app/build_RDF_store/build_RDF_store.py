@@ -50,6 +50,8 @@ todo_Compound = config['COMPOUND'].getboolean("todo")
 todo_Descriptor = config['DESCRIPTOR'].getboolean("todo")
 todo_InchiKey = config['INCHIKEY'].getboolean("todo")
 todo_Elink = config['ELINK'].getboolean("todo")
+# FTP info
+ftp = config['FTP'].get('ftp')
 
 # Write ouput file header :
 with open(out_path + "upload_data.sh", "w") as upload_f, open(out_path + "pre_upload.sh", "w") as pre_upload:
@@ -197,10 +199,10 @@ if todo_Elink:
         l2 = list()
         for pmid_cid_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID/" + pmid_cid_version + "/*.trig.gz")]:
             l1.append(int(pmid_cid_path.split("PMID_CID_")[1].split(".trig.gz")[0]))
-            pmid_cid.ressource_version.add_DataDump(pmid_cid_path)
+            pmid_cid.ressource_version.add_DataDump(pmid_cid_path, ftp)
         for pmid_cid_endpoint_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID_endpoints/" + pmid_cid_version + "/*.trig.gz")]:
             l2.append(int(pmid_cid_endpoint_path.split("PMID_CID_endpoints_")[1].split(".trig.gz")[0]))
-            pmid_cid.ressource_version_endpoint.add_DataDump(pmid_cid_endpoint_path)
+            pmid_cid.ressource_version_endpoint.add_DataDump(pmid_cid_endpoint_path, ftp)
         # The file index is set as the maximum of the last index or PMID_CID and PMIC_CID_endpoints to avoid missing wrong erasing, if they are different ! Or the next index if they are equals
         if max(l1) == max(l2):
             pmid_cid.file_index = max(l1) + 1
@@ -240,10 +242,10 @@ if todo_Elink:
         all_pmids = [all_pmids[i] for i in range(0,100000)]
     
     # Run :
-    pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, max_triples_by_files, addtional_files_out_path)
+    pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, max_triples_by_files, addtional_files_out_path, ftp)
     # Looking for failed at first try :
     while(len(pmid_cid.request_failure) != 0):
-        pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, addtional_files_out_path)
+        pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, addtional_files_out_path, ftp)
     # Export ressource metadata
     pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef("http://database/ressources/PubChem/reference"), rdflib.URIRef("http://database/ressources/PubChem/compound")])
     # Export versions and uris versions

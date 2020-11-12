@@ -206,7 +206,7 @@ class Elink_ressource_creator:
         self.ressource_version.version_graph.serialize(destination= path_out_1 + "void.ttl", format='turtle')
         self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "void.ttl", format='turtle')
     
-    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path):
+    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path, ftp):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
@@ -214,6 +214,7 @@ class Elink_ressource_creator:
         - pack_size: the size of the cids pack that have to be send as request, refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
         - max_size : the maximal number of pmids by files
+        - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.  
         """
         # Intialyze .log file :
         with open(add_f_out_path + "elink.log", "w") as f_log:
@@ -258,13 +259,13 @@ class Elink_ressource_creator:
                 # On export les graphs :
                 try:
                     self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".trig", format='trig')
-                    self.ressource_version.add_DataDump(g_linked_id_name + ".trig")
+                    self.ressource_version.add_DataDump(g_linked_id_name + ".trig", ftp)
                 except Exception as e:
                     print("Error while trying to serialize linked id graph at " + path_out_1 + g_linked_id_name + " : " +str(e))
                     sys.exit(3)
                 try:
                     self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".trig", format='trig')
-                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig")
+                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig", ftp)
                 except Exception as e:
                     print("Error while trying to serialize linked id graph endpoint at " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)

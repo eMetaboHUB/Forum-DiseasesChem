@@ -46,6 +46,7 @@ namespaces = {
 # Get initial parameters
 version = args.version
 n_processes = config["PROCESSES"].getint("n_processes")
+ftp = config['FTP'].get('ftp')
 path_to_share = args.out + "/"
 path_out = args.log + "/"
 
@@ -94,7 +95,7 @@ graph_sizes = [p.get() for p in results]
 # Close Pool
 pool.close()
 pool.join()
-export_ressource_metadata(ClassyFire_alternative_p, ClassyFire_direct_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p)
+export_ressource_metadata(ClassyFire_alternative_p, ClassyFire_direct_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p, ftp)
 
 # The same for the both: 
 version = ClassyFire_direct_p.version

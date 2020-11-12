@@ -64,5 +64,10 @@ class Database_ressource_version:
             if namespace not in [ns[0] for ns in self.version_graph.namespace_manager.namespaces()]:
                 self.version_graph.bind(namespace, namespace_dict[namespace])
     
-    def add_DataDump(self, graph_file):
-        self.version_graph.add((self.uri_version, VOID["dataDump"], rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version + "/" + graph_file)))
+    def add_DataDump(self, graph_file, ftp):
+        """
+        This function will create an attribute void:dataDump to indicate the location of the data files on the provided ftp server. The ftp server address on which created data will be stored.
+        - graph_file: the graph file name
+        - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used. 
+        """
+        self.version_graph.add((self.uri_version, VOID["dataDump"], rdflib.URIRef(ftp + self.ressource + "/" + self.version + "/" + graph_file)))

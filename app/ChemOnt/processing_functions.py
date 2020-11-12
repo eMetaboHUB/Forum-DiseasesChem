@@ -197,14 +197,14 @@ def ask_for_graph(url, graph_uri):
         return True
     return False
 
-def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, uri_targeted_ressources, path_direct_p, path_alternative_p):
+def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, uri_targeted_ressources, path_direct_p, path_alternative_p, ftp):
     """
     This function is used export metadata for builted graphs
     """
     # On ajoute les infos pour la première ressource:
     for i in range(1, (len(graph_sizes) + 1)):
-        ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".trig")
-        ClassyFire_alternative_p.add_DataDump("classyfire_alternative_parent_" + str(i) + ".trig")
+        ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".trig", ftp)
+        ClassyFire_alternative_p.add_DataDump("classyfire_alternative_parent_" + str(i) + ".trig", ftp)
     ClassyFire_direct_p.add_version_attribute(RDF["type"], VOID["Linkset"])
     ClassyFire_alternative_p.add_version_attribute(RDF["type"], VOID["Linkset"])
     for uri_targeted_ressource in uri_targeted_ressources:

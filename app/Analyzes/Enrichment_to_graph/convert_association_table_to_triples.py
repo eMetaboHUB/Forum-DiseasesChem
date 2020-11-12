@@ -37,6 +37,7 @@ except configparser.Error as e:
 input_table_path = args.input
 version = args.version
 path_to_dumps = args.out
+ftp = config['FTP'].get('ftp')
 chunk_size = config['PARSER'].getint('chunk_size')
 column_parsed = config['PARSER'].get('column')
 threshold = config['PARSER'].getfloat('threshold')
@@ -92,7 +93,7 @@ for chunk in df_chunk:
         n_subjects += len(set([str(s) for s in g.subjects()]))
         n_objects += len(g)
         g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".trig", format='trig')
-        ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig")
+        ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig", ftp)
         g = ressource.create_data_graph(namespaces.keys(), namespaces)
         f_i += 1
     print("Ok\n", end = '')
@@ -103,7 +104,7 @@ if(len(g)) != 0:
     n_subjects += len(set([str(s) for s in g.subjects()]))
     n_objects += len(g)
     g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".trig", format='trig')
-    ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig")
+    ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig", ftp)
     print("Ok\n")
 
 # On zip
