@@ -61,7 +61,7 @@ There are two configuration files related to this step:
 Then, from *metdiseasedatabase* directory execute: 
 
 ```bash
- ./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -p mdpForum -s path/to/virtuoso/shared/directory
+./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -p mdpForum -s path/to/virtuoso/shared/directory
 ```
 eg.:
 
