@@ -43,7 +43,11 @@ All used configuration files are stored in the *config* directory.
 ```bash
 python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config="path/to/config.ini" --input="path/to/input" --uri="ftp://path/to/input" --version="version" --out="path/to/out"
 ```
-- config: path to the configuration file
+Two configuraton files are required in this process. The first (config) correspond to the confugaration file describe above, used for the convertion process. The second is the configuration file that was used during the computation process (metab2mesh_requesting_virtuoso). This configuration file is also needed to describe all the data that was used to create these triples.
+
+- config: path to the configuration file for the conversion process
+- c2mconfig: path to the configuration used in the computation analysis (metab2mesh_requesting_virtuoso)
+- c2mname: name of the converted ressource (eg. CID_MESH)
 - input: path to the input result table
 - uri: url of the input table on the ftp server, same as used to upload it 
 - version: the analysis version
@@ -51,3 +55,5 @@ python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py
 **/!\ WARNING:** the path to the configuration file **MUST** be the relative path from the repository root, such as *app/Analyzes/.../.../config.ini* to correspond to the path of the file on the GitLab repo.
 
 All triples will be exported in the Docker Virtuoso share directory. A file named *upload_Enrichment_SUBJECT_OBJECT.sh* can then be used to load triples into Virtuoso.
+
+Several metadata are created to fully describe the created triples. The created graph is defined to be a void:Linkset and its location on the ftp server is indicated using the *void:dataDump* predicate. The result table that have been filtered to produce these triples is also indicated with the *dcterm:source* predicate. For this resource table, its location on the ftp server is also indicated using the *dcat:downloadURL* predicate and all graphs that that have been used as resource in the computation process (metab2mesh_requesting_virtuoso), to produce this table, are also indicated using the predicate *dcterm:source*.

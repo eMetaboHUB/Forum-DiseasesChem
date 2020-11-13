@@ -1,4 +1,4 @@
-## Metab2mesh :
+## Compound2MeSH :
 
 use metab2mesh_requesting_virtuoso.py
 
