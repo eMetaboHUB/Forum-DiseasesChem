@@ -12,6 +12,8 @@ from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--c2mconfig", help="path to the configuration of the compound2MeSH analysis (metab2mesh_requesting_virtuoso)")
+parser.add_argument("--c2mname", help="name of the raw ressource used in computation processes (eg. CID_MESH)")
 parser.add_argument("--input", help="path to the input result table")
 parser.add_argument("--version", help="Analysis version")
 parser.add_argument("--out", help="path to output directory")
@@ -19,7 +21,6 @@ args = parser.parse_args()
 
 # parser.add_argument("--uri", help="uri on the input table on the ftp")
 # source = args.uri
-# ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source))
 
 
 if not os.path.exists(args.config):
@@ -43,6 +44,10 @@ column_parsed = config['PARSER'].get('column')
 threshold = config['PARSER'].getfloat('threshold')
 ressource_name = config["METADATA"]["ressource"]
 file_prefix = config['OUT'].get('file_prefix')
+
+# sources
+c2m_config = args.c2mconfig
+c2m_name = args.c2mname
 
 out_path = path_to_dumps + "/" + ressource_name + "/" + version + "/"
 
@@ -96,7 +101,6 @@ for chunk in df_chunk:
         ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig.gz", ftp)
         g = ressource.create_data_graph(namespaces.keys(), namespaces)
         f_i += 1
-    print("Ok\n", end = '')
 
 # On serialyze le dernier graph :
 if(len(g)) != 0:
@@ -114,7 +118,7 @@ except subprocess.CalledProcessError as e:
     print("Error while trying to compress files at " + out_path + "/" + file_prefix + "_*.trig : " + str(e))
     sys.exit(3)
 
-print("Export Metadata ... ", end = '')
+print("Export Metadata ... ")
 ressource.add_version_attribute(RDF["type"], VOID["Linkset"])
 for uri_targeted_ressource in config['METADATA'].get("targets").split('\n'):
     ressource.add_version_attribute(VOID["target"], rdflib.URIRef(uri_targeted_ressource))
@@ -122,6 +126,27 @@ ressource.add_version_attribute(VOID["triples"], rdflib.Literal(n_objects, datat
 ressource.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(n_subjects, datatype=XSD.long))
 ressource.add_version_attribute(DCTERMS["description"], rdflib.Literal("For more information about this analysis, please refer to the configuration file on repository at : " + args.config + ". You can also find the initial table of results on the ftp server at " + ftp + "."))
 ressource.add_version_attribute(DCTERMS["title"], rdflib.Literal("This graph contains significant associations between " + L[0] + " and " + L[1] + " using a threshold on " + column_parsed + " at " + str(threshold)))
+
+# Sources 
+# Needed namespaces
+ns = {"dcat":rdflib.Namespace("http://www.w3.org/ns/dcat#")}
+# Creation of the ressource
+c2m_ressource = Database_ressource_version(ressource = c2m_name, version = version)
+c2m_ressource.add_version_namespaces(["dcat"], ns)
+c2m_ressource.add_version_attribute(RDF["type"], ns["dcat"]["Dataset"])
+uri_distribution = c2m_ressource.uri_version + "/data"
+c2m_ressource.add_version_attribute(ns["dcat"]["distribution"], uri_distribution)
+c2m_ressource.version_graph.add((uri_distribution, RDF["type"], ns["dcat"]["Distribution"]))
+c2m_ressource.version_graph.add((uri_distribution, ns["dcat"]["downloadURL"], rdflib.URIRef(ftp + c2m_name + "/" + version + "/r_fisher_q_w.csv")))
+c2m_ressource.version_graph.add((uri_distribution, ns["dcat"]["mediaType"], rdflib.URIRef("text/csv")))
+# Parse config of computation processes to retrieve source graphs
+c2m = configparser.ConfigParser()
+c2m.read(c2m_config)
+for g in c2m['VIRTUOSO'].get("graph_from").split('\n'):
+    c2m_ressource.add_version_attribute(DCTERMS["source"], rdflib.URIRef(g))
+ressource.add_version_attribute(DCTERMS["source"], c2m_ressource.uri_version)
+ressource.version_graph = ressource.version_graph + c2m_ressource.version_graph
+
 ressource.version_graph.serialize(destination= out_path + "void.ttl", format='turtle')
 
 print("Ok\nExport upload_file ... ", end = '')
