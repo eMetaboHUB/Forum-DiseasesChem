@@ -17,10 +17,10 @@ This 4 counts must be determine for each available combinations of *x* and *y* u
 - The total number of individuals (pmids) having the *y* modality: **[Y] section**
   - The query return a csv file like: *modalility_y, total_counts_for_modality_y*. Ex: 'SELECT ?MESH ?COUNT WHERE { ... }'
 - The total number of individuals (pmids) having **both** the *x* and the *y* modality: **[X_Y] section**
-  - The query return a csv file like: *modalility_x, modaliity_y, total_counts_for_coocurences_between_x_and_y*. Ex: 'SELECT ?CID ?MESH ?COUNT WHERE { ... }'
+  - The query return a csv file like: *modality_x, modality_y, total_counts_for_coocurences_between_x_and_y*. Ex: 'SELECT ?CID ?MESH ?COUNT WHERE { ... }'. The order (*modality_x, modality_y*) is important as when building the final table, columns will be considered using the *X* variable for the first, and the *Y* variable for the second.
 - The total number of individuals (pmids) having at least one modality of X and one modality of Y: **[U] section**
-  - A *counting request* which just return the total number of individuals. Ex: 'SELECT ?COUNT WHERE { ... }'
 
+A *counting request* which just return the total number of individuals. Ex: 'SELECT ?COUNT WHERE { ... }'
 So, for each section *Request_name* contains the name of the variable in a *sparql_query.py* file, containing the string of the request couting individuals. But as this request may be really time and memory consumming, it's advised to run this query in parallel. To do so, the structure of the sparql query provided in the *sparql_query.py* file is adapted to the parallelization. A first internal nested *SELECT* is used to order modalities of the Variable and use a combination of *LIMIT* and *OFFSET* clauses to divide the set of modalities in smaller sets with a size of *limit_pack_ids* for each request.
 
 Then, each request is send in parallel with a specific sub-set. For exemple if the request is send with the *OFFSET a*, it computes the request for the *OFFSET a* 'th modality to the *OFFSET a + limit_pack_ids* 'th modality. The external *LIMIT* and *OFFSET* clauses are used to manage the pagination of outputed results by Virtuoso. Virtuoso max outputed rows is 2^20, so if for a particular sub-set there are more results, the request need to be re-send, incrementing the last offset from the maximal number of outputed lines (*limit_selected_ids*)
@@ -34,7 +34,7 @@ A more detailed description of the configuration file is provided below.
 For all computed offset of each queries, csv results outputed by Virtuoso are stored in the corresponding *out_dir* as provided in the associated section of the configuration file at *out_path*.
 
 After all queries have been completed, all results are merged to build a global data.frame containing counts for each combination such as:
-*modalility_x, modalility_y, total_counts_for_modality_x, total_counts_for_modality_y, total_counts_for_coocurences_between_x_and_y, total_number_of_individuals*. As this data.frame can be really huge and to facilitate post-processes parallelization it can be divided in smaller data.frame according to the *file_size* parameters
+*modalility_x, modalility_y, total_counts_for_modality_x, total_counts_for_modality_y, total_counts_for_coocurences_between_x_and_y, total_number_of_individuals*. As this data.frame can be really huge and to facilitate post-processes parallelization it can be divided in smaller data.frame according to *file_size* and *split* parameters.
 
 The data.frame is printed in *df_out_dir* at *out_path*
 
