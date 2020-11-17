@@ -77,47 +77,54 @@ where
         where
         {
             {
-                select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH1) (strafter(STR(?mesh_all),\"http://id.nlm.nih.gov/mesh/\") as ?MESH2) (count(distinct ?pmid) as ?count) 
+                select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH1) (strafter(STR(?mesh_all),\"http://id.nlm.nih.gov/mesh/\") as ?MESH2) ?count 
                 where
                 {
                     {
-                        select distinct ?mesh ?pmid
+                        select ?mesh ?mesh_all (count(distinct ?pmid) as ?count) 
                         where
                         {
-
                             {
-                                select ?mesh
+                                select distinct ?mesh ?pmid
                                 where
                                 {
+
                                     {
-                                        select distinct ?mesh
+                                        select ?mesh
                                         where
                                         {
-                                            ?mesh a meshv:TopicalDescriptor .
-                                            ?mesh meshv:active 1 .
-                                            ?mesh meshv:treeNumber ?tn .
-                                            FILTER(REGEX(?tn,\"(C|A|G|F|I|J|D20|D23|D26|D27)\"))
+                                            {
+                                                select distinct ?mesh
+                                                where
+                                                {
+                                                    ?mesh a meshv:TopicalDescriptor .
+                                                    ?mesh meshv:active 1 .
+                                                    ?mesh meshv:treeNumber ?tn .
+                                                    FILTER(REGEX(?tn,\"(C|A|G|F|I|J|D20|D23|D26|D27)\"))
+                                                }
+                                                order by ?mesh
+                                            }
                                         }
-                                        order by ?mesh
+                                        limit %s
+                                        offset %s
                                     }
+                                    ?endp obo:IAO_0000136 ?pmid .
+                                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                                    ?mesh_ini a meshv:TopicalDescriptor .
+                                    ?mesh_ini meshv:active 1 .
+                                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+                                    ?mesh meshv:treeNumber ?tn .
                                 }
-                                limit %s
-                                offset %s
                             }
-                            ?endp obo:IAO_0000136 ?pmid .
-                            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
-                            ?mesh_ini a meshv:TopicalDescriptor .
-                            ?mesh_ini meshv:active 1 .
-                            ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
-                            ?mesh meshv:treeNumber ?tn .
+                            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini_2 .
+                            ?mesh_ini_2 a meshv:TopicalDescriptor .
+                            ?mesh_ini_2 meshv:active 1 .
+                            ?mesh_ini_2 (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn_all .
+                            FILTER(REGEX(?tn_all,\"(C|A|G|F|I|J|D20|D23|D26|D27)\")) .
+                            ?mesh_all meshv:treeNumber ?tn_all
                         }
+                        group by ?mesh ?mesh_all
                     }
-                    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini_2 .
-                    ?mesh_ini_2 a meshv:TopicalDescriptor .
-                    ?mesh_ini_2 meshv:active 1 .
-                    ?mesh_ini_2 (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn_all .
-                    FILTER(REGEX(?tn_all,\"(C|A|G|F|I|J|D20|D23|D26|D27)\")) .
-                    ?mesh_all meshv:treeNumber ?tn_all
                     FILTER
                         ( 
                             NOT EXISTS
@@ -133,7 +140,6 @@ where
                             }
                         )
                 }
-                group by ?mesh ?mesh_all
             }
             bind(uri(concat(\"http://database/ressources/mesh2mesh/\", ?MESH1, \"_\", ?MESH2)) as ?id)
         }
