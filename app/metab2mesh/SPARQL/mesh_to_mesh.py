@@ -121,7 +121,10 @@ where
                             ?mesh_ini_2 meshv:active 1 .
                             ?mesh_ini_2 (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn_all .
                             FILTER(REGEX(?tn_all,\"(C|A|G|F|I|J|D20|D23|D26|D27)\")) .
-                            ?mesh_all meshv:treeNumber ?tn_all
+                            ?mesh_all meshv:treeNumber ?tn_all .
+                            ?mesh_all a meshv:TopicalDescriptor .
+                            ?mesh_all meshv:active 1 .
+
                         }
                         group by ?mesh ?mesh_all
                     }
@@ -130,7 +133,7 @@ where
                             NOT EXISTS
                             { 
                                 ?mesh_all meshv:treeNumber/meshv:parentTreeNumber* ?tn .
-                                ?mesh meshv:treeNumber ?tn 
+                                ?mesh meshv:treeNumber ?tn .
                             } 
                             && 
                             NOT EXISTS
