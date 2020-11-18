@@ -45,7 +45,7 @@ echo " - compute fisher exact tests"
 IN_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/results/metab2mesh.csv"
 OUT_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher.csv"
 
-Rscript app/metab2mesh/post-processes/compute_fisher_exact_test_V2.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOG
+Rscript app/metab2mesh/post-processes/compute_fisher_exact_test.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOG
 
 # Compute post-processes (eg. q.value)
 echo " - Compute benjamini and Holchberg procedure"

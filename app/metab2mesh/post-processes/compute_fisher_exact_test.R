@@ -1,88 +1,149 @@
-library(optparse, lib.loc="~/work/R")
+library(optparse)
+library(bigstatsr)
+library(parallel)
+library(foreach)
 
 option_list <- list(
   make_option(c("-f", "--file"), type="character", default=NULL,
-              help="dataset file name", metavar="character")
+              help="dataset file name", metavar="character"),
+  make_option(c("-c", "--chunksize"), type="numeric", default=NULL,
+              help="chunk size while reading", metavar="numeric"),
+  make_option(c("-p", "--parallel"), type="numeric", default=NULL,
+              help="Number of cores allowed for parallelisation", metavar="numeric"),
+  make_option(c("-o", "--p_out"), type="character", default=NULL,
+              help="path to out file", metavar="character")
 );
 
+
 opt_parser <- OptionParser(option_list=option_list);
-opt <- parse_args(opt_parser);
+opt <- parse_args(opt_parser)
+
+# Functions
+
+
+# Compute test :
+parallel_on_chunck <- function(dataChunk, n_cores){
+  
+  # Function
+  compute_tests <- function(X, Y, COOC, T_X, T_Y, TT){
+    # Prepare matrix
+    a <- COOC
+    b <- T_X - COOC
+    c <- T_Y - COOC
+    d <- TT - a - b - c
+    matrice <- matrix(data = c(a, b, c, d), ncol = 2, byrow = TRUE)
+    # TryCatch on Fisher test :
+    test <- tryCatch(
+      {
+        fisher.test(x = matrice, alternative = "greater")
+      },
+      error = function(e){
+        print(paste(c(X, Y, e), collapse = " "))
+        return(NULL)
+      },
+      warning = function(w){
+        print(paste(c(X, Y, w), collapse = " "))
+        return(NULL)
+      }
+    )
+    # TryCatch on Chisq test :
+    chisq <- tryCatch({
+      suppressWarnings(chisq.test(matrice)$statistic)
+    },
+    error = function(e){
+      print(paste(c(X, Y, e), collapse = " "))
+      return(NULL)
+    })
+    # parse and write results :
+    if(!is.null(test)){
+      p.value <- test$p.value
+      if(is.infinite(test$estimate)){
+        odds_ratio <- NA
+      }else{
+        odds_ratio <- test$estimate
+      }
+      fold_change <- (a/T_X)/(T_Y/TT)
+    }else{
+      p.value <- odds_ratio <- fold_change <- NA
+    }
+    if(!is.null(chisq)){
+      chisq_stat <- chisq
+    }else{
+      chisq_stat <- NA
+    }
+    return(c(p.value, odds_ratio, fold_change, chisq_stat))
+  }
+  
+  n <- nrow(dataChunk)
+  cl <- parallel::makeCluster(n_cores, outfile = "")
+  doParallel::registerDoParallel(cl)
+  results <- FBM(n, 4)
+  print("Computing ....")
+  tmp <- foreach(i = 1:n, .combine = 'c') %dopar% {
+    # On calcule les stats. Attention, maintenant les log suront print, il faudrait donc rediriger la sortie vers un fichier .log au moment du lancement
+    results[i, ] <- compute_tests(dataChunk[i, 1], dataChunk[i, 2], dataChunk[i, 3], dataChunk[i, 4], dataChunk[i, 5], dataChunk[i, 6])
+  }
+  # On stoppe les processus en parallèle
+  parallel::stopCluster(cl)
+  return(results[])
+}
+
+
+
+# Get parralel parameteres
+n_cores <- opt$parallel
+chunksize <- opt$chunksize
 
 # Prepare files :
 path_in <- opt$file
-splited_path <- strsplit(path_in, "\\.")
-path_out <- paste0(splited_path[[1]][1], "_results.csv")
-log <- file(paste0(splited_path[[1]][1], ".log"), "w")
+path_out <- opt$p_out
 
-# Read data :
-data <- read.table(path_in, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+# Get total number of lines. Remove 1 for header:
+nlines <- R.utils::countLines(path_in)[1] - 1
+print(paste("There are", nlines, "associations to compute"))
+print(paste("Use parallelisation with", n_cores, "cores"))
 
-# Initialyze vectors :
-n <- nrow(data)
-p.value <- vector(mode = "numeric", length = n)
-odds_ratio <- vector(mode = "numeric", length = n)
-fold_change <- vector(mode = "numeric", length = n)
-chisq_stat <- vector(mode = "numeric", length = n)
+# Prepare conn
+con <- file(description=path_in, open="r")
+reached_chunck <- 0
+print(paste("Treating chunk", reached_chunck))
 
-# Compute test :
-for( i in 1:n){
-  # Prepare matrix
-  a <- data[i, 3]
-  b <- data[i, 4] - data[i, 3]
-  c <- data[i, 5] - data[i, 3]
-  d <- data[i, 6] - a - b - c
-  matrice <- matrix(data = c(a, b, c, d), ncol = 2, byrow = TRUE)
-  # TryCatch on Fisher test :
-  test <- tryCatch(
-    {
-      fisher.test(x = matrice, alternative = "greater")
-    },
-    error = function(e){
-      writeLines(paste0(c(data[i, 1], data[i, 2], e), collapse = "\t"), log)
-      return(NULL)
-    },
-    warning = function(w){
-      writeLines(paste(c(data[i, 1], data[i, 2], w), collapse = "\t"), log)
-      return(NULL)
-    }
-  )
-  # TryCatch on Chisq test :
-  chisq <- tryCatch({
-    suppressWarnings(chisq.test(matrice)$statistic)
-  },
-  error = function(e){
-    writeLines(paste0(c(data[i, 1], data[i, 2], e), collapse = "\t"), log)
-    return(NULL)
-  })
-  # parse and write results :
-  if(!is.null(test)){
-      p.value[i] <- test$p.value
-      if(is.infinite(test$estimate)){
-          odds_ratio[i] <- NA
-      }else{
-          odds_ratio[i] <- test$estimate
-      }
-        fold_change[i] <- (a/data[i, 4])/(data[i, 5]/data[i, 6])
-  }else{
-      p.value[i] <- odds_ratio[i] <- fold_change[i] <- NA
-  }
-  if(!is.null(chisq)){
-      chisq_stat[i] <- chisq
-  }else{
-      chisq_stat[i] <- NA
-  }
+# First time is read here to extract reader: 
+dataChunk <- read.table(con, nrows = chunksize, skip = 0, header = TRUE, fill = TRUE, sep = ",")
+
+# Computation
+results <- parallel_on_chunck(dataChunk, n_cores)
+
+# On cbind par rapport au chunk
+dataChunk <- cbind(dataChunk, results)
+
+# On écrit une première fois les headers
+colnames(dataChunk)[seq.int(to = length(colnames(dataChunk)), length.out = 4)] <- c("p.value", "odds_ratio", "fold_change", "chisq_stat")
+
+# On écrit avec les headers
+out <- file(description=path_out, open="w")
+write.table(dataChunk, out, sep = ',', row.names = FALSE, col.names = TRUE, append = FALSE)
+close(out)
+
+# On incrémente le chunk
+reached_chunck <- reached_chunck + chunksize
+# Do in loop
+while(reached_chunck < nlines){
+  print(paste("Treating chunk", reached_chunck))
+  # read chunk
+  dataChunk <- read.table(con, nrows = chunksize, skip = 0, header = FALSE, fill = TRUE, sep = ",")
+
+  # Computation
+  results <- parallel_on_chunck(dataChunk, n_cores)
+  dataChunk <- cbind(dataChunk, results)
+  out <- file(description=path_out, open="a")
+  # On écrit en append SANS les headers
+  write.table(dataChunk, out, sep = ',', row.names = FALSE, col.names = FALSE, append = TRUE)
+  close(out)
+  # On incrémente le chunk
+  reached_chunck <- reached_chunck + chunksize
+  
 }
-# Append results
-data$p.value <- p.value
-data$odds_ratio <- odds_ratio
-data$fold_change <- fold_change
-data$chisq_stat <- chisq_stat
-
-write.table(data, path_out, sep = ',', row.names = FALSE, col.names = FALSE)
-close(log)
-
-
-
-
-
+close(con)
+print("End !")
 

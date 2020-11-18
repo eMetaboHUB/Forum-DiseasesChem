@@ -34,7 +34,7 @@ A more detailed description of the configuration file is provided below.
 For all computed offset of each queries, csv results outputed by Virtuoso are stored in the corresponding *out_dir* as provided in the associated section of the configuration file at *out_path*.
 
 After all queries have been completed, all results are merged to build a global data.frame containing counts for each combination such as:
-*modalility_x, modalility_y, total_counts_for_modality_x, total_counts_for_modality_y, total_counts_for_coocurences_between_x_and_y, total_number_of_individuals*. As this data.frame can be really huge and to facilitate post-processes parallelization it can be divided in smaller data.frame according to the *file_size* parameters
+*modalility_x, modalility_y, total_counts_for_modality_x, total_counts_for_modality_y, total_counts_for_coocurences_between_x_and_y, total_number_of_individuals*. As this data.frame can be really huge and to facilitate post-processes parallelization it can be divided in smaller data.frame according to the *file_size* parameters. The order of these columns is important for the next statistical analyses, as identifiers and corpus sizes of variable $X$ modalities need to be in column 1 and 4, in column 2 and 5 for variable $Y$ modalities, their co-occurences in column 3, and the univers size in column 6. Also, for the weakness testing, the $X$ variable is used as reference to compute the Jeffrey's CI, according to the co-occurence in column 3 and the corpus size of variable $X$ modalities in column 4.
 
 The data.frame is printed in *df_out_dir* at *out_path*
 
@@ -85,3 +85,4 @@ python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config="/path/to/conf
 - out: path to the output directory
 
 Using the same workflow to parallelize queries, additional queries (Get MESH Names, etc ...) are provided in the additional_request.py and config parameters are the same.
+
