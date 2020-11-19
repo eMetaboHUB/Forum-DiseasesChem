@@ -18,10 +18,11 @@ If not
 ``` 
 Documentation at [tenforce/virtuoso](https://hub.docker.com/r/tenforce/virtuoso)
 
-Before building the triplestore, you need to create two directories:
+Before building the triplestore, you need to create three directories:
     - the **data** directory: it will contain all analysis result files, such as *Compound - MeSH* associations
     - the **docker-virtuoso** directory: it will contain the Virtuoso session files and data
       - a **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image, to ensure data loading.
+    - the **logs** to store logs.
 
 So, for instance, you can execute:
 ```
@@ -42,16 +43,35 @@ docker build -t forum/processes \
 ```
 This allow to build an image with correct permissions that correspond to the local host. (https://vsupalov.com/docker-shared-permissions/)
 
+In this container, three directories are intented to be bind with the host:
+- out: to export results in data
+- share-virtuoso: to create new RDF files in the Virtuoso shared directory
+- logs-app: to export logs
+
 Then, you can launch it using:
 
 ```bash
 docker run --name forum_scripts --rm -it --network="host" \
 -v /path/docker-virtuoso/share:/workdir/share-virtuoso \
 -v /path/to/data/dir:/workdir/out \
+-v /path/to/log/dir:/workdir/logs-app \
 forum/processes bash
 ```
+
+or in detach mode
+
+```bash
+docker run --detach --name forum_scripts --rm -t --network="host" \
+-v /path/docker-virtuoso/share:/workdir/share-virtuoso \
+-v /path/to/data/dir:/workdir/out \
+-v /path/to/log/dir:/workdir/logs-app \
+forum/processes bash
+```
+
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
 Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *data* and *docker-virtuoso/share*, instead of using ./data and ./docker-virtuoso/share in the next examples.
+
+**If you want to restart an analysis from scratch, be sure to remove all logs before!**
 
 ## 2 - Prepare the triplestore
 
@@ -66,12 +86,12 @@ There are two configuration files related to this step:
 Then, from *metdiseasedatabase* directory execute: 
 
 ```bash
-./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -p mdpForum -s path/to/virtuoso/shared/directory
+./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -p mdpForum -s path/to/virtuoso/shared/directory -l /path/to/log/dir
 ```
 eg.:
 
 ```bash
-./workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -p mdpForum -s ./docker-virtuoso/share
+./workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -p mdpForum -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 - *Option details:*
@@ -168,34 +188,34 @@ Some example of commands that can be used to compute each analysis are shown bel
 #### 3.3.1 - Compute PubChem compounds - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir
+./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CID_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/2020-10-10/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share
+./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CID_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/2020-10-10/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 
 #### 3.3.2 - Compute ChEBI - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/ChEBI2MeSH -t path/to/config/triplesConverter/ChEBI2MeSH -u CHEBI_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir
+./workflow/w_compound2mesh.sh -v version -m /path/to/config/ChEBI2MeSH -t path/to/config/triplesConverter/ChEBI2MeSH -u CHEBI_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CHEBI_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-10-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share
+./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CHEBI_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-10-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 #### 3.3.3 - Compute Chemont - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/Chemont2MeSH -t path/to/config/triplesConverter/Chemont2MeSH -u CHEMONT_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir
+./workflow/w_compound2mesh.sh -v version -m /path/to/config/Chemont2MeSH -t path/to/config/triplesConverter/Chemont2MeSH -u CHEMONT_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CHEMONT_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/2020-10-10/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share
+./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CHEMONT_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/2020-10-10/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 ### 3.4 - Shutdown Virtoso session

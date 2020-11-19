@@ -54,7 +54,8 @@ RUN mkdir /workdir \
     /workdir/share-virtuoso/ \
     /workdir/out/ \
     /workdir/app \
-    /workdir/workflow
+    /workdir/workflow \
+    /workdir/logs-app
     
 
 # COPY FILES

@@ -1,9 +1,6 @@
 #!/bin/bash
 
 BASEDIR=$(dirname $0)
-LOGSDIR=./logs-app
-
-mkdir -p $LOGSDIR
 
 #EG. bash workflow/w_compound2mesh.sh -v test -m app/metab2mesh/config/CHEBI_MESH_Thesaurus_Onto/test/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-07-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share
 
@@ -16,7 +13,7 @@ mkdir -p $LOGSDIR
 
 
 
-while getopts v:m:t:u:d:s: flag
+while getopts v:m:t:u:d:s:l: flag
 	do
 	    case "${flag}" in
 	        v) VERSION=${OPTARG};;
@@ -25,11 +22,14 @@ while getopts v:m:t:u:d:s: flag
 			u) RESSOURCE_NAME=${OPTARG};;
 			d) DATA=${OPTARG};;
 			s) RESOURCES_DIR=${OPTARG};;
+			l) LOGSDIR=${OPTARG};;
 	    esac
 	done
 
+mkdir -p $LOGSDIR
+
 # Init logs
-LOG="${LOGSDIR}/post_processes_${RESSOURCE_NAME}.log"
+LOG="${LOGSDIR}/processes_${RESSOURCE_NAME}.log"
 
 echo "" > $LOG
 

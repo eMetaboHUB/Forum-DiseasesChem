@@ -2,9 +2,6 @@
 
 
 BASEDIR=$(dirname $0)
-LOGSDIR=./logs-app
-
-mkdir -p $LOGSDIR
 
 # Test: bash workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -p F0rum_p455w0rd -s ./share-virtuoso
 
@@ -13,7 +10,7 @@ mkdir -p $LOGSDIR
 # -p: pydio pwd
 # -s: le chemin vers le répertoire de partage de Virtuoso où écrire les triplets (eg/ ./docker-virtuoso/share)
 
-while getopts b:c:v:p:s: flag
+while getopts b:c:v:p:s:l: flag
 	do
 	    case "${flag}" in
             b) CONFIG_BUILD_RDF_STORE=${OPTARG};;
@@ -21,8 +18,11 @@ while getopts b:c:v:p:s: flag
             v) VERSION=${OPTARG:-};;
             p) PYDIO_PASSWD=${OPTARG};;
 			s) RESOURCES_DIR=${OPTARG};;
+			l) LOGSDIR=${OPTARG};;
 	    esac
 	done
+
+mkdir -p $LOGSDIR
 
 echo "--  Create triple store !"
 echo "1) Get vocabulary and external data files from pydio ..."
