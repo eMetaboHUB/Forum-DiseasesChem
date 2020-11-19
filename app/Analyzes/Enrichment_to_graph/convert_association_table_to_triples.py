@@ -97,8 +97,15 @@ for chunk in df_chunk:
         # On ajoute les comptages pour les metadata
         n_subjects += len(set([str(s) for s in g.subjects()]))
         n_objects += len(g)
-        g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".trig", format='trig')
-        ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig.gz", ftp)
+        g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".ttl", format='turtle')
+        # On zip
+        try:
+            subprocess.run("gzip -f " + out_path + "/" + file_prefix + "_" + str(f_i) + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+        except subprocess.CalledProcessError as e:
+            print("Error while trying to compress files at " + out_path + "/" + file_prefix + "_" + str(f_i) + ".ttl : " + str(e))
+            sys.exit(3)
+        # Add to datapDump
+        ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".ttl.gz", ftp)
         g = ressource.create_data_graph(namespaces.keys(), namespaces)
         f_i += 1
 
@@ -107,16 +114,17 @@ if(len(g)) != 0:
     print("Ok\nStart serialyzing last graph ... ", end = '')
     n_subjects += len(set([str(s) for s in g.subjects()]))
     n_objects += len(g)
-    g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".trig", format='trig')
-    ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".trig.gz", ftp)
+    g.serialize(destination=out_path + "/" + file_prefix + "_" + str(f_i) + ".ttl", format='turtle')
+    # On zip
+    try:
+        subprocess.run("gzip -f " + out_path + "/" + file_prefix + "_" + str(f_i) + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error while trying to compress files at " + out_path + "/" + file_prefix + "_" + str(f_i) + ".ttl : " + str(e))
+        sys.exit(3)
+    ressource.add_DataDump(file_prefix + "_" + str(f_i) + ".ttl.gz", ftp)
     print("Ok\n")
 
-# On zip
-try:
-    subprocess.run("gzip -f " + out_path + "/" + file_prefix + "_*.trig", shell = True, check=True, stderr = subprocess.PIPE)
-except subprocess.CalledProcessError as e:
-    print("Error while trying to compress files at " + out_path + "/" + file_prefix + "_*.trig : " + str(e))
-    sys.exit(3)
+
 
 print("Export Metadata ... ")
 ressource.add_version_attribute(RDF["type"], VOID["Linkset"])
@@ -152,7 +160,7 @@ ressource.version_graph.serialize(destination= out_path + "void.ttl", format='tu
 print("Ok\nExport upload_file ... ", end = '')
 with open(path_to_dumps + "/" + "upload_Enrichment_" + config['SUBJECTS'].get('name') + "_" + config['OBJECTS'].get('name') + ".sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
-    upload_f.write("ld_dir_all ('./dumps/" + ressource_name + "/" + version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/" + ressource_name + "/" + version + "/', '*.ttl.gz', '" + str(ressource.uri_version) + "');\n")
     upload_f.write("ld_dir_all ('./dumps/" + ressource_name + "/" + version + "/', 'void.ttl', '" + str(ressource.uri_version) + "');\n")
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")

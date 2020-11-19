@@ -63,10 +63,10 @@ if todo_MeSH:
     mesh_out_dir = config['MESH'].get('out_dir_name')
     mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces, addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
-        upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
+        upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'mesh.nt', '" + mesh_uri + "');\n")
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
         # Also for pre-upload:
-        pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', '*.trig', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'mesh.nt', '" + mesh_uri + "');\n")
         pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
         
 # References
@@ -197,11 +197,11 @@ if todo_Elink:
         # Initialyze list to determine the last outputed file
         l1 = list()
         l2 = list()
-        for pmid_cid_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID/" + pmid_cid_version + "/*.trig.gz")]:
-            l1.append(int(pmid_cid_path.split("PMID_CID_")[1].split(".trig.gz")[0]))
+        for pmid_cid_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID/" + pmid_cid_version + "/*.ttl.gz")]:
+            l1.append(int(pmid_cid_path.split("PMID_CID_")[1].split(".ttl.gz")[0]))
             pmid_cid.ressource_version.add_DataDump(pmid_cid_path, ftp)
-        for pmid_cid_endpoint_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID_endpoints/" + pmid_cid_version + "/*.trig.gz")]:
-            l2.append(int(pmid_cid_endpoint_path.split("PMID_CID_endpoints_")[1].split(".trig.gz")[0]))
+        for pmid_cid_endpoint_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID_endpoints/" + pmid_cid_version + "/*.ttl.gz")]:
+            l2.append(int(pmid_cid_endpoint_path.split("PMID_CID_endpoints_")[1].split(".ttl.gz")[0]))
             pmid_cid.ressource_version_endpoint.add_DataDump(pmid_cid_endpoint_path, ftp)
         # The file index is set as the maximum of the last index or PMID_CID and PMIC_CID_endpoints to avoid missing wrong erasing, if they are different ! Or the next index if they are equals
         if max(l1) == max(l2):
@@ -253,14 +253,14 @@ if todo_Elink:
     pmid_cid_endpoint_uri_version = pmid_cid.ressource_version_endpoint.uri_version
     # Write in upload file :
     with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_uri_version) + "');\n")
         upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
         upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
         # For pre-upload, we need just type to compute with ChEBI:
-        pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_uri_version) + "');\n")
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.trig.gz', '');\n")
+        pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
 
 # Write ouput file footer :

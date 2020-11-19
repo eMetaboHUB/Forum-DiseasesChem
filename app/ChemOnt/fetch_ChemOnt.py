@@ -100,15 +100,6 @@ export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_s
 # The same for the both: 
 version = ClassyFire_direct_p.version
 
-# Compress files:
-try:
-    subprocess.run("gzip " + path_to_share + "ClassyFire/direct-parent/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
-    subprocess.run("gzip " + path_to_share + "ClassyFire/alternative-parents/" + version + "/*.trig", shell = True, check=True, stderr = subprocess.PIPE)
-except subprocess.CalledProcessError as e:
-    print("Error while trying to compress files")
-    print(e)
-    sys.exit(3)
-
 # Write ouput file header :
 with open(path_to_share + "upload_ClassyFire.sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")

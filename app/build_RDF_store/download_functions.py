@@ -164,26 +164,21 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
     for s,p,o in g_metadata.triples((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), None, None)):
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
-        if p != DCTERMS["created"]:
+        if (p != DCTERMS["created"]) or ((p == VOID['dataDump'] and str(o) == "ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt")):
             ressource_version.add_version_attribute(predicate = p, object = o)
-        if p == VOID['dataDump'] and str(o) != "ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt":
-            continue
     # On crée le graph de données : 
     print("Ok\nTrying to create MeSH new ressource version ...", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
-    mesh_graph.bind("mesh", rdflib.Namespace("http://id.nlm.nih.gov/mesh/"))
     mesh_graph.parse(out_path + "mesh.nt", format = "nt")
-    mesh_graph.serialize(destination = out_path + "mesh.trig", format='trig')
     ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
     ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
     # On écrit le graph de la ressource 
     ressource_version.version_graph.serialize(out_path + "void.ttl", format = 'turtle')
-    # On supprime le fichier initial au format .nt
+    # On supprime le fichier void initial
     try:
         subprocess.run("rm " + out_path + "void_1.0.0.ttl ", shell = True, check=True, stderr = subprocess.PIPE)
-        subprocess.run("rm " + out_path + "mesh.nt", shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
-        print("Error during trying to remove files, check dl_mesh.log")
+        print("Error during trying to remove file, check dl_mesh.log")
         print(e)
         with open(out_log + "dl_mesh.log", "ab") as f_log:
             f_log.write(e.stderr)
