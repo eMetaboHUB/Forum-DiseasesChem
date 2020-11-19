@@ -131,6 +131,9 @@ def get_creation_date(path):
 
 def get_graph_list(path_to_share, path_from_share, regex):
     all_versions_path = glob.glob(path_to_share + path_from_share + "*")
+    if len(all_versions_path) == 0:
+        print("Can't find files at " + path_to_share + path_from_share + "*. \n This step requires PMID_CID and PubChem InchiKey, you may check in config files to see if both are in todo.")
+        sys.exit(3)
     all_creation_date = [get_creation_date(p) for p in all_versions_path]
     most_recent_date = sorted(all_creation_date)[-1]
     most_recent_dir = all_versions_path[all_creation_date.index(most_recent_date)]

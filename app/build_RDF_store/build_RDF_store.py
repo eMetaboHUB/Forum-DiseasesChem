@@ -124,6 +124,7 @@ if todo_Elink:
     pack_size = config['ELINK'].getint('pack_size')
     timeout = config['ELINK'].getint('timeout')
     max_triples_by_files = config['ELINK'].getint('max_triples_by_files')
+    all_pmids = None
     # Building requests
     query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
@@ -229,6 +230,8 @@ if todo_Elink:
         all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
 
         print("Ok\n" + str(len(all_pmids)) + " pmids were found !")
+        if run_as_test:
+            all_pmids = [all_pmids[i] for i in range(0,100000)]
         # Export all_pmids list as linking ids list in addtional path
         if not os.path.exists(version_add_f_path):
             os.makedirs(version_add_f_path)
@@ -238,9 +241,6 @@ if todo_Elink:
     
     # From a previous attempt or a first try, use all_pmids list to compute associations :
     print("Try to extract CID - PMID associations using Elink processes")
-    if run_as_test:
-        all_pmids = [all_pmids[i] for i in range(0,100000)]
-    
     # Run :
     pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, max_triples_by_files, addtional_files_out_path, ftp)
     # Looking for failed at first try :
