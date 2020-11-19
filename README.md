@@ -58,7 +58,7 @@ docker run --name forum_scripts --rm -it --network="host" \
 forum/processes bash
 ```
 
-or in detach mode
+or in detach mode :
 
 ```bash
 docker run --detach --name forum_scripts --rm -t --network="host" \
@@ -67,15 +67,23 @@ docker run --detach --name forum_scripts --rm -t --network="host" \
 -v /path/to/log/dir:/workdir/logs-app \
 forum/processes bash
 ```
+When using detach mode, the container is running in the background, which can be really convinient to avoid *Broken pipe*, for instance if your are working on a server.
+You can open an interactive bash shell on the container running in the background by using :
 
-All commands can be launch in a detach mode, like :
 ```bash
-docker exec --detach forum_scripts ./command -param v1 -param2 v2 ...
+docker exec -it forum_scripts bash
+```
+You can then navigate in the container (like in a classic docker) to modify configuration files, make tests on scripts, check directory mount directories, etc ...
+
+Finally, all commands can be launch in a detach mode from the host (with nohup for instance), like :
+```bash
+nohup docker exec --detach forum_scripts ./command -param v1 -param2 v2 ... &
 ```
 eg.
 ```bash
-docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+nohup docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir &
 ```
+This command will be execute in the container, running in the background.
 
 
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
