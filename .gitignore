@@ -81,3 +81,4 @@ docker-virtuoso/save_workflow.sh
 docker_resources/**
 paper/**
 docker-virtuoso/**
+logs/**

@@ -68,6 +68,16 @@ docker run --detach --name forum_scripts --rm -t --network="host" \
 forum/processes bash
 ```
 
+All commands can be launch in a detach mode, like :
+```bash
+docker exec --detach forum_scripts ./command -param v1 -param2 v2 ...
+```
+eg.
+```bash
+docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+```
+
+
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
 Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *data* and *docker-virtuoso/share*, instead of using ./data and ./docker-virtuoso/share in the next examples.
 
