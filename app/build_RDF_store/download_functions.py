@@ -164,15 +164,24 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
     for s,p,o in g_metadata.triples((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), None, None)):
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
-        if (p != DCTERMS["created"]) or ((p == VOID['dataDump'] and str(o) == "ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt")):
+        if (p == VOID['dataDump']):
+            if str(o) == "ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt":
+                ressource_version.add_version_attribute(predicate = p, object = o)
+            else:
+                continue
+        elif (p != DCTERMS["created"]):
             ressource_version.add_version_attribute(predicate = p, object = o)
+        else:
+            continue
     # On crée le graph de données : 
     print("Ok\nTrying to create MeSH new ressource version ...", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
     mesh_graph.parse(out_path + "mesh.nt", format = "nt")
     ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
     ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
-    # On écrit le graph de la ressource 
+    # Clear graph
+    mesh_graph = None
+    # On écrit le graph de la ressource
     ressource_version.version_graph.serialize(out_path + "void.ttl", format = 'turtle')
     # On supprime le fichier void initial
     try:
