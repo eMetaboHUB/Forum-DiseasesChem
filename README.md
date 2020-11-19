@@ -55,7 +55,9 @@ Also, if you use the docker forum/processes, you should use in your commands,  d
 
 ## 2 - Prepare the triplestore
 
-To build the initial triplestore, you can use the script w_buildTripleStore.sh
+To build the initial triplestore, you can use the script w_buildTripleStore.sh or directly download RDF files from the FTP server.
+
+### 2.1 - Build the triplestore
 
 There are two configuration files related to this step:
 - The first contains parameters about the creation of the triplestore. See README in the *build_RDF_store* sub-directory for option details.
@@ -96,6 +98,11 @@ The vocabulary directory contains files associated to the schema of used ontolog
 
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
 pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graph, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds, as it need approximately 500 G0 of RAM to load all graphs ! But, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
+
+### 2.2 - Download RDF files from FTP
+
+Several datasets are used to compute associations between studied entities. Some dataset are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external ressource can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM ftp server at ftp://FORUM/. Files used to upload datasets in the Virutoso triples store, originally created by the workflow, are also provided.
+
 
 ## 3 - Compute chemical entities to MeSH associations
 
@@ -290,7 +297,7 @@ Be sure to remove the *pre_upload.sh* before compressing the share directory
 
 Created data-graphs are named graphs for which the associated uri identify the graph and triples it contains in the RDF store. By this specific uri, each data-graph is associated to a version of a specific ressource. There are several main ressources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
 
-When a new graph is created, a new version of the associated ressource is created. For example, if a new version of PubChem compounds is build using *build_RDF_store* script, a new graph with the uri *http://database/ressources/PubChem/compound/version_X* is created as a version of the ressource *http://database/ressources/PubChem/compound*.
+When a new graph is created, a new version of the associated ressource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *http://database/ressources/PubChem/compound/version_X* is created as a version of the ressource *http://database/ressources/PubChem/compound*.
 
 Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the data-graph in the same directory. An example of a *void.ttl* associated to a PubChem reference ressource is describe bellow:
 

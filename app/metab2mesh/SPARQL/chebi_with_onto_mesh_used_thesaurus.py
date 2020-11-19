@@ -198,7 +198,7 @@ where
                     }
                     group by ?chebi ?mesh
                 } 
-            bind(uri(concat(\"http://database/ressources/metab2mesh/\", ?CHEBI, \"_\", ?MESH)) as ?id)
+            bind(uri(concat(\"http://database/ressources/chebi2mesh/\", ?CHEBI, \"_\", ?MESH)) as ?id)
         }
         order by ?id
     }

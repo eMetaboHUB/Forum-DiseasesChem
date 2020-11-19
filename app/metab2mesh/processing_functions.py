@@ -211,14 +211,14 @@ def send_counting_request(prefix, header, data, url, config, key, module):
         sys.exit(3)
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     r_data["query"] = prefix + query %(graph_from)
-    print("Counting total number of " + name + " ...")
+    print("Counting total number of distinct subjects for " + name + " ...")
     count_res = requests.post(url = url, headers = header, data = r_data)
     if count_res.status_code != 200:
         print("Error in request " + config[key].get('Size_Request_name') + ", request status code = " + str(count_res.status_code) + "\nImpossible to continue without total counts, exit.\n")
         print(count_res.text)
         sys.exit(3)
     count = int(count_res.text.splitlines().pop(1))
-    print("There are " + str(count) + " " + name)
+    print("There are " + str(count) + " distinct subjects for  " + name)
     return count
 
 def launch_from_config(prefix, header, data, url, config, key, out_path, module):
