@@ -76,8 +76,8 @@ def parse_pubchem_RDF(input_ressource_directory, all_ids, prefix, input_ressourc
             current_graph.parse(data = file_content, format = 'turtle')
             n_triples += len(current_graph)
             subjects = subjects.union(set([str(s) for s in current_graph.subjects()]))
-            ressource_filtered_version.add_DataDump(base_name + "_filtered" + ".trig")
-            current_graph.serialize(destination = path_out + base_name + "_filtered" + ".trig", format='trig')
+            ressource_filtered_version.add_DataDump(base_name + "_filtered" + ".ttl")
+            current_graph.serialize(destination = path_out + base_name + "_filtered" + ".ttl", format='turtle')
             # On vide le graph
             current_graph = None
     # On ajoute les infos :

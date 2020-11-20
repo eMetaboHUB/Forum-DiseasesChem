@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import multiprocessing as mp
 import subprocess
+import glob
 import rdflib
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
@@ -60,42 +61,45 @@ with open(path_out + "classyFire_error_ids.log", "w") as f_log:
 with open(path_out + "ids_no_classify.log", "w") as f_log:
     pass
 
-
-pmids_cids_graph_list = get_graph_list(path_to_share, "PMID_CID/", "*.trig.gz")
-inchikeys_graph_list = get_graph_list(path_to_share, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  # pc_inchikey2compound_*.ttl.gz
-# Create CID - InchiLKey:
-path_inchiKey = path_out + "CID_InchiKeys.csv"
-extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list, path_inchiKey)
-
-# Read input file
-CID_inchiKeys = pd.read_csv(path_inchiKey, sep = ",", dtype= {'CID': str, 'INCHIKEY':str})
-df_list = np.array_split(CID_inchiKeys, n_processes)
-
 # On initialise les ressources :
 ClassyFire_direct_p = Database_ressource_version(ressource = "ClassyFire/direct-parent", version = version)
 ClassyFire_alternative_p = Database_ressource_version(ressource = "ClassyFire/alternative-parents", version = version)
-
-# On initialise les listes de graphs :
-ClassyFire_direct_p_graph_l = [ClassyFire_direct_p.create_data_graph(["compound", "classyfire"], namespaces) for i in range(0, n_processes)]
-ClassyFire_alternative_p_graph_l = [ClassyFire_alternative_p.create_data_graph(["compound", "classyfire"], namespaces) for i in range(0, n_processes)]
 
 # On initialise les path où exporter les graphs :
 path_direct_p = path_to_share + ClassyFire_direct_p.ressource + "/" + ClassyFire_direct_p.version + "/"
 path_alternative_p = path_to_share + ClassyFire_alternative_p.ressource + "/" + ClassyFire_alternative_p.version + "/"
 
-if not os.path.exists(path_direct_p):
-    os.makedirs(path_direct_p)
-
-if not os.path.exists(path_alternative_p):
-    os.makedirs(path_alternative_p)
-
-pool = mp.Pool(processes = n_processes)
-results = [pool.apply_async(classify_df, args=(i, df_list[i], ClassyFire_direct_p_graph_l[i], ClassyFire_alternative_p_graph_l[i], path_direct_p, path_alternative_p, path_out)) for i in range(0, n_processes)]
-graph_sizes = [p.get() for p in results]
-# Close Pool
-pool.close()
-pool.join()
-export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p, ftp)
+# Check if a previous version already exists :
+if (len(glob.glob(path_direct_p + "void.ttl")) == 1) and (len(glob.glob(path_alternative_p + "void.ttl")) == 1):
+    print("This version already exist, skip computation.")
+else:
+    pmids_cids_graph_list = get_graph_list(path_to_share, "PMID_CID/", "*.ttl.gz")
+    inchikeys_graph_list = get_graph_list(path_to_share, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  
+    # Create CID - InchiLKey:
+    path_inchiKey = path_out + "CID_InchiKeys.csv"
+    extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list, path_inchiKey)
+    
+    # Read input file
+    CID_inchiKeys = pd.read_csv(path_inchiKey, sep = ",", dtype= {'CID': str, 'INCHIKEY':str})
+    df_list = np.array_split(CID_inchiKeys, n_processes)
+    
+    # On initialise les listes de graphs :
+    ClassyFire_direct_p_graph_l = [ClassyFire_direct_p.create_data_graph(["compound", "classyfire"], namespaces) for i in range(0, n_processes)]
+    ClassyFire_alternative_p_graph_l = [ClassyFire_alternative_p.create_data_graph(["compound", "classyfire"], namespaces) for i in range(0, n_processes)]
+    
+    if not os.path.exists(path_direct_p):
+        os.makedirs(path_direct_p)
+    
+    if not os.path.exists(path_alternative_p):
+        os.makedirs(path_alternative_p)
+    
+    pool = mp.Pool(processes = n_processes)
+    results = [pool.apply_async(classify_df, args=(i, df_list[i], ClassyFire_direct_p_graph_l[i], ClassyFire_alternative_p_graph_l[i], path_direct_p, path_alternative_p, path_out)) for i in range(0, n_processes)]
+    graph_sizes = [p.get() for p in results]
+    # Close Pool
+    pool.close()
+    pool.join()
+    export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p, ftp)
 
 # The same for the both: 
 version = ClassyFire_direct_p.version
@@ -103,9 +107,9 @@ version = ClassyFire_direct_p.version
 # Write ouput file header :
 with open(path_to_share + "upload_ClassyFire.sh", "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
-    upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', '*.ttl.gz', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
     upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', 'void.ttl', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/ClassyFire/alternative-parents/" + version + "/', '*.trig.gz', '');\n")
+    upload_f.write("ld_dir_all ('./dumps/ClassyFire/alternative-parents/" + version + "/', '*.ttl.gz', '" + str(ClassyFire_alternative_p.uri_version) + "');\n")
     upload_f.write("ld_dir_all ('./dumps/ClassyFire/alternative-parents/" + version + "/', 'void.ttl', '" + str(ClassyFire_alternative_p.uri_version) + "');\n")
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")

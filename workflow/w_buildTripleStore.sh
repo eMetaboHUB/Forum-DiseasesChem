@@ -46,7 +46,7 @@ echo "2) Build rdf store"
 LOG_RDF="${LOGSDIR}/build_rdf_store.log"
 echo "" > $LOG_RDF
 
-python3 app/build_RDF_store/build_RDF_store.py --config=$CONFIG_BUILD_RDF_STORE --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_RDF
+python3 -u app/build_RDF_store/build_RDF_store.py --config=$CONFIG_BUILD_RDF_STORE --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_RDF
 
 echo "3) Create Chemont ressource"
 
@@ -54,4 +54,4 @@ echo "3) Create Chemont ressource"
 LOG_CHEMONT="${LOGSDIR}/chemont.log"
 echo "" > $LOG_CHEMONT
 
-python3 app/ChemOnt/fetch_ChemOnt.py --config=$CONFIG_CHEMONT --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_CHEMONT
+python3 -u app/ChemOnt/fetch_ChemOnt.py --config=$CONFIG_CHEMONT --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_CHEMONT

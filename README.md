@@ -85,6 +85,7 @@ docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /
 ```
 This command will be execute in the container, running in the background.
 
+Finally, the forum/processes container must not be used to start/stop/clean the Virtuoso triplestore (See 3.1)
 
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
 Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *data* and *docker-virtuoso/share*, instead of using ./data and ./docker-virtuoso/share in the next examples.
@@ -147,6 +148,9 @@ Several datasets are used to compute associations between studied entities. Some
 Once the initial data of the triplestore have been created, an initial session of the Virtuoso triplestore must be started in order to compute associations between chemical entities and MeSH descriptors.
 
 ### 3.1 - Initialyze the Virtuoso session
+
+
+**Warning:** The management script of the triplestore Virtuoso, *w_virtuoso.sh*, must be run directly **on the host**, without using the forum docker (forum/processes). Indeed, while starting the forum/processes container, the option *--network="host"* will allows that the container will use the host’s networking.
 
 To start the virtuoso session, use: 
 ```bash

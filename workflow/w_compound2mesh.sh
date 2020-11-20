@@ -38,7 +38,7 @@ echo " - compute compound2mesh"
 
 OUT_M="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/"
 
-python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
+python3 -u app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
 
 echo " - compute fisher exact tests"
 
@@ -71,4 +71,4 @@ echo " - Convert significant relations to triples"
 
 IN_T=$OUT_W
 
-python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --c2mconfig=$CONFIG_COMPOUND2MESH --c2mname=$RESSOURCE_NAME --input=$IN_T --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG
+python3 -u app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --c2mconfig=$CONFIG_COMPOUND2MESH --c2mname=$RESSOURCE_NAME --input=$IN_T --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG

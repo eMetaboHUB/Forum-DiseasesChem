@@ -179,9 +179,6 @@ if todo_Elink:
         
         print("Ok\nTry to determine remaining pmids ...", end = '')
         all_pmids = list(all_pmids_set - linking_ids_without_linked_ids_set - successful_linking_ids_set)
-        if len(all_pmids) == 0:
-            print("\nEverything seems already done, exit.")
-            sys.exit(3)
         print("Ok")
         print(str(len(all_pmids)) + " remaining pmids !")
         print("Try to initialyze all_linked_ids list ...", end = '')

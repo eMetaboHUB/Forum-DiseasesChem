@@ -255,7 +255,7 @@ class Elink_ressource_creator:
                     print("\t\tEnd was reached with %d new linking_id - linked_id association, start to export graph\n" %(self.available_linked_ids))
                 else:
                     print("\t\tMaximal size (%d) was reached with %d new linking_id - linked_id association, start to export graph\n" %(max_size, self.available_linked_ids))
-                print(" Ok\n\t\tTry to write and compress graph as .trig in %s and %s ..." %(path_out_1, path_out_2), end = '')
+                print(" Ok\n\t\tTry to write and compress graph as .ttl in %s and %s ..." %(path_out_1, path_out_2), end = '')
                 # On export les graphs :
                 try:
                     self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".ttl", format='turtle')
