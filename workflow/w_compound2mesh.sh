@@ -71,7 +71,7 @@ echo " - compute compound2mesh"
 
 OUT_M="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/"
 
-# python3 -u app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
+python3 -u app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
 
 echo " - compute fisher exact tests"
 
