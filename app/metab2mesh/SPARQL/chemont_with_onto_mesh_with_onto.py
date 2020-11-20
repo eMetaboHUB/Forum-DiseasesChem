@@ -305,22 +305,3 @@ where
     ?pmid a fabio:Article
 }
 """
-
-
-ChemOnt_Names = """
-select (strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\") as ?CHEMONT) (?chemont_label as ?CHEMONT_NAMES)
-%s
-where
-{
-    {
-        select distinct ?chemont where
-        {
-            ?chemont rdfs:subClassOf+ chemont:9999999 .
-            ?cid a+ ?chemont
-        }
-        group by ?chemont
-        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
-    }
-    ?chemont rdfs:label ?chemont_label
-}
-"""

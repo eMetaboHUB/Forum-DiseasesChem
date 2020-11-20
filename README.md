@@ -258,7 +258,12 @@ New directory *Analyzes* should have been created at the end of the process in t
 
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory
 
-End !
+### 3.5 MeSH, Chemont, ChEBI and CID labels
+
+Identifiers are not always convinients to study results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
+To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
+Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify. But, you can use the [PubChem identifier exchange service](https://pubchem.ncbi.nlm.nih.gov/idexchange/idexchange.cgi) to retrieve PubChem molecule names from their PubChem ID. You can extract a specific set of PubChem Compounds identifiers using the SPARQL endpoint and you can also get all the PubChem Compound identifier of molecules related to Pubmed articles by using the log file *all_linked_ids.txt*, located */path/to/logs/additional_files/version/all_linked_ids.txt*.
+
 
 ## 4 - Build a custom triplestore
 

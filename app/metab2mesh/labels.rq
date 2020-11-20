@@ -1,0 +1,53 @@
+# PREFIX
+
+DEFINE input:inference "schema-inference-rules"
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+PREFIX cito: <http://purl.org/spar/cito/>
+PREFIX fabio:	<http://purl.org/spar/fabio/> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX chemont: <http://purl.obolibrary.org/obo/CHEMONTID_>
+PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+
+
+# FOR MESH DESCRIPTORS
+
+select distinct (strafter(STR(?mesh), "http://id.nlm.nih.gov/mesh/") as ?MESH) (str(?label) as ?MESH_LABEL)
+FROM <MESH_GRAPH>
+where
+{
+    ?mesh a meshv:TopicalDescriptor .
+    ?mesh meshv:active 1 .
+    ?mesh rdfs:label ?label
+}
+
+
+# FOR CHEMONT CLASSES
+
+select distinct (strafter(STR(?chemont),"http://purl.obolibrary.org/obo/") as ?CHEMONT) (str(?chemont_label) as ?CHEMONT_NAMES)
+FROM <CHEMONT_GRAPH>
+where
+{
+
+    ?chemont rdfs:subClassOf+ chemont:9999999 .
+    ?chemont rdfs:label ?chemont_label
+}
+
+# FOR CHEBI
+
+select distinct (strafter(STR(?chebi),"http://purl.obolibrary.org/obo/CHEBI_") as ?CHEBI) (str(?chebi_label) as ?CHEBI_NAMES)
+FROM <CHEBI_GRAPH>
+where
+{
+    ?chebi rdfs:subClassOf+ chebi:24431 .    
+    ?chebi rdfs:label ?chebi_label
+}
