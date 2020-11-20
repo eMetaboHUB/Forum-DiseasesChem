@@ -11,9 +11,28 @@ BASEDIR=$(dirname $0)
 # -d: le chemin vers le répertoire où écrire les données (eg. ./data)
 # -s: le chemin vers le répertoire de partage de Virtuoso où écrire les triplets (eg/ ./docker-virtuoso/share)
 
+usage () {
+	echo "script usage: $(basename $0)" 
+	echo "-v version (optional, date as default value)"
+	echo "-m /path/to/config/compound2mesh"
+	echo "-t /path/to/config/EnrichmentAnalysis"
+	echo "-u ressource name"
+	echo "-d /path/data/dir"
+	echo "-s /path/to/docker-virtuoso/share/dir"
+	echo "-l /path/to/logs/dir"
+	echo "-c chunksize for parsing files (optional, default 100000)"
+	echo "-p number of used cores (optional, default 5)"
+	echo "-o threshold used in fragility index (optional, default 1e-6)"
+	echo "-i alpha of Jeffrey's CI for fragility index computation (optional, default 0.05)"
+}
 
+VERSION=$(date +"%Y-%m-%d")
+CHUNKSIZE=100000
+PARALLEL=5
+THRESHOLD=1e-6
+ALPHACI=0.05
 
-while getopts v:m:t:u:d:s:l: flag
+while getopts v:m:t:u:d:s:l:c:p:o:i: flag
 	do
 	    case "${flag}" in
 	        v) VERSION=${OPTARG};;
@@ -23,8 +42,22 @@ while getopts v:m:t:u:d:s:l: flag
 			d) DATA=${OPTARG};;
 			s) RESOURCES_DIR=${OPTARG};;
 			l) LOGSDIR=${OPTARG};;
+			c) CHUNKSIZE=${OPTARG};;
+			p) PARALLEL=${OPTARG};;
+			o) THRESHOLD=${OPTARG};;
+			i) ALPHACI=${OPTARG};;
+			?) usage; exit 1;;
+
+
 	    esac
 	done
+
+if [ -z "$CONFIG_COMPOUND2MESH" ] || [ -z "$CONFIG_COMPOUND2MESH_TRIPLES" ] || [ -z "$RESSOURCE_NAME" ] || [ -z "$DATA" ] || [ -z "$RESOURCES_DIR" ] || [ -z "$LOGSDIR" ]
+then
+	echo "One (or few) mandatory options seem missing. Mandatory options are: -m -t -u -d -s -l" ;
+	usage ;
+	exit 1 ;
+fi
 
 mkdir -p $LOGSDIR
 
@@ -38,14 +71,14 @@ echo " - compute compound2mesh"
 
 OUT_M="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/"
 
-python3 -u app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
+# python3 -u app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
 
 echo " - compute fisher exact tests"
 
 IN_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/results/metab2mesh.csv"
 OUT_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher.csv"
 
-Rscript app/metab2mesh/post-processes/compute_fisher_exact_test.R --file=$IN_F --chunksize=100000 --parallel=5 --p_out=$OUT_F 2>&1 | tee -a $LOG
+Rscript app/metab2mesh/post-processes/compute_fisher_exact_test.R --file=$IN_F --chunksize=$CHUNKSIZE --parallel=$PARALLEL --p_out=$OUT_F 2>&1 | tee -a $LOG
 
 # Compute post-processes (eg. q.value)
 echo " - Compute benjamini and Holchberg procedure"
@@ -60,7 +93,7 @@ echo " - Compute weakness tests"
 
 IN_W=$OUT_Q
 OUT_W="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher_q_w.csv"
-Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=1e-6 --alphaCI=0.05 --chunksize=100000 --parallel=5 --p_out=$OUT_W 2>&1 | tee -a $LOG
+Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=$THRESHOLD --alphaCI=$ALPHACI --chunksize=$CHUNKSIZE --parallel=$PARALLEL --p_out=$OUT_W 2>&1 | tee -a $LOG
 
 # Upload step: Aboard
 # FTP="ftp://data/anayse/version"

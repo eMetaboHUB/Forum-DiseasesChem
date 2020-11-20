@@ -187,12 +187,19 @@ For each analysis, there are two main configuration files:
 To compute associations between chemical entities and MeSH descriptors, you can use: w_compound2mesh.sh
 
 *Option details:*
-  - v: version of the analysis.
+- **Mandatory otions**:
   - m: path to the configuration file of the analysis requesting Virtuoso
   - t: path to the configuration file to convert association to triples
   - u: name of the computed resource
   - d: path to the data directory
   - s: path to the Virtuoso shared directory
+- **Optionals:**
+  - v: version of the analysis (optional, date used as default).
+  - c: chunksize for parsing files (optional, default 100000)
+  - p: number of used cores (optional, default 5)
+  - o: threshold used in fragility index (optional, default 1e-6)
+  - i: alpha of Jeffrey's CI for fragility index computation (optional, default 0.05)
+  
 
 For each analysis: all results and intermediary data will be exported in a dedicated sub-directory named as the resource (option u).
 In this sub-directory, you can find count data associated with Chemical entities, MeSH descriptors and their co-occurrences (eg. directory MESH_PMID).

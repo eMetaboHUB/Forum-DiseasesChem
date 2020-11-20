@@ -128,7 +128,7 @@ if todo_Elink:
     # Building requests
     query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
-                                    api_key = apiKey, email = "maxime.delmas@inrae.fr")
+                                    api_key = apiKey, email = "service.pfem@inrae.fr")
     # Build Elink ressource creator: 
     pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID", 
                                         version = pmid_cid_version, 
