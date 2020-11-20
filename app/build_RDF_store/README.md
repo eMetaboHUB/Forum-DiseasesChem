@@ -56,6 +56,8 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
   - timeout: The period (in seconds) after which a request will be canceled if too long. For CID - PMID, 600 is recommended.
   - additional_files_out_path: a path to a directory where the *additional_files* directory will be created.
   - max_triples_by_files: The maximum number of associations exported in a file. For CID - PMID, 5000000 is recommended.
+- [FTP]
+  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 
 run from workdir:
 ```python
