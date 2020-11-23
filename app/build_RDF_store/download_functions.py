@@ -40,6 +40,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     if len(test_r_info) == 1:
         print("Yes\nPubChem " + request_ressource + " RDF version " + pubchem_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_last_v)
+        print("=================================================================================\n")
         return pubchem_last_v, str(ressource_version.uri_version)
     else:
         print("No\nTrying to dowload PubChem " + request_ressource + " RDF version " + pubchem_last_v + "\n\n")
@@ -91,6 +92,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
     print(" Ok\nEnd !")
+    print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)
 
 def download_MeSH(out_dir, namespaces_dict, out_log):
@@ -129,6 +131,7 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
     if len(test_r_info) == 1:
         print("Yes\nMeSH RDF version " + mesh_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_last_v)
+        print("=================================================================================\n")
         return mesh_last_v, str(ressource_version.uri_version)
     else:
         print("No\nTrying to dowload MeSH RDF version " + mesh_last_v + "\n\n")
@@ -193,5 +196,5 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
             f_log.write(e.stderr)
         sys.exit(3)
     print(" Ok\nEnd")
-    print("=================================================================================")
+    print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)

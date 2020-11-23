@@ -226,7 +226,7 @@ if todo_Elink:
         
         all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
 
-        print("Ok\n" + str(len(all_pmids)) + " pmids were found !")
+        print(" Ok\n" + str(len(all_pmids)) + " pmids were found !")
         if run_as_test:
             all_pmids = [all_pmids[i] for i in range(0,100000)]
         # Export all_pmids list as linking ids list in addtional path
@@ -260,6 +260,7 @@ if todo_Elink:
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
 
+print("=================================================================================\n")
 # Write ouput file footer :
 print("Write uplaod file")
 with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
