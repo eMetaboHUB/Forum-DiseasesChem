@@ -238,3 +238,4 @@ def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, gra
     ClassyFire_alternative_p.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(sum([g[3] for g in graph_sizes]), datatype=XSD.long ))
     ClassyFire_direct_p.version_graph.serialize(destination= path_direct_p + "void.ttl", format='turtle')
     ClassyFire_alternative_p.version_graph.serialize(destination= path_alternative_p + "void.ttl", format='turtle')
+    print("Ok")
