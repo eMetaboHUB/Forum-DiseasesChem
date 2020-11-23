@@ -297,21 +297,3 @@ where
     ?pmid a fabio:Article
 }
 """
-
-ChEBI_Names = """
-select (strafter(STR(?chebi),\"http://purl.obolibrary.org/obo/CHEBI_\") as ?CHEBI) (?chebi_label as ?CHEBI_NAMES)
-%s
-where
-{
-    {
-        select distinct ?chebi where
-        {
-            ?chebi rdfs:subClassOf+ chebi:24431 .
-            ?cid a+ ?chebi
-        }
-        group by ?chebi
-        having(count (distinct ?cid) <= 1000 && count(distinct ?cid) > 1)
-    }
-    ?chebi rdfs:label ?chebi_label
-}
-"""

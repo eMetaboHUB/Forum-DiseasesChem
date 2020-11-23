@@ -18,21 +18,22 @@ If not
 ``` 
 Documentation at [tenforce/virtuoso](https://hub.docker.com/r/tenforce/virtuoso)
 
-Before building the triplestore, you need to create three directories:
-    - the **data** directory: it will contain all analysis result files, such as *Compound - MeSH* associations
-    - the **docker-virtuoso** directory: it will contain the Virtuoso session files and data
-      - a **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image, to ensure data loading.
-    - the **logs** to store logs.
+Before building the triplestore, you need to create 4 directories:
+- the **data** directory: it will contain all analysis result files, such as *Compound - MeSH* associations
+- the **docker-virtuoso** directory: it will contain the Virtuoso session files and data
+- the **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image, to ensure data loading.
+- the **logs** to store logs.
 
 So, for instance, you can execute:
 ```
 mkdir data
+mkdir logs
 mkdir -p docker-virtuoso/share
 ```
 
 Two possibility to build the triplestore:
-    - You can use the docker-image provided which contains all needed packages and libraries.
-    - or you can execute them on your own environment, but check that all needed packages are installed.
+- You can use the docker-image provided which contains all needed packages and libraries.
+- Or, you can execute them on your own environment, but check that all needed packages are installed.
 
 If you want to use the docker image, first build it :
 
@@ -73,18 +74,19 @@ You can open an interactive bash shell on the container running in the backgroun
 ```bash
 docker exec -it forum_scripts bash
 ```
-You can then navigate in the container (like in a classic docker) to modify configuration files, make tests on scripts, check directory mount directories, etc ...
+You can then navigate in the container (like in a classic docker) to modify configuration files, make tests on scripts, check mount directories, etc ...
 
-Finally, all commands can be launch in a detach mode from the host (with nohup for instance), like :
+Finally, all commands can be launch in a detach mode from the host, like :
 ```bash
-nohup docker exec --detach forum_scripts ./command -param v1 -param2 v2 ... &
+docker exec --detach forum_scripts ./command -param v1 -param2 v2 ...
 ```
 eg.
 ```bash
-nohup docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir &
+docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 This command will be execute in the container, running in the background.
 
+Finally, the forum/processes container must not be used to start/stop/clean the Virtuoso triplestore (See 3.1)
 
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
 Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *data* and *docker-virtuoso/share*, instead of using ./data and ./docker-virtuoso/share in the next examples.
@@ -132,12 +134,12 @@ The vocabulary directory contains files associated to the schema of used ontolog
 - skos: https://www.w3.org/2009/08/skos-reference/skos.rdf
 - ChemOnt: http://classyfire.wishartlab.com/downloads
 
-*Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl is actually used.
+*Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl.
 
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
-pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graph, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds, as it need approximately 500 G0 of RAM to load all graphs ! But, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
+pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
 
-### 2.2 - Download RDF files from FTP
+### 2.2 - Or ... Download RDF files from FTP
 
 Several datasets are used to compute associations between studied entities. Some dataset are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external ressource can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM ftp server at ftp://FORUM/. Files used to upload datasets in the Virutoso triples store, originally created by the workflow, are also provided.
 
@@ -147,6 +149,9 @@ Several datasets are used to compute associations between studied entities. Some
 Once the initial data of the triplestore have been created, an initial session of the Virtuoso triplestore must be started in order to compute associations between chemical entities and MeSH descriptors.
 
 ### 3.1 - Initialyze the Virtuoso session
+
+
+**Warning:** The management script of the triplestore Virtuoso, *w_virtuoso.sh*, must be run directly **on the host**, without using the forum docker (forum/processes). Indeed, while starting the forum/processes container, the option *--network="host"* will allows that the container will use the host’s networking.
 
 To start the virtuoso session, use: 
 ```bash
@@ -158,7 +163,7 @@ eg.
 workflow/w_virtuoso.sh -d ./docker-virtuoso -s share start
 ```
 
-*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to required the KG during the computation is http://localhost**:9980**/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
+*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to required the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
 
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
@@ -183,16 +188,23 @@ For each analysis, there are two main configuration files:
 To compute associations between chemical entities and MeSH descriptors, you can use: w_compound2mesh.sh
 
 *Option details:*
-  - v: version of the analysis.
+- **Mandatory options**:
   - m: path to the configuration file of the analysis requesting Virtuoso
   - t: path to the configuration file to convert association to triples
   - u: name of the computed resource
   - d: path to the data directory
   - s: path to the Virtuoso shared directory
+- **Optionals:**
+  - v: version of the analysis (optional, date used as default).
+  - c: chunksize for parsing files (optional, default 100000)
+  - p: number of used cores (optional, default 5)
+  - o: threshold used in fragility index (optional, default 1e-6)
+  - i: alpha of Jeffrey's CI for fragility index computation (optional, default 0.05)
+  
 
 For each analysis: all results and intermediary data will be exported in a dedicated sub-directory named as the resource (option u).
 In this sub-directory, you can find count data associated with Chemical entities, MeSH descriptors and their co-occurrences (eg. directory MESH_PMID).
-In the sub-directory results, you can find the table that resume counts for each association. It is this table that is used later to compute Fisher exact tests on each association. From this table to the final result table containing all statistical values, there are several intermediary files produced.
+In the sub-directory results, you can find the table that resume counts for each association. This table that is used later to compute Fisher exact tests on each association. From this table to the final result table containing all statistical values, there are several intermediary files produced.
 
 These intermediary files are:
 - r_fisher.csv: correspond to the table containing results after the Fisher exact test computation.
@@ -201,7 +213,7 @@ These intermediary files are:
 
 At the end of this procedure all significant associations, according to the threshold in the configuration file, are converted in a triple formalism to be instantiated in the knowledge graph. See details of the procedure in the README of Analyzes/Enrichment_to_graph.
 
-Some example of commands that can be used to compute each analysis are shown below:
+Some example of commands that can be used to compute each analysis are shown below, using default values options c,p,o,i :
 
 #### 3.3.1 - Compute PubChem compounds - MeSH associations
 
@@ -254,7 +266,12 @@ New directory *Analyzes* should have been created at the end of the process in t
 
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory
 
-End !
+### 3.5 MeSH, Chemont, ChEBI and CID labels
+
+Identifiers are not always convinients to study results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
+To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
+Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify. But, you can use the [PubChem identifier exchange service](https://pubchem.ncbi.nlm.nih.gov/idexchange/idexchange.cgi) to retrieve PubChem molecule names from their PubChem ID. You can extract a specific set of PubChem Compounds identifiers using the SPARQL endpoint and you can also get all the PubChem Compound identifier of molecules related to Pubmed articles by using the log file *all_linked_ids.txt*, located */path/to/logs/additional_files/version/all_linked_ids.txt*.
+
 
 ## 4 - Build a custom triplestore
 
@@ -301,7 +318,7 @@ services:
 networks:
     network_name: # network name
 ```
-**Warning:** the *data* directory which is bind in the docker-virtuoso is **not** the *data* directory of the results! Inside the directory *docker-virtuoso*, containing the docker-compose file, Virtuoso will create several directories to prepare to session. Among them, it will create a data/virtuoso sub-directory, which need to be mapped to data in the docker container.
+**Warning:** the *data* directory which is bind in the docker-virtuoso is **not** the *data* directory of the results! Inside the directory *docker-virtuoso*, containing the docker-compose file, Virtuoso will create several directories to prepare to session. Among them, it will create a *data/virtuoso* sub-directory, which need to be mapped to data in the docker container.
 
 Start Virtuoso:
 

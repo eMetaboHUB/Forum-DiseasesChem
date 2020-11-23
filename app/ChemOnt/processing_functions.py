@@ -4,6 +4,7 @@ import time
 import rdflib
 from rdflib.namespace import RDF, VOID, DCTERMS, XSD
 import sys
+import subprocess
 import signal
 import glob
 import datetime
@@ -32,8 +33,16 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
             continue
         add_triples(row['CID'], chemont_ids, g_direct_parent, g_alternative_parent)
     print("Serialyze graphs")
-    g_direct_parent.serialize(destination=path_direct_p + "classyfire_direct_parent_" + str(df_index + 1) + ".trig", format='trig')
-    g_alternative_parent.serialize(destination=path_alternative_p + "classyfire_alternative_parent_" + str(df_index + 1) + ".trig", format='trig')
+    g_direct_parent.serialize(destination=path_direct_p + "classyfire_direct_parent_" + str(df_index + 1) + ".ttl", format='turtle')
+    g_alternative_parent.serialize(destination=path_alternative_p + "classyfire_alternative_parent_" + str(df_index + 1) + ".ttl", format='turtle')
+    # Compress files:
+    try:
+        subprocess.run("gzip " + path_direct_p + "classyfire_direct_parent_" + str(df_index + 1) + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("gzip " + path_alternative_p + "classyfire_alternative_parent_" + str(df_index + 1) + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error while trying to compress files")
+        print(e)
+        sys.exit(3)
     return [len(g_direct_parent), len(set([str(s) for s in g_direct_parent.subjects()])), len(g_alternative_parent), len(set([str(s) for s in g_alternative_parent.subjects()]))]
 
 def get_entity_from_ClassyFire(CID, InchiKey, path_out):
@@ -122,11 +131,17 @@ def get_creation_date(path):
 
 def get_graph_list(path_to_share, path_from_share, regex):
     all_versions_path = glob.glob(path_to_share + path_from_share + "*")
+    if len(all_versions_path) == 0:
+        print("Can't find directories at " + path_to_share + path_from_share + "*. \n This step requires PMID_CID and PubChem InchiKey, you may check in config files to see if both are in todo and other logs.")
+        sys.exit(3)
     all_creation_date = [get_creation_date(p) for p in all_versions_path]
     most_recent_date = sorted(all_creation_date)[-1]
     most_recent_dir = all_versions_path[all_creation_date.index(most_recent_date)]
     
     file_list = glob.glob(most_recent_dir + "/" + regex)
+    if len(file_list) == 0:
+        print("Can't find *.ttl.gz files at " + most_recent_dir + ". \n This step requires PMID_CID and PubChem InchiKey, you may check in config files to see if both are in todo and other logs.")
+        sys.exit(3)
     return file_list
 
 
@@ -144,7 +159,7 @@ def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out)
         print("Importing " + pmid_cid_f_input + " ...")
         g_pmid_cid = rdflib.ConjunctiveGraph()
         with gzip.open(pmid_cid_f_input, "rb") as f:
-            g_pmid_cid.parse(f, format = "trig")
+            g_pmid_cid.parse(f, format = "turtle")
         # Get all objects
         extracted_objects = [uri.toPython().split('http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID')[1] for uri in list(g_pmid_cid.objects())]
         available_cids = available_cids.union(extracted_objects)
@@ -203,8 +218,8 @@ def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, gra
     """
     # On ajoute les infos pour la première ressource:
     for i in range(1, (len(graph_sizes) + 1)):
-        ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".trig.gz", ftp)
-        ClassyFire_alternative_p.add_DataDump("classyfire_alternative_parent_" + str(i) + ".trig.gz", ftp)
+        ClassyFire_direct_p.add_DataDump("classyfire_direct_parent_" + str(i) + ".ttl.gz", ftp)
+        ClassyFire_alternative_p.add_DataDump("classyfire_alternative_parent_" + str(i) + ".ttl.gz", ftp)
     ClassyFire_direct_p.add_version_attribute(RDF["type"], VOID["Linkset"])
     ClassyFire_alternative_p.add_version_attribute(RDF["type"], VOID["Linkset"])
     for uri_targeted_ressource in uri_targeted_ressources:

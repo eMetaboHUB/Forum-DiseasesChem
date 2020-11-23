@@ -15,6 +15,8 @@ These both types of classes are stored separately in two different graphs.
 ### Config file
 - [PROCESSES]
   - n_processes: The number of molecule that will be treated in parralel. The input table will be divided in *n_processes* sub-tables, which will be treated independtly in parralel.
+- [FTP]
+  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 
 
 How to run:

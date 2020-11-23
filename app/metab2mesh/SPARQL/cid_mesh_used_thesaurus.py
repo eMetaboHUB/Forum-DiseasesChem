@@ -233,44 +233,6 @@ offset %d
 """
 
 
-MESH_name = """
-select ?MESH str(?str_f_label)
-%s
-where
-{
-    {
-        select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) MIN(str(?label)) as ?str_f_label
-        where
-        {
-            {
-                select ?mesh
-                where
-                {
-                    {
-                        select distinct ?mesh
-                        where
-                        {
-                            ?mesh a meshv:TopicalDescriptor .
-                            ?mesh meshv:active 1 .
-                            ?mesh meshv:treeNumber ?tn .
-                            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-                        }
-                        order by ?mesh
-                    }
-                }
-                limit %d
-                offset %d
-            }
-        ?mesh rdfs:label ?label
-        }
-        group by ?mesh
-        order by ?mesh
-    }
-}
-limit %d
-offset %d
-"""
-
 count_number_of_CID = """
 select (count(distinct ?cid) as ?count_CID)
 %s

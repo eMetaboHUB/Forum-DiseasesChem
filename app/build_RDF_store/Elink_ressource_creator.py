@@ -255,25 +255,25 @@ class Elink_ressource_creator:
                     print("\t\tEnd was reached with %d new linking_id - linked_id association, start to export graph\n" %(self.available_linked_ids))
                 else:
                     print("\t\tMaximal size (%d) was reached with %d new linking_id - linked_id association, start to export graph\n" %(max_size, self.available_linked_ids))
-                print(" Ok\n\t\tTry to write and compress graph as .trig in %s and %s ..." %(path_out_1, path_out_2), end = '')
+                print(" Ok\n\t\tTry to write and compress graph as .ttl in %s and %s ..." %(path_out_1, path_out_2), end = '')
                 # On export les graphs :
                 try:
-                    self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".trig", format='trig')
-                    self.ressource_version.add_DataDump(g_linked_id_name + ".trig.gz", ftp)
+                    self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".ttl", format='turtle')
                 except Exception as e:
                     print("Error while trying to serialize linked id graph at " + path_out_1 + g_linked_id_name + " : " +str(e))
                     sys.exit(3)
                 try:
-                    self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".trig", format='trig')
-                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".trig.gz", ftp)
+                    self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".ttl", format='turtle')
                 except Exception as e:
                     print("Error while trying to serialize linked id graph endpoint at " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)
-                # On zip :
+                # On zip et on ajoute le dataDump:
                 try:
-                    subprocess.run("gzip -f " + path_out_1 + g_linked_id_name + ".trig" + " " + path_out_2 + g_linked_id_endpoint_name + ".trig", shell = True, check=True, stderr = subprocess.PIPE)
+                    subprocess.run("gzip -f " + path_out_1 + g_linked_id_name + ".ttl" + " " + path_out_2 + g_linked_id_endpoint_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                    self.ressource_version.add_DataDump(g_linked_id_name + ".ttl.gz", ftp)
+                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".ttl.gz", ftp)
                 except subprocess.CalledProcessError as e:
-                    print("Eroor while trying to compress files at " + path_out_1 + g_linked_id_name + " and " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
+                    print("Error while trying to compress files and add dataDump at " + path_out_1 + g_linked_id_name + " and " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)
                 # On incrémente les nombres de sujets et de triples :
                 print("Ok\n\t\tIncrement numbers of triples and subjects from added triples ...", end = '')

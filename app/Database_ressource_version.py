@@ -69,7 +69,7 @@ class Database_ressource_version:
         This function will create an attribute void:dataDump to indicate the location of the data files on the provided ftp server. The ftp server address on which created data will be stored.
         - graph_file: the graph file name
         - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server.
-        If an empty string is used, dataDump triples will not be added to the void.tll
+        If an empty string is used, dataDump triples will not be added to the void.ttl
         """
         if len(ftp) > 0:
             self.version_graph.add((self.uri_version, VOID["dataDump"], rdflib.URIRef(ftp + self.ressource + "/" + self.version + "/" + graph_file)))
