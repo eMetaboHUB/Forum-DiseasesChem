@@ -261,7 +261,7 @@ if todo_Elink:
         pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
 
 # Write ouput file footer :
-print("Write output file")
+print("Write uplaod file")
 with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")

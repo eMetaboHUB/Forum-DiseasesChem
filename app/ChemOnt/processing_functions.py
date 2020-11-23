@@ -156,18 +156,19 @@ def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out)
         # release memory
         g_pmid_cid = None
         # Import pmid_cid graph
-        print("Importing " + pmid_cid_f_input + " ...")
+        print("Importing " + pmid_cid_f_input + " ...", end = '')
         g_pmid_cid = rdflib.ConjunctiveGraph()
         with gzip.open(pmid_cid_f_input, "rb") as f:
             g_pmid_cid.parse(f, format = "turtle")
         # Get all objects
         extracted_objects = [uri.toPython().split('http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID')[1] for uri in list(g_pmid_cid.objects())]
         available_cids = available_cids.union(extracted_objects)
+        print(" Ok")
     # Then, we browse inchikey files to select CID - inchikey association for which the CID has an associated corpus
     for inchikey_f_input in inchikeys_graph_list:
         g_inchikey = None
         g_inchikey = rdflib.Graph()
-        print("treating file " + inchikey_f_input + " ...")
+        print("treating file " + inchikey_f_input + " ...", end = '')
         # Add InchiKeys triples to the graph
         with gzip.open(inchikey_f_input, "rb") as f:
             g_inchikey.parse(f, format = "turtle")
@@ -180,6 +181,7 @@ def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out)
             for cid_index in range(0, len(cids)):
                 if cids[cid_index] in available_cids:
                     m = out_writer.writerow([cids[cid_index], inchikeys[cid_index]])
+        print(" Ok")
     # Release all memory
     g_inchikey = None
     g_pmid_cid = None

@@ -18,7 +18,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     with open(out_log + "dl_pubchem_" + request_ressource + ".log", "wb") as f_log:
         pass
     # On télécharge le fichier void et les données
-    print("Trying to check last available version of PubChem RDF on ftp ...")
+    print("Trying to check last available version of PubChem RDF on ftp ...", end = '')
     # Connect ftp server to check void.ttl last modification date
     try:
         ftp = ftplib.FTP("ftp.ncbi.nlm.nih.gov")
@@ -33,16 +33,16 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     # Parse data to create pubchem version
     pubchem_last_v = parser.parse(pubchem_mdtm)
     pubchem_last_v = pubchem_last_v.strftime('%Y-%m-%d')
-    print("Last PubChem " + request_ressource + "RDF version found on ftp server is : " + pubchem_last_v)
-    print("Check if PubChem " + request_ressource + " RDF version " + pubchem_last_v + " was already download ...")
+    print(" Ok\nLast PubChem " + request_ressource + "RDF version found on ftp server is : " + pubchem_last_v)
+    print("Check if PubChem " + request_ressource + " RDF version " + pubchem_last_v + " was already download: ", end = '')
     # From last version date, if associated void.ttl file already exists, exit and return pubchem last version and associated uri
     test_r_info = glob.glob(out_path + request_ressource + "/" + pubchem_last_v + "/" + "void.ttl")
     if len(test_r_info) == 1:
-        print("PubChem " + request_ressource + " RDF version " + pubchem_last_v + " is already downloaded, end.\n\n")
+        print("Yes\nPubChem " + request_ressource + " RDF version " + pubchem_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_last_v)
         return pubchem_last_v, str(ressource_version.uri_version)
     else:
-        print("Trying to dowload PubChem " + request_ressource + " RDF version " + pubchem_last_v + "\n\n")
+        print("No\nTrying to dowload PubChem " + request_ressource + " RDF version " + pubchem_last_v + "\n\n")
     # Download PubChem data
     print("Trying to dowload PubChem void.ttl file ...", end = '')
     # Create output directory for requested ressource and last available version
@@ -57,7 +57,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
         with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
-    print("Ok\nTrying to read Pubchem void.ttl file ...", end = '')
+    print(" Ok\nTrying to read Pubchem void.ttl file ...", end = '')
     # On parse le fichier des metadatas
     g_metadata = rdflib.Graph()
     g_metadata.parse(version_path + "void.ttl", format='turtle')
@@ -69,7 +69,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
         with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
-    print("Ok\nTrying to dowload Pubchem " + dir + " directory ...", end = '')
+    print(" Ok\nTrying to dowload Pubchem " + dir + " directory ...", end = '')
     # On récupère les données que l'on enregistre dans le directory créée
     try:
         subprocess.run("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir, shell = True, check=True, stderr = subprocess.PIPE)
@@ -79,7 +79,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
         with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
-    print("Ok\nTrying to build Pubchem " + request_ressource + " new ressource version ...", end = '')
+    print(" Ok\nTrying to build Pubchem " + request_ressource + " new ressource version ...", end = '')
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_last_v)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
@@ -90,7 +90,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
-    print("Ok\nEnd !")
+    print(" Ok\nEnd !")
     return ressource_version.version, str(ressource_version.uri_version)
 
 def download_MeSH(out_dir, namespaces_dict, out_log):
@@ -107,7 +107,7 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
         pass
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    print("Trying to check last available version of MeSH RDF on ftp ...")
+    print("Trying to check last available version of MeSH RDF on ftp ...", end = '')
     # Connect ftp server to check mesh.nt last modification date
     try:
         ftp = ftplib.FTP("ftp.nlm.nih.gov")
@@ -122,16 +122,16 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
     # parse date to get last version
     mesh_last_v = parser.parse(mesh_mdtm)
     mesh_last_v = mesh_last_v.strftime('%Y-%m-%d')
-    print("Last MeSH RDF version found on ftp server is : " + mesh_last_v)
-    print("Check if MeSH RDF version " + mesh_last_v + " was already download ...")
+    print(" Ok\nLast MeSH RDF version found on ftp server is : " + mesh_last_v)
+    print("Check if MeSH RDF version " + mesh_last_v + " was already download: ", end = '')
     test_r_info = glob.glob(out_dir + mesh_last_v + "/" + "void.ttl")
     # From last version date, if associated void.ttl file already exists, exit and return mesh last version and associated uri
     if len(test_r_info) == 1:
-        print("MeSH RDF version " + mesh_last_v + " is already downloaded, end.\n\n")
+        print("Yes\nMeSH RDF version " + mesh_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_last_v)
         return mesh_last_v, str(ressource_version.uri_version)
     else:
-        print("Trying to dowload MeSH RDF version " + mesh_last_v + "\n\n")
+        print("No\nTrying to dowload MeSH RDF version " + mesh_last_v + "\n\n")
     # Create version output directory
     out_path = out_dir + mesh_last_v + "/"
     if not os.path.exists(out_path):
@@ -148,7 +148,7 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
     print("Trying to read MeSH void.ttl file ...", end = '')
     g_metadata = rdflib.Graph()
     g_metadata.parse(out_path + "void_1.0.0.ttl", format = 'turtle')
-    print("Ok\nTrying to dowload MeSH RDF file ...", end = '')
+    print(" Ok\nTrying to dowload MeSH RDF file ...", end = '')
     # Download MeSH RDF
     try:
         subprocess.run("wget -P " + out_path + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt", shell = True, check=True, stderr = subprocess.PIPE)
@@ -158,7 +158,7 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
         with open(out_log + "dl_mesh.log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
-    print("Ok\nTrying to parse MeSH original metadata ...", end = '')
+    print(" Ok\nTrying to parse MeSH original metadata ...", end = '')
     # On crée la nouvelle ressource MeSH
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_last_v)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
@@ -174,7 +174,7 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
         else:
             continue
     # On crée le graph de données : 
-    print("Ok\nTrying to create MeSH new ressource version ...", end = '')
+    print(" Ok\nTrying to create MeSH new ressource version ...", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
     mesh_graph.parse(out_path + "mesh.nt", format = "nt")
     ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
@@ -192,5 +192,6 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
         with open(out_log + "dl_mesh.log", "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
-    print("Ok\nEnd")
+    print(" Ok\nEnd")
+    print("=================================================================================")
     return ressource_version.version, str(ressource_version.uri_version)
