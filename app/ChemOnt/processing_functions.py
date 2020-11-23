@@ -233,7 +233,7 @@ def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, gra
     ClassyFire_alternative_p.add_version_attribute(DCTERMS["description"], rdflib.Literal("This subset contains RDF triples providing links between PubChem compounds and their classes according to ChemOnt ontology from ClassyFire. The provided classes correspond to the Alternative Parents, representing classes describing the molecule but which not have an ancestor–descendant relationship with each other or with the Direct Parent"))
     ClassyFire_alternative_p.add_version_attribute(DCTERMS["title"], rdflib.Literal("ChemOnt Classification - Alternative parents"))
     # On exporte le graph des metadata :
-    print(" Export version graph with metadata ...\n", end = '')
+    print("Export version graph with metadata ... ", end = '')
     ClassyFire_direct_p.add_version_attribute(VOID["triples"], rdflib.Literal(sum([g[0] for g in graph_sizes]), datatype=XSD.long))
     ClassyFire_direct_p.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(sum([g[1] for g in graph_sizes]), datatype=XSD.long ))
     ClassyFire_alternative_p.add_version_attribute(VOID["triples"], rdflib.Literal(sum([g[2] for g in graph_sizes]), datatype=XSD.long ))
