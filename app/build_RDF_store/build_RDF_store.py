@@ -140,7 +140,8 @@ if todo_Elink:
                                         primary_predicate = ("cito", "discusses"),
                                         secondary_predicate = ("cito", "isCitedAsDataSourceBy"),
                                         namespaces = namespaces,
-                                        timeout = timeout)
+                                        timeout = timeout,
+                                        ftp = ftp)
     # If version was set to None, it has been transform to date in the Elink_ressource_creator objects, if no None it was keeped
     pmid_cid_version = pmid_cid.ressource_version.version
     # Test if associations files from a previous attempt exists :
@@ -239,10 +240,10 @@ if todo_Elink:
     # From a previous attempt or a first try, use all_pmids list to compute associations :
     print("Try to extract CID - PMID associations using Elink processes")
     # Run :
-    pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, max_triples_by_files, addtional_files_out_path, ftp)
+    pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, max_triples_by_files, addtional_files_out_path)
     # Looking for failed at first try :
     while(len(pmid_cid.request_failure) != 0):
-        pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, addtional_files_out_path, ftp)
+        pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, addtional_files_out_path)
     # Export ressource metadata
     pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef("http://database/ressources/PubChem/reference"), rdflib.URIRef("http://database/ressources/PubChem/compound")])
     # Export versions and uris versions

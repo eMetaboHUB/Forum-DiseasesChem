@@ -7,7 +7,14 @@ from Id_mapping import Id_mapping
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
+parser.add_argument("--out", help="path to output directory")
+parser.add_argument("--meta", help="path to table of metadata")
+parser.add_argument("--format", help="format of the SBML RDF files, compatible with RDFlib")
+parser.add_argument("--sbml", help="path to sbml file")
+parser.add_argument("--version", help="version of the PMID-CID ressource, if none, the date is used")
 args = parser.parse_args()
+
+# Intialyze attributes and paths: 
 
 if not os.path.exists(args.config):
     print("Config file : " + args.config + " does not exist")
@@ -19,9 +26,6 @@ try:
 except configparser.Error as e:
     print(e)
     sys.exit(3)
-
-
-# Intialyze attributes and paths: 
 
 namespaces = {
     "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
@@ -37,55 +41,51 @@ namespaces = {
     "owl": rdflib.Namespace("http://www.w3.org/2002/07/owl#")
 }
 
+# Global
+path_to_dumps = args.out + "/"
+meta_table = args.meta
+path_to_g_SBML = args.sbml
+ftp = config["FTP"].get("ftp")
 
-# Virtuoso:
-path_to_dumps = config['VIRTUOSO'].get('path_to_dumps')
-url = config['VIRTUOSO'].get('url')
-update_f_name = config['VIRTUOSO'].get('update_file')
 # SBML
-path_to_g_SBML = config['SBML'].get('g_path')
-path_to_dir_SMBL = config['SBML'].get('path_to_dir_from_dumps')
-sbml_version = config['SBML'].get('version')
-path_to_dir_Intra = config['SBML'].get('path_to_dir_intra_from_dumps')
+sbml_version = args.version
+sbml_rdf_format = config["SBML"].get("format")
+gem_path = path_to_dumps + "GEM/" + sbml_version
+
+# URIS
 base_uri_SBML = "http://database/ressources/SMBL/"
-#LINKED GRAPH
 Intra_eq_base_uri = "http://database/ressources/ressources_id_mapping/Intra/SBML/"
 
+# PROCESSES
 uri = base_uri_SBML + sbml_version
+
+print("Try to move SMBL file to Virtuoso shared directory ...")
+if not os.path.exists(gem_path):
+    os.makedirs(gem_path)
+try:
+    subprocess.run("cp " + path_to_g_SBML + " " + gem_path + "/", shell = True, stderr=subprocess.STDOUT)
+except subprocess.SubprocessError as e:
+    print("There was an error when trying to move SBML file : " + e)
+    sys.exit(3)
 
 linked_grahs = [Intra_eq_base_uri + sbml_version]
 
-print("Initialyze update file : " + update_f_name)
+update_f_name = "SBML_update_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 
-if test_if_graph_exists(url, uri, linked_grahs, path_to_dumps, update_f_name):
-    print("Graphs not already exists, create new graphs...")
-else:
-    sys.exit(3)
-
-# Move SBML RDF file to Virtuoso shared directory:
-print("Try to move SMBL files to Virtuoso shared directory ...")
-if not os.path.exists(path_to_dumps + path_to_dir_SMBL):
-    os.makedirs(path_to_dumps + path_to_dir_SMBL)
-try:
-    subprocess.run("cp " + path_to_g_SBML + " " + path_to_dumps + path_to_dir_SMBL, shell = True, stderr=subprocess.STDOUT)
-except subprocess.SubprocessError as e:
-    print("There was an error when trying to move SBML files : " + e)
-    sys.exit(3)
-# Load graph
-print("Try to load SMBL graph in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_SMBL, "*.ttl", uri, update_f_name)
+gem_file = os.path.basename(path_to_g_SBML)
+create_update_file_from_ressource(path_to_dumps, "GEM/" + sbml_version + "/", gem_file, uri, update_f_name)
 
 print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
-map_ids = Id_mapping(sbml_version, namespaces)
+map_ids = Id_mapping(sbml_version, namespaces, ftp)
 print("Import configuration table", end = '')
-map_ids.import_table_infos(config['SBML'].get('path_to_table_infos'))
-map_ids.get_graph_ids_set(path_to_g_SBML, uri)
+map_ids.import_table_infos(meta_table)
+map_ids.get_graph_ids_set(gem_path + "/" + gem_file, uri, sbml_rdf_format)
 print("Export SBML Uris intra equivalences ")
-map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "SBML")
+map_ids.export_intra_eq(path_to_dumps + "Id_mapping/Intra/", "SBML")
 print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
 
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "*.trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "SBML/" + sbml_version + "/", "void.ttl", Intra_eq_base_uri + sbml_version, update_f_name)
+create_update_file_from_ressource(path_to_dumps, "Id_mapping/Intra/SBML/" + sbml_version + "/", "*.trig", '', update_f_name)
+create_update_file_from_ressource(path_to_dumps, "Id_mapping/Intra/SBML/" + sbml_version + "/", "void.ttl", Intra_eq_base_uri + sbml_version, update_f_name)

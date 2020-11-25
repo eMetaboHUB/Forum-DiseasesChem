@@ -13,7 +13,7 @@ from Database_ressource_version import Database_ressource_version
 
 
 class Id_mapping:
-    def __init__(self, version, namespaces):
+    def __init__(self, version, namespaces, ftp):
         """
         - ressource_uris: a dict with key as ressource name and values representing different URIs that may be associated to the ressource
         - ressources_ids: a dict with key as ressource name and values representing the ressource id in UniChem
@@ -24,6 +24,7 @@ class Id_mapping:
         - sources:  a list of uris representing RDF graph which were used a sources in the process. All the list is exported in metadat when creating Intra-ressources equivalences. For specific Inter-ressource equivalences (Ex: MetaNetX or PubChem), only the associated source graph is exported
         - namespaces: a dict of namespaces
         - version: the version of the ressource, if None date is used
+        - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.
         """
         self.ressource_uris = dict()
         self.ressources_ids = dict()
@@ -34,8 +35,9 @@ class Id_mapping:
         self.sources = list()
         self.namespaces = namespaces
         self.version = version
+        self.ftp = ftp
     
-    def get_graph_ids_set(self, path_to_graph, graph_uri):
+    def get_graph_ids_set(self, path_to_graph, graph_uri, format):
         """
         This function allow to parse an input SMBL RDF graph and get all the actual ids present in the graph ONLY for ressources that may have several uris.
         - path_to_graph: a path to the .ttl file of the SMBL graph
@@ -43,7 +45,7 @@ class Id_mapping:
         Note that keys in the dict must be the same as in the ressource_uris dict.
         """
         g = rdflib.Graph()
-        g.parse(path_to_graph, format = 'turtle')
+        g.parse(path_to_graph, format = format)
         query = g.query(
             """
             select distinct ?ref
@@ -87,12 +89,12 @@ class Id_mapping:
                 for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
                     current_graph.add((current_uri, self.namespaces["owl"]['sameAs'], next_uri))
             print("Ok\nExport graph for ressource " + r_name + " ...", end = '')
-            ressource_version_intra.add_DataDump(g_name + ".trig")
+            ressource_version_intra.add_DataDump(g_name + ".trig", self.ftp)
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
             subjects = subjects.union(set([s for s in current_graph.subjects()]))
             n_triples += len(current_graph)
             print("Ok")
-        print("Write metadata graph ...", end = '')
+        print("Write metadata graph ... ", end = '')
         ressource_version_intra.add_version_namespaces(["void"], self.namespaces)
         ressource_version_intra.add_version_attribute(DCTERMS["description"], rdflib.Literal("URIs equivalence inside a ressource"))
         ressource_version_intra.add_version_attribute(DCTERMS["title"], rdflib.Literal("URIs equivalence inside a ressource"))
@@ -187,7 +189,7 @@ class Id_mapping:
                 current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
             # On écrit le graph :
             print("Ok\nExport graph for ressource " + ressource + " ...", end = '')
-            ressource_version_MetaNetX.add_DataDump(g_name + ".trig")
+            ressource_version_MetaNetX.add_DataDump(g_name + ".trig", self.ftp)
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
             n_triples += len(current_graph)
             subjects = subjects.union(set([s for s in current_graph.subjects()]))
@@ -221,7 +223,7 @@ class Id_mapping:
                 current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
             # On écrit le graph :
             print("Ok\nExport graph for ressource " + ressource + " ...", end = '')
-            ressource_version_MetaNetX.add_DataDump(g_name + ".trig")
+            ressource_version_MetaNetX.add_DataDump(g_name + ".trig", self.ftp)
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
             n_triples += len(current_graph)
             subjects = subjects.union(set([s for s in current_graph.subjects()]))
@@ -267,7 +269,7 @@ class Id_mapping:
                 uri_1, uri_2 = rdflib.URIRef(self.ressource_uris["pubchem"][0] + PubChem_ids[id_index]), rdflib.URIRef(self.ressource_uris[ressource][0] + ressource_ids[id_index])
                 current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
             # On écrit le graph :
-            ressource_version_PubChem.add_DataDump(g_name + ".trig")
+            ressource_version_PubChem.add_DataDump(g_name + ".trig", self.ftp)
             print("Ok\nExport graph for ressource " + ressource + " ...", end = '')
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
             n_triples += len(current_graph)
