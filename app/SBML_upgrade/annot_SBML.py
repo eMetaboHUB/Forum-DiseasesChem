@@ -58,6 +58,7 @@ prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
 prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
 CONSTRUCT {
 	?specie bqbiol:is ?otherRef . 
 }
