@@ -1,8 +1,8 @@
-chebi	7	http://identifiers.org/chebi/CHEBI:,http://purl.obolibrary.org/obo/CHEBI_,https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:	http://identifiers.org/chebi/CHEBI:	http://purl.obolibrary.org/obo/CHEBI_	http://purl.obolibrary.org/obo/CHEBI_
-pubchem	22	http://identifiers.org/pubchem.compound/,http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID	http://identifiers.org/pubchem.compound/		http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID
-kegg	6	http://identifiers.org/kegg.compound/,https://www.kegg.jp/entry/,https://identifiers.org/kegg.compound:	http://identifiers.org/kegg.compound/	https://identifiers.org/kegg.compound:	
-hmdb	18	http://identifiers.org/hmdb/,https://identifiers.org/hmdb:	http://identifiers.org/hmdb/	https://identifiers.org/hmdb:	
-lipidmaps	33	http://identifiers.org/lipidmaps/,https://identifiers.org/lipidmaps:	http://identifiers.org/lipidmaps/	https://identifiers.org/lipidmaps:	
-chembl	1	https://identifiers.org/chembl.compound/,http://rdf.ebi.ac.uk/resource/chembl/molecule/			
-metanetx		http://identifiers.org/metanetx.chemical/,https://rdf.metanetx.org/chem/	http://identifiers.org/metanetx.chemical/	https://rdf.metanetx.org/chem/	
-bigg		http://identifiers.org/bigg.metabolite/,https://identifiers.org/bigg.metabolite:	http://identifiers.org/bigg.metabolite/	https://identifiers.org/bigg.metabolite:	
+chebi	http://identifiers.org/chebi/CHEBI:,http://purl.obolibrary.org/obo/CHEBI_,https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:	http://identifiers.org/chebi/CHEBI:	http://purl.obolibrary.org/obo/CHEBI_	http://purl.obolibrary.org/obo/CHEBI_
+pubchem	http://identifiers.org/pubchem.compound/,http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID	http://identifiers.org/pubchem.compound/		http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID
+kegg	http://identifiers.org/kegg.compound/,https://www.kegg.jp/entry/,https://identifiers.org/kegg.compound:	http://identifiers.org/kegg.compound/	https://identifiers.org/kegg.compound:	
+hmdb	http://identifiers.org/hmdb/,https://identifiers.org/hmdb:	http://identifiers.org/hmdb/	https://identifiers.org/hmdb:	
+lipidmaps	http://identifiers.org/lipidmaps/,https://identifiers.org/lipidmaps:	http://identifiers.org/lipidmaps/	https://identifiers.org/lipidmaps:	
+chembl	https://identifiers.org/chembl.compound/,http://rdf.ebi.ac.uk/resource/chembl/molecule/			
+metanetx	http://identifiers.org/metanetx.chemical/,https://rdf.metanetx.org/chem/	http://identifiers.org/metanetx.chemical/	https://rdf.metanetx.org/chem/	
+bigg	http://identifiers.org/bigg.metabolite/,https://identifiers.org/bigg.metabolite:	http://identifiers.org/bigg.metabolite/	https://identifiers.org/bigg.metabolite:	

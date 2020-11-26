@@ -5,6 +5,7 @@ import re
 import os, sys
 import json
 import gzip
+import subprocess
 import itertools
 import csv
 from rdflib.namespace import XSD, DCTERMS, OWL
@@ -15,8 +16,7 @@ from Database_ressource_version import Database_ressource_version
 class Id_mapping:
     def __init__(self, version, namespaces, ftp):
         """
-        - ressource_uris: a dict with key as ressource name and values representing different URIs that may be associated to the ressource
-        - ressources_ids: a dict with key as ressource name and values representing the ressource id in UniChem
+        - ressource_uris: a dict with key as ressource name and values representing different URIs that may be associated to the ressource and that will be consider as synonyms uris
         - graph_original_uri_prefix: a dict with key as ressource name and values as the URI used in the SBML graph
         - intra_ids_dict: a dict with key as ressource name and values containing the union of all the ids extracted for this ressource
         - uri_MetaNetX: a dict with key as ressource name and values representing the URI of the ressource present in the MetaNetX RDF graph
@@ -27,7 +27,6 @@ class Id_mapping:
         - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.
         """
         self.ressource_uris = dict()
-        self.ressources_ids = dict()
         self.graph_original_uri_prefix = dict()
         self.intra_ids_dict = dict()
         self.uri_MetaNetX = dict()
@@ -72,7 +71,7 @@ class Id_mapping:
         - path_out: a path to out files
         - source : a string which defined the origin of the data stores in the IdMapping object, et may be SBML, MetaNetX, BiGG ...
         """
-        ressource_version_intra = Database_ressource_version(ressource = "ressources_id_mapping/Intra/" + source, version = self.version)
+        ressource_version_intra = Database_ressource_version(ressource = "Id_mapping/Intra/" + source, version = self.version)
         n_triples = 0
         subjects = set()
         path_out = path_out + source + "/" + ressource_version_intra.version + "/"
@@ -83,14 +82,23 @@ class Id_mapping:
             g_name = r_name + "_intra"
             current_graph = ressource_version_intra.create_data_graph(namespace_list  = ["owl"], namespace_dict = self.namespaces)
             intra_ids = list(self.intra_ids_dict[r_name])
-            print("Create intra uris equivalences ...", end = '')
+            print("Create intra uris equivalences ... ", end = '')
             for id in intra_ids:
                 intra_uris = [rdflib.URIRef(prefix + id) for prefix in self.ressource_uris[r_name]]
                 for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
                     current_graph.add((current_uri, self.namespaces["owl"]['sameAs'], next_uri))
-            print("Ok\nExport graph for ressource " + r_name + " ...", end = '')
-            ressource_version_intra.add_DataDump(g_name + ".trig", self.ftp)
-            current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
+            print("Ok\nExport graph for ressource " + r_name + " ... ", end = '')
+            current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
+            print("Ok\nTry to compress file " + r_name + " ... ", end = '')
+            try:
+                # Use of gzip -f to force overwritting if file already exist
+                subprocess.run("gzip -f " + path_out + g_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                ressource_version_intra.add_DataDump(g_name + ".ttl.gz", self.ftp)
+            except subprocess.CalledProcessError as e:
+                print("Error while trying to compress files")
+                print(e)
+                sys.exit(3)
+            print("Ok\nIncrement metadata ... ", end = '')
             subjects = subjects.union(set([s for s in current_graph.subjects()]))
             n_triples += len(current_graph)
             print("Ok")
@@ -105,20 +113,21 @@ class Id_mapping:
         ressource_version_intra.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
     
-    def import_table_infos(self, config_file):
+    def import_table_infos(self, meta, sep):
         """
         This function is used to import the configuration file. The configuration file is a tabulated file with columns containing information of each ressource in this order:
-        ressource name, ressource UniChem id, all ressource URIs (comma separated), URI used on SBML, URI used in MetaNetX, URI used in PubChem
+        ressource name, all ressource URIs (comma separated), URI used on SBML, URI used in MetaNetX, URI used in PubChem
+        - meta: path to the metadata file
+        - sep: the field separator character 
         """
-        with open(config_file, "r") as config:
-            for l in config:
+        with open(meta, "r") as meta:
+            for l in meta:
                 columns = l.split("\t")
-                self.ressources_ids[str(columns[0])] = str(columns[1])
-                self.ressource_uris[str(columns[0])] = str(columns[2]).split(',')
-                self.graph_original_uri_prefix[str(columns[0])] = str(columns[3])
+                self.ressource_uris[str(columns[0])] = str(columns[1]).split(',')
+                self.graph_original_uri_prefix[str(columns[0])] = str(columns[2])
                 # Use rstrip because it's the last column
-                self.uri_MetaNetX[str(columns[0])] = str(columns[4])
-                self.uri_PubChem[str(columns[0])] = str(columns[5]).rstrip()
+                self.uri_MetaNetX[str(columns[0])] = str(columns[3])
+                self.uri_PubChem[str(columns[0])] = str(columns[4]).rstrip()
         self.intra_ids_dict = {key: set() for key in self.ressource_uris.keys() if len(self.ressource_uris[key]) > 1 }
     
     def get_mapping_from_MetanetX(self, graph_metaNetX, ressource):

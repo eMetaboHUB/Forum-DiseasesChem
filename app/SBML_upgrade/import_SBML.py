@@ -59,7 +59,7 @@ Intra_eq_base_uri = "http://database/ressources/ressources_id_mapping/Intra/SBML
 # PROCESSES
 uri = base_uri_SBML + sbml_version
 
-print("Try to move SMBL file to Virtuoso shared directory ...")
+print("Try to move SMBL file to Virtuoso shared directory ... ", end = '')
 if not os.path.exists(gem_path):
     os.makedirs(gem_path)
 try:
@@ -67,6 +67,7 @@ try:
 except subprocess.SubprocessError as e:
     print("There was an error when trying to move SBML file : " + e)
     sys.exit(3)
+print("Ok")
 
 linked_grahs = [Intra_eq_base_uri + sbml_version]
 
@@ -77,15 +78,15 @@ with open(path_to_dumps + update_f_name, "w") as update_f:
 gem_file = os.path.basename(path_to_g_SBML)
 create_update_file_from_ressource(path_to_dumps, "GEM/" + sbml_version + "/", gem_file, uri, update_f_name)
 
-print("Import identifiers from Graph to create SBML URIs intra equivalences")
 # Intialyze Object:
 map_ids = Id_mapping(sbml_version, namespaces, ftp)
-print("Import configuration table", end = '')
-map_ids.import_table_infos(meta_table)
+print("Import configuration table ... ", end = '')
+map_ids.import_table_infos(meta_table, "\t")
+print("OK\nImport identifiers from SBML rdf graph to create SBML URIs intra equivalences ... ", end = '')
 map_ids.get_graph_ids_set(gem_path + "/" + gem_file, uri, sbml_rdf_format)
-print("Export SBML Uris intra equivalences ")
+print("Ok\nExport SBML Uris intra equivalences ... ", end = '')
 map_ids.export_intra_eq(path_to_dumps + "Id_mapping/Intra/", "SBML")
-print("Try to load SMBL URIs intra equivalences in Virtuoso ...")
-
-create_update_file_from_ressource(path_to_dumps, "Id_mapping/Intra/SBML/" + sbml_version + "/", "*.trig", '', update_f_name)
+print("Export upload file ... ", end = '')
+create_update_file_from_ressource(path_to_dumps, "Id_mapping/Intra/SBML/" + sbml_version + "/", "*.ttl.gz", Intra_eq_base_uri + sbml_version, update_f_name)
 create_update_file_from_ressource(path_to_dumps, "Id_mapping/Intra/SBML/" + sbml_version + "/", "void.ttl", Intra_eq_base_uri + sbml_version, update_f_name)
+print("Ok")
