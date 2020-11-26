@@ -3,6 +3,7 @@ import argparse, sys, os
 import rdflib
 import configparser
 import subprocess
+import gzip
 
 from Id_mapping import Id_mapping
 from processing_functions import *
@@ -41,40 +42,39 @@ namespaces = {
 
 # Global
 path_to_dumps = args.out
+meta_table = config["META"].get("path")
+ftp = config["FTP"].get("ftp")
 
 # MetaNetX:
 MetaNetX_v = args.version
 
-path_to_g_MetaNetX = path_to_dumps + "MetaNetX/metanetx.ttl.gz"
-uri_source_graph = config['METANETX'].get('uri')
-# Intra
-path_to_dir_Intra = config['INTRA'].get('path_to_dir_from_dumps')
+path_to_MetaNetX_dir = path_to_dumps + "MetaNetX/" + MetaNetX_v
+path_to_g_MetaNetX = path_to_MetaNetX_dir + "/" + "metanetx.ttl.gz"
 
-uri_MetaNetX = base_uri_MetaNetX + MetaNetX_v
-linked_grahs = [base_uri_Intra + MetaNetX_v]
+uri_source_graph = get_uri_from_void(path_to_MetaNetX_dir)
 
 update_f_name = "MetaNetX_update_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 
-print("Mapping MetaNetX v." + MetaNetX_v + " graph don't exist, create graph.")
 # Intialyze Object:
-map_ids = Id_mapping(MetaNetX_v, namespaces)
-print("Import configuration table ...", end = '')
-map_ids.import_table_infos(config['METANETX'].get('path_to_table_infos'))
+map_ids = Id_mapping(MetaNetX_v, namespaces, ftp)
+print("Import configuration table ... ", end = '')
+map_ids.import_table_infos(meta_table, sep = "\t")
 # Import graph :
-print("Ok\nTry to load MetanetX graph from " + config['METANETX'].get('g_path') + " ...", end = '')
+print("Ok\nTry to load MetanetX graph from " + path_to_g_MetaNetX + " ... ", end = '')
 graph_metaNetX = rdflib.Graph()
-graph_metaNetX.parse(path_to_g_MetaNetX, format = "turtle")
-print("Ok\nTry de create URIs equivalences from MetaNetX graph ...")
+with gzip.open(path_to_g_MetaNetX, "rb") as f_MetaNetX:
+    graph_metaNetX.parse(f_MetaNetX, format="turtle")
+print("Ok\nTry de create URIs equivalences from MetaNetX graph: ")
 # Create graphs :
-map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + "Id_mapping/MetaNetX/", uri_source_graph)
-map_ids.export_intra_eq(path_to_dumps + path_to_dir_Intra, "MetaNetX")
+uri_MetaNetX_inter_eq = map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + "Id_mapping/MetaNetX/", uri_source_graph)
+uri_MetaNetX_intra_eq = map_ids.export_intra_eq(path_to_dumps + "Id_mapping/Intra/", "MetaNetX")
 
-print("Try to load mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "*trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "void.ttl", base_uri_MetaNetX + MetaNetX_v, update_f_name)
+print("Create upload files ...", end = '')
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", uri_MetaNetX_inter_eq, update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "void.ttl", uri_MetaNetX_inter_eq, update_f_name)
 
-print("Try to intra mapping graphs in Virtuoso ...")
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "*trig", '', update_f_name)
-create_update_file_from_ressource(path_to_dumps, path_to_dir_Intra + "MetaNetX/" + MetaNetX_v + "/", "void.ttl", base_uri_Intra + MetaNetX_v, update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", uri_MetaNetX_intra_eq, update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "void.ttl", uri_MetaNetX_intra_eq, update_f_name)
+print("Ok")

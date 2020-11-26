@@ -92,6 +92,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
+    g_metadata = None
     print(" Ok\nEnd !")
     print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)
@@ -177,6 +178,7 @@ def download_MeSH(out_dir, out_log):
             ressource_version.add_version_attribute(predicate = p, object = o)
         else:
             continue
+    g_metadata = None
     # On crée le graph de données : 
     print(" Ok\nTrying to create MeSH new ressource version ...", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
@@ -239,6 +241,8 @@ def download_MetaNetX(out_dir, out_log, version):
     ressource_version.add_version_attribute(predicate = VOID["triples"], object = rdflib.Literal(len(g_MetaNetX), datatype=XSD.long ))
     ressource_version.add_version_attribute(predicate = VOID["distinctSubjects"], object = rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()]))))
     ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
+    # Clear memory
+    g_MetaNetX = None
     print("Ok\nEnd")
     print("=================================================================================\n")
     return str(ressource_version.uri_version)
