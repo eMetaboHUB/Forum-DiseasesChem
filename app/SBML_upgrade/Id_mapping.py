@@ -79,9 +79,11 @@ class Id_mapping:
             os.makedirs(path_out)
         for r_name in self.intra_ids_dict.keys():
             print("Treating " + r_name + ":")
+            intra_ids = list(self.intra_ids_dict[r_name])
+            if len(intra_ids) == 0:
+                continue
             g_name = r_name + "_intra"
             current_graph = ressource_version_intra.create_data_graph(namespace_list  = ["owl"], namespace_dict = self.namespaces)
-            intra_ids = list(self.intra_ids_dict[r_name])
             print("Create intra uris equivalences ... ", end = '')
             for id in intra_ids:
                 intra_uris = [rdflib.URIRef(prefix + id) for prefix in self.ressource_uris[r_name]]
