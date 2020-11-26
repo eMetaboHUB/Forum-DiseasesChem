@@ -18,7 +18,6 @@ These both types of classes are stored separately in two different graphs.
 - [FTP]
   - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 
-
 How to run:
 ```python
 python3 app/ChemOnt/fetch_ChemOnt.py --config="path/to/config.ini" --out="/path/to/out/dir" --log="path/to/log/dir" --version="version"

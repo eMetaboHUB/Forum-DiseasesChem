@@ -60,7 +60,7 @@ with open(out_path + "upload_data.sh", "w") as upload_f, open(out_path + "pre_up
 
 # MeSH
 if todo_MeSH:
-    mesh_out_dir = config['MESH'].get('out_dir_name')
+    mesh_out_dir = "MeSH"
     mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", namespaces, addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
         upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'mesh.nt', '" + mesh_uri + "');\n")
@@ -71,8 +71,8 @@ if todo_MeSH:
         
 # References
 if todo_Reference:
-    reference_out_dir = config['REFERENCE'].get('out_dir_name')
-    reference_r_name = config['REFERENCE'].get('ressource_name')
+    reference_out_dir = "PubChem_Reference"
+    reference_r_name = "reference"
     reference_dir_on_ftp = config['REFERENCE'].get('dir_on_ftp')
     reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
@@ -84,8 +84,8 @@ if todo_Reference:
 
 # Compounds
 if todo_Compound:
-    compound_out_dir = config['COMPOUND'].get('out_dir_name')
-    compound_r_name = config['COMPOUND'].get('ressource_name')
+    compound_out_dir = "PubChem_Compound"
+    compound_r_name = "compound"
     compound_dir_on_ftp = config['COMPOUND'].get('dir_on_ftp')
     compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
@@ -98,8 +98,8 @@ if todo_Compound:
 
 # Descriptors
 if todo_Descriptor:
-    descriptor_out_dir = config['DESCRIPTOR'].get('out_dir_name')
-    descriptor_r_name = config['DESCRIPTOR'].get('ressource_name')
+    descriptor_out_dir = "PubChem_Descriptor"
+    descriptor_r_name = "descriptor"
     descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
     descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:
@@ -108,8 +108,8 @@ if todo_Descriptor:
 
 # InchiKey
 if todo_InchiKey:
-    inchikey_out_dir = config['INCHIKEY'].get('out_dir_name')
-    inchikey_r_name = config['INCHIKEY'].get('ressource_name')
+    inchikey_out_dir = "PubChem_InchiKey"
+    inchikey_r_name = "inchikey"
     inchikey_dir_on_ftp = config['INCHIKEY'].get('dir_on_ftp')
     inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, out_path + inchikey_out_dir + "/", addtional_files_out_path)
     with open(out_path + "upload_data.sh", "a") as upload_f:

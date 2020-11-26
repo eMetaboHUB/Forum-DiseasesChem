@@ -48,6 +48,11 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
   - out_dir_name: output directory name (ex: PubChem_References)
   - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: reference)
   - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: reference)
+- [INCHIKEY]
+  - todo: a boolean (True/False) telling if the data need to be downloaded
+  - out_dir_name: output directory name (ex: PubChem_InchiKey)
+  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: inchikey)
+  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: inchikey)
 - [ELINK]
   - todo: a boolean (True/False) telling if the data need to be downloaded
   - run_as_test: a boolean (True/False) indicating if the Elink processes have to be run as test (only the first 30000 pmids) or full

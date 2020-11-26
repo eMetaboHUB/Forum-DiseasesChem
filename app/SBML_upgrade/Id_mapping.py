@@ -87,7 +87,7 @@ class Id_mapping:
                 intra_uris = [rdflib.URIRef(prefix + id) for prefix in self.ressource_uris[r_name]]
                 for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
                     current_graph.add((current_uri, self.namespaces["owl"]['sameAs'], next_uri))
-            print("Ok\nExport graph for ressource " + r_name + " ... ", end = '')
+            print("Ok\nExport graph for resource " + r_name + " ... ", end = '')
             current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
             print("Ok\nTry to compress file " + r_name + " ... ", end = '')
             try:
@@ -112,6 +112,7 @@ class Id_mapping:
         ressource_version_intra.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_intra.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
+        return ressource_version_intra.uri_version
     
     def import_table_infos(self, meta, sep):
         """
@@ -174,7 +175,7 @@ class Id_mapping:
         - graph_metaNetX: a rdflib object graph associated to the MetaNetX RDF graph
         - path_out: a path to out files
         """
-        ressource_version_MetaNetX = Database_ressource_version(ressource = "ressources_id_mapping/MetaNetX", version = self.version)
+        ressource_version_MetaNetX = Database_ressource_version(ressource = "Id_mapping/MetaNetX", version = self.version)
         n_triples = 0
         subjects = set()
         path_out = path_out + ressource_version_MetaNetX.version + "/"
@@ -183,7 +184,7 @@ class Id_mapping:
         selected_ressource = [r for r in self.uri_MetaNetX.keys() if len(self.uri_MetaNetX[r]) > 0 and r != "metanetx"]
         for ressource in selected_ressource:
             # On crée le graph MetaNetX .vs. ressource
-            print("Treating ressource: " + ressource + " with MetaNetX ...")
+            print("Treating resource: " + ressource + " with MetaNetX ...")
             g_name = ("MetaNetX_" + ressource)
             print("Get ids mapping ...", end = '')
             current_graph = ressource_version_MetaNetX.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
@@ -197,7 +198,7 @@ class Id_mapping:
                 uri_1, uri_2 = rdflib.URIRef(self.ressource_uris["metanetx"][0] + metaNetX_ids[id_index]), rdflib.URIRef(self.ressource_uris[ressource][0] + ressource_ids[id_index])
                 current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
             # On écrit le graph :
-            print("Ok\nExport graph for ressource " + ressource + " ...", end = '')
+            print("Ok\nExport graph for resource " + ressource + " ...", end = '')
             ressource_version_MetaNetX.add_DataDump(g_name + ".trig", self.ftp)
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
             n_triples += len(current_graph)
@@ -231,7 +232,7 @@ class Id_mapping:
                 uri_1, uri_2 = rdflib.URIRef(self.ressource_uris[r1][0] + ids_r1[id_index]), rdflib.URIRef(self.ressource_uris[r2][0] + ids_r2[id_index])
                 current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
             # On écrit le graph :
-            print("Ok\nExport graph for ressource " + ressource + " ...", end = '')
+            print("Ok\nExport graph for resource " + ressource + " ...", end = '')
             ressource_version_MetaNetX.add_DataDump(g_name + ".trig", self.ftp)
             current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
             n_triples += len(current_graph)
@@ -254,7 +255,7 @@ class Id_mapping:
         - pubchem_graph: a rdflib object graph associated to the PubChem type RDF graph
         - path_out: path to the output directory
         """
-        ressource_version_PubChem = Database_ressource_version(ressource = "ressources_id_mapping/PubChem", version = self.version)
+        ressource_version_PubChem = Database_ressource_version(ressource = "Id_mapping/PubChem", version = self.version)
         n_triples = 0
         subjects = set()
         path_out = path_out + ressource_version_PubChem.version + "/"
@@ -267,31 +268,39 @@ class Id_mapping:
             print("Treating ressource " + ressource + " :")
             g_name = ("PubChem_" + ressource)
             current_graph = ressource_version_PubChem.create_data_graph(namespace_list  = ["skos"], namespace_dict = self.namespaces)
-            print("Get ids mapping ...", end = '')
+            print("Get ids mapping ... ", end = '')
             PubChem_ids, ressource_ids = self.get_pubchem_mapping(pubchem_graph, uri_PubChem, request_uri)
             if PubChem_ids is None or ressource_ids is None:
                 print("Impossible to process information for identifiers equivalence between MetaNetX and " + ressource + "\n")
                 continue
             n_ids = len(PubChem_ids)
+            print("Ok\nCompute equivalences ... ", end = '')
             for id_index in range(n_ids):
                 #  On écrit les équivalence inter-ressource seulement pour une URI de chaque ressource, le liens avec les autres se fera par le biais des équivalence intra-ressource
                 uri_1, uri_2 = rdflib.URIRef(self.ressource_uris["pubchem"][0] + PubChem_ids[id_index]), rdflib.URIRef(self.ressource_uris[ressource][0] + ressource_ids[id_index])
                 current_graph.add((uri_1, self.namespaces["skos"]['closeMatch'], uri_2))
-            # On écrit le graph :
-            ressource_version_PubChem.add_DataDump(g_name + ".trig", self.ftp)
-            print("Ok\nExport graph for ressource " + ressource + " ...", end = '')
-            current_graph.serialize(destination = path_out + g_name + ".trig", format='trig')
+            print("Ok\nExport graph for resource " + ressource + " ... ", end = '')
+            current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
+            try:
+                # Use of gzip -f to force overwritting if file already exist
+                subprocess.run("gzip -f " + path_out + g_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                ressource_version_PubChem.add_DataDump(g_name + ".ttl.gz", self.ftp)
+            except subprocess.CalledProcessError as e:
+                print("Error while trying to compress files")
+                print(e)
+                sys.exit(3)
+            print("Ok\nIncrement metadata ... ", end = '')
             n_triples += len(current_graph)
             subjects = subjects.union(set([s for s in current_graph.subjects()]))
             # Si il y a plusieurs URI pour la ressource, il faut préparer les identifiants pour les correspondances intra-ressource
-            print("Ok\nAdd ids to intra equivalences table ...", end = '')
+            print("Ok\nAdd ids to intra equivalences table ... ", end = '')
             if len(self.ressource_uris["pubchem"]) > 1:
                 self.intra_ids_dict["pubchem"] = self.intra_ids_dict["pubchem"].union(PubChem_ids)
             if len(self.ressource_uris[ressource]) > 1:
                 self.intra_ids_dict[ressource] = self.intra_ids_dict[ressource].union(ressource_ids)
             print("Ok")
         self.sources.append(graph_uri)
-        print("Write metadata graph ...", end = '')
+        print("Write metadata graph ... ", end = '')
         ressource_version_PubChem.add_version_namespaces(["void"], self.namespaces)
         ressource_version_PubChem.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from PubChem"))
         ressource_version_PubChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from PubChem"))
@@ -300,6 +309,7 @@ class Id_mapping:
         ressource_version_PubChem.add_version_attribute(self.namespaces["void"]["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
         ressource_version_PubChem.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
         print("Ok")
+        return ressource_version_PubChem.uri_version
         
     def get_pubchem_mapping(self, pubchem_graph, uri_1, uri2):
         """
