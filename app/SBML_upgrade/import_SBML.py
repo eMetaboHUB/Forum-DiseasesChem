@@ -25,20 +25,6 @@ except configparser.Error as e:
     print(e)
     sys.exit(3)
 
-namespaces = {
-    "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
-    "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
-    "reference": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"),
-    "endpoint":	rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/"),
-    "obo": rdflib.Namespace("http://purl.obolibrary.org/obo/"),
-    "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
-    "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
-    "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
-    "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
-    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#"),
-    "owl": rdflib.Namespace("http://www.w3.org/2002/07/owl#")
-}
-
 # Global
 path_to_dumps = args.out + "/"
 meta_table = config["META"].get("path")
@@ -74,7 +60,7 @@ gem_file = os.path.basename(path_to_g_SBML)
 create_upload_file_from_resource(path_to_dumps, "GEM/" + sbml_version + "/", gem_file, uri, update_f_name)
 
 # Intialyze Object:
-map_ids = Id_mapping(sbml_version, namespaces, ftp)
+map_ids = Id_mapping(sbml_version, ftp)
 print("Import configuration table ... ", end = '')
 map_ids.import_table_infos(meta_table, "\t")
 print("OK\nImport identifiers from SBML rdf graph to create SBML URIs intra equivalences ... ", end = '')

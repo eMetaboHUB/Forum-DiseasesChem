@@ -81,7 +81,8 @@ class Id_mapping:
             if len(intra_ids) == 0:
                 continue
             g_name = r_name + "_intra"
-            current_graph = ressource_version_intra.create_data_graph(namespace_list  = [], namespace_dict = None)
+            current_graph = ressource_version_intra.create_data_graph([], None)
+            current_graph.bind("owl", OWL)
             print("Create intra uris equivalences ... ", end = '')
             for id in intra_ids:
                 intra_uris = [rdflib.URIRef(prefix + id) for prefix in self.ressource_uris[r_name]]
@@ -103,6 +104,7 @@ class Id_mapping:
             n_triples += len(current_graph)
             print("Ok")
         print("Write metadata graph ... ", end = '')
+        ressource_version_intra.version_graph.bind("void", VOID)
         ressource_version_intra.add_version_attribute(DCTERMS["description"], rdflib.Literal("URIs equivalence inside a ressource"))
         ressource_version_intra.add_version_attribute(DCTERMS["title"], rdflib.Literal("URIs equivalence inside a ressource"))
         for source_uris in self.sources:
@@ -186,7 +188,8 @@ class Id_mapping:
             print("Treating resource: " + ressource + " with MetaNetX :")
             g_name = ("MetaNetX_" + ressource)
             print("Get ids mapping ... ", end = '')
-            current_graph = ressource_version_MetaNetX.create_data_graph(namespace_list  = [], namespace_dict = None)
+            current_graph = ressource_version_MetaNetX.create_data_graph([], None)
+            current_graph.bind("skos", SKOS)
             metaNetX_ids, ressource_ids = self.get_mapping_from_MetanetX(graph_metaNetX, ressource)
             if metaNetX_ids is None or ressource_ids is None:
                 print("Impossible to process information for identifiers equivalence between MetaNetX and " + ressource + "\n")
@@ -226,7 +229,8 @@ class Id_mapping:
             g_name = ("metanetx_" + r1 + "_" + r2)
             print("Treating : " + r1 + " - " + r2 + " with MetaNetX :")
             print("Get ids mapping ...", end = '')
-            current_graph = ressource_version_MetaNetX.create_data_graph(namespace_list  = [], namespace_dict = None)
+            current_graph = ressource_version_MetaNetX.create_data_graph([], None)
+            current_graph.bind("skos", SKOS)
             # Le WevService semble mal fonctionner ... donc je suis passer par une nouvelle méthode où de download depuis le ftp :
             ids_r1, ids_r2 = self.get_mapping_from_MetanetX_inter_ressource(graph_metaNetX, self.uri_MetaNetX[r1], self.uri_MetaNetX[r2])
             if ids_r1 is None or ids_r2 is None:
@@ -253,6 +257,7 @@ class Id_mapping:
             print("Ok")
             # Pas besoin de savoir s'il faut les ajouter dans l'intra-dict, car ils y ont nécéssairement été ajouté par le run MetaNetX .vs. ressource  
         print("Write metadata graph ...", end = '')
+        ressource_version_MetaNetX.version_graph.bind("void", VOID)
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
@@ -280,7 +285,8 @@ class Id_mapping:
             request_uri = self.uri_PubChem[ressource]
             print("Treating ressource " + ressource + " :")
             g_name = ("PubChem_" + ressource)
-            current_graph = ressource_version_PubChem.create_data_graph(namespace_list  = [], namespace_dict = None)
+            current_graph = ressource_version_PubChem.create_data_graph([], None)
+            current_graph.bind("skos", SKOS)
             print("Get ids mapping ... ", end = '')
             PubChem_ids, ressource_ids = self.get_pubchem_mapping(pubchem_graph, uri_PubChem, request_uri)
             if PubChem_ids is None or ressource_ids is None:
@@ -314,6 +320,7 @@ class Id_mapping:
             print("Ok")
         self.sources.append(graph_uri)
         print("Write metadata graph ... ", end = '')
+        ressource_version_PubChem.version_graph.bind("void", VOID)
         ressource_version_PubChem.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from PubChem"))
         ressource_version_PubChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from PubChem"))
         ressource_version_PubChem.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))

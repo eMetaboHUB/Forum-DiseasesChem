@@ -24,20 +24,6 @@ except configparser.Error as e:
     print(e)
     sys.exit(3)
 
-namespaces = {
-    "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
-    "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
-    "reference": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"),
-    "endpoint":	rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/"),
-    "obo": rdflib.Namespace("http://purl.obolibrary.org/obo/"),
-    "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
-    "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
-    "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
-    "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
-    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#"),
-    "owl": rdflib.Namespace("http://www.w3.org/2002/07/owl#")
-}
-
 
 # Global
 path_to_dumps = args.out + "/"
@@ -49,12 +35,12 @@ Pubchem_v = args.version
 path_to_pubchem_dir = path_to_dumps + "PubChem_Compound/compound/" + Pubchem_v + "/"
 uri_source_graph = get_uri_from_void(path_to_pubchem_dir)
 
-update_f_name = "PubChem_update_file.sh"
+update_f_name = "Id_mapping_PubChem_update_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 
 # Intialyze Object:
-map_ids = Id_mapping(Pubchem_v, namespaces, ftp)
+map_ids = Id_mapping(Pubchem_v, ftp)
 print("Import configuration table ... ", end = '')
 map_ids.import_table_infos(meta_table, "\t")
 

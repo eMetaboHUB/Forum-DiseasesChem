@@ -25,23 +25,8 @@ except configparser.Error as e:
     print(e)
     sys.exit(3)
 
-namespaces = {
-    "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
-    "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
-    "reference": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"),
-    "endpoint":	rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/"),
-    "obo": rdflib.Namespace("http://purl.obolibrary.org/obo/"),
-    "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
-    "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
-    "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
-    "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
-    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#"),
-    "owl": rdflib.Namespace("http://www.w3.org/2002/07/owl#")
-}
-
-
 # Global
-path_to_dumps = args.out
+path_to_dumps = args.out + "/"
 meta_table = config["META"].get("path")
 ftp = config["FTP"].get("ftp")
 
@@ -53,12 +38,12 @@ path_to_g_MetaNetX = path_to_MetaNetX_dir + "/" + "metanetx.ttl.gz"
 
 uri_source_graph = get_uri_from_void(path_to_MetaNetX_dir)
 
-update_f_name = "MetaNetX_update_file.sh"
+update_f_name = "Id_mapping_MetaNetX_update_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 
 # Intialyze Object:
-map_ids = Id_mapping(MetaNetX_v, namespaces, ftp)
+map_ids = Id_mapping(MetaNetX_v, ftp)
 print("Import configuration table ... ", end = '')
 map_ids.import_table_infos(meta_table, sep = "\t")
 # Import graph :
@@ -71,10 +56,11 @@ print("Ok\nTry de create URIs equivalences from MetaNetX graph: ")
 uri_MetaNetX_inter_eq = map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + "Id_mapping/MetaNetX/", uri_source_graph)
 uri_MetaNetX_intra_eq = map_ids.export_intra_eq(path_to_dumps + "Id_mapping/Intra/", "MetaNetX")
 
-print("Create upload files ...", end = '')
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", uri_MetaNetX_inter_eq, update_f_name)
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "void.ttl", uri_MetaNetX_inter_eq, update_f_name)
+print("Create upload files ... ", end = '')
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", str(uri_MetaNetX_inter_eq), update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "void.ttl", str(uri_MetaNetX_inter_eq), update_f_name)
 
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", uri_MetaNetX_intra_eq, update_f_name)
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "void.ttl", uri_MetaNetX_intra_eq, update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", str(uri_MetaNetX_intra_eq), update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "void.ttl", str(uri_MetaNetX_intra_eq), update_f_name)
+graph_metaNetX = None
 print("Ok")
