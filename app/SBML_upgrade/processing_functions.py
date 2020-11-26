@@ -130,6 +130,9 @@ def get_uri_from_void(dir):
     This function is used to extract the uri assocaited to a version of a resource from the void.ttl file
     - dir: the path to the resource version directory
     """
+    if not os.path.exists(dir + "/void.ttl"):
+        print("Can't find PubChem RDF void.ttl file in " + dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
+        sys.exit(3)
     g = rdflib.Graph()
     g.parse(dir + "/void.ttl", format = "turtle")
     uri = g.query(

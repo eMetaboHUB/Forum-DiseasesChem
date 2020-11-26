@@ -59,6 +59,9 @@ print("Import configuration table ... ", end = '')
 map_ids.import_table_infos(meta_table, "\t")
 
 print("Ok\nRead pubchem type graph(s) ... ", end = '')
+if len(glob.glob(path_to_pubchem_dir + "*_type*.ttl.gz")) == 0:
+    print("Can't find *_type*.ttl.gz PubChem RDF file(s) in " + path_to_pubchem_dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
+    sys.exit(3)
 g = rdflib.ConjunctiveGraph()
 for path in glob.glob(path_to_pubchem_dir + "*_type*.ttl.gz"):
     with gzip.open(path, "rb") as f:
