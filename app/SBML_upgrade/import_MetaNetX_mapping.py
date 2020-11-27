@@ -38,7 +38,7 @@ path_to_g_MetaNetX = path_to_MetaNetX_dir + "/" + "metanetx.ttl.gz"
 
 uri_source_graph = get_uri_from_void(path_to_MetaNetX_dir)
 
-update_f_name = "Id_mapping_MetaNetX_update_file.sh"
+update_f_name = "Id_mapping_MetaNetX_upload_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 

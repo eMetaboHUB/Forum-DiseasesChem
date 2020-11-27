@@ -52,7 +52,7 @@ except subprocess.SubprocessError as e:
     sys.exit(3)
 print("Ok")
 
-update_f_name = "SBML_update_file.sh"
+update_f_name = "SBML_upload_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 

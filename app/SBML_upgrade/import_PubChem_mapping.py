@@ -35,7 +35,7 @@ Pubchem_v = args.version
 path_to_pubchem_dir = path_to_dumps + "PubChem_Compound/compound/" + Pubchem_v + "/"
 uri_source_graph = get_uri_from_void(path_to_pubchem_dir)
 
-update_f_name = "Id_mapping_PubChem_update_file.sh"
+update_f_name = "Id_mapping_PubChem_upload_file.sh"
 with open(path_to_dumps + update_f_name, "w") as update_f:
     pass
 
