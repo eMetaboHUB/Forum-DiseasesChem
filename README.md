@@ -134,7 +134,9 @@ The vocabulary directory contains files associated to the schema of used ontolog
 - skos: https://www.w3.org/2009/08/skos-reference/skos.rdf
 - ChemOnt: http://classyfire.wishartlab.com/downloads
 
-*Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl.
+The ChEBI ontology file is often updated and the actual version of the ChEBI ontology used in the triplestore is ChEBI 193 (Release of 01 Nov. 2020), as refer in the URI of the ChEBI Graph in FORUM.
+
+*Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt seems to be stable.
 
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
 pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
