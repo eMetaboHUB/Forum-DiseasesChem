@@ -41,8 +41,9 @@ class Elink_ressource_creator:
     - n_triples_g_linked_id: the total number of triples in the g_linked_id graph
     - n_subjects_g_linked_id_endpoint: the number of subjects in the g_linked_id_endpoint graph
     - n_triples_g_linked_id_endpoint: the total number of triples in the g_linked_id_endpoint graph
+    - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.  
     """
-    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout):       
+    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout, ftp):       
         self.dbfrom = dbfrom
         self.db = db
         self.file_index = 1
@@ -65,6 +66,7 @@ class Elink_ressource_creator:
         self.n_subjects_g_linked_id_endpoint = 0
         self.n_triples_g_linked_id_endpoint = 0
         self.r_timeout = timeout
+        self.ftp = ftp
         
     def append_linked_ids(self, id_packed_list, index_list, query_builder, pack_size, add_f_out_path):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
@@ -207,7 +209,7 @@ class Elink_ressource_creator:
         self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "void.ttl", format='turtle')
         print(" Ok")
     
-    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path, ftp):
+    def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path):
         """
         This function is used to create a new version of the CID_PMID and CID_PMID_enpoint ressources, by creating all the ressource and data graph associated to from information contained in the object.
         - out_dir: a path to an directory to write output files.
@@ -215,7 +217,6 @@ class Elink_ressource_creator:
         - pack_size: the size of the cids pack that have to be send as request, refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html
         - query_builder: a eutils.QueryService object parameterized with cache, retmax, retmode, usehistory and especially the api_key
         - max_size : the maximal number of pmids by files
-        - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.  
         """
         # Intialyze .log file :
         with open(add_f_out_path + "elink.log", "w") as f_log:
@@ -271,8 +272,8 @@ class Elink_ressource_creator:
                 # On zip et on ajoute le dataDump:
                 try:
                     subprocess.run("gzip -f " + path_out_1 + g_linked_id_name + ".ttl" + " " + path_out_2 + g_linked_id_endpoint_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
-                    self.ressource_version.add_DataDump(g_linked_id_name + ".ttl.gz", ftp)
-                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".ttl.gz", ftp)
+                    self.ressource_version.add_DataDump(g_linked_id_name + ".ttl.gz", self.ftp)
+                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".ttl.gz", self.ftp)
                 except subprocess.CalledProcessError as e:
                     print("Error while trying to compress files and add dataDump at " + path_out_1 + g_linked_id_name + " and " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)

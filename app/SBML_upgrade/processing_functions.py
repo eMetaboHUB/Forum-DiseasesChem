@@ -5,14 +5,14 @@ from rdflib.namespace import XSD, DCTERMS, OWL, VOID
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 
-def create_update_file_from_ressource(path_out, path_to_graph_dir, file_pattern, target_graph, update_file_name):
+def create_upload_file_from_resource(path_out, path_to_graph_dir, file_pattern, target_graph, update_file_name):
     """
     This function is used to buid an update.sh file which have to be execute by Virtuoso to properly load all graphs from an input directory.
     The function does not create a file but append to an existing (or empty file)
     - path_out: path to write the update file
     - path_to_graph_dir: path to the graph directory from the Virtuoso share directory (ex: dumps)
     - file_pattern: a file pattern (ex: *trig) to select graphs files in the input directory
-    - target_graph: an URI corresponding to the associated ressource graph
+    - target_graph: an URI corresponding to the associated resource graph
     - update_file_name: name of the update file 
     """
     with open(path_out + update_file_name, "a") as update_f:
@@ -124,6 +124,25 @@ def ask_for_graph(url, graph_uri):
     if r.text == "true":
         return True
     return False
+
+def get_uri_from_void(dir):
+    """
+    This function is used to extract the uri assocaited to a version of a resource from the void.ttl file
+    - dir: the path to the resource version directory
+    """
+    if not os.path.exists(dir + "/void.ttl"):
+        print("Can't find void.ttl file in " + dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
+        sys.exit(3)
+    g = rdflib.Graph()
+    g.parse(dir + "/void.ttl", format = "turtle")
+    uri = g.query(
+        """
+        SELECT (STR(?o) as ?URI)
+        WHERE {
+            ?s <http://purl.org/dc/terms/hasVersion> ?o .
+        }
+        """)
+    return(str(list(uri)[0][0]))
 
 def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version, ressource_name, desc, title, sources):
     """

@@ -1,6 +1,7 @@
 import os, time, rdflib, sys, subprocess
-from rdflib.namespace import XSD, DCTERMS, VOID
+from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 import ftplib
+import gzip
 from dateutil import parser
 import glob
 sys.path.insert(1, 'app/')
@@ -91,11 +92,12 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
+    g_metadata = None
     print(" Ok\nEnd !")
     print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)
 
-def download_MeSH(out_dir, namespaces_dict, out_log):
+def download_MeSH(out_dir, out_log):
     """
     This function is used to download the last version of the MeSH RDF from NIH ftp server, the void.ttl file is also use to bring metadata information about the dowloaded version.
     But contrary to PubChem the modification date is not include in the void.ttl file. So, version is determine from the modification date of the file.
@@ -176,12 +178,13 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
             ressource_version.add_version_attribute(predicate = p, object = o)
         else:
             continue
+    g_metadata = None
     # On crée le graph de données : 
     print(" Ok\nTrying to create MeSH new ressource version ...", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
     mesh_graph.parse(out_path + "mesh.nt", format = "nt")
-    ressource_version.add_version_attribute(namespaces_dict["void"]["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
-    ressource_version.add_version_attribute(namespaces_dict["void"]["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
+    ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
+    ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
     # Clear graph
     mesh_graph = None
     # On écrit le graph de la ressource
@@ -198,3 +201,50 @@ def download_MeSH(out_dir, namespaces_dict, out_log):
     print(" Ok\nEnd")
     print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)
+
+def download_MetaNetX(out_dir, out_log, version):
+    # Intialyze logs
+    with open(out_log + "dl_metanetx.log", "wb") as f_log:
+        pass
+    version_path = out_dir + version + "/"
+    print("Check if MetaNetX version " + version + " was already download: ", end = '')
+    test_r_info = glob.glob(version_path + "void.ttl")
+    if len(test_r_info) == 1:
+        print("Yes\nMetaNetX RDF version " + version + " is already downloaded, end.\n\n")
+        ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
+        print("=================================================================================\n")
+        return str(ressource_version.uri_version)
+    # Else, download:
+    print("No\nTrying to dowload MetaNetX RDF file ... ", end = '')
+    if not os.path.exists(version_path):
+        os.makedirs(version_path)
+    # Download MeSH RDF
+    try:
+        subprocess.run("wget -P " + version_path + " ftp://ftp.vital-it.ch/databases/metanetx/MNXref/" + version + "/metanetx.ttl.gz", shell = True, check=True, stderr = subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
+        print(e)
+        with open(out_log + "dl_metanetx.log", "ab") as f_log:
+            f_log.write(e.stderr)
+        sys.exit(3)
+    print("Ok\nCreate new MetaNetX resource: ")
+    ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
+    print("Try to parse MetaNetX graph to extract metadata ... ", end = '')
+    g_MetaNetX = rdflib.Graph()
+    with gzip.open(version_path + "metanetx.ttl.gz", "rb") as f_MetaNetX:
+        g_MetaNetX.parse(f_MetaNetX, format="turtle")
+    print("Ok\nExtract metadata ... ", end = '')
+    ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID["Dataset"])
+    ressource_version.add_version_attribute(predicate = DCTERMS["description"], object = rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments--namely MNXref--and proteins."))
+    ressource_version.add_version_attribute(predicate = DCTERMS["title"], object = rdflib.Literal("MetaNetX v." + version))
+    ressource_version.add_version_attribute(predicate = VOID["dataDump"], object = rdflib.URIRef("ftp://ftp.vital-it.ch/databases/metanetx/MNXref/" + version + "/metanetx.ttl.gz"))
+    ressource_version.add_version_attribute(predicate = VOID["triples"], object = rdflib.Literal(len(g_MetaNetX), datatype=XSD.long ))
+    ressource_version.add_version_attribute(predicate = VOID["distinctSubjects"], object = rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()]))))
+    ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
+    # Clear memory
+    g_MetaNetX = None
+    print("Ok\nEnd")
+    print("=================================================================================\n")
+    return str(ressource_version.uri_version)
+    
+    
