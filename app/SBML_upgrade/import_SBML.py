@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
 parser.add_argument("--out", help="path to output directory")
 parser.add_argument("--sbml", help="path to sbml file")
-parser.add_argument("--version", help="version of the PMID-CID ressource, if none, the date is used")
+parser.add_argument("--version", help="version of the SBML RDF file")
 args = parser.parse_args()
 
 # Intialyze attributes and paths: 

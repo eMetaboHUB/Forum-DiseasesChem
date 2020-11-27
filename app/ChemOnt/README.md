@@ -31,6 +31,6 @@ python3 app/ChemOnt/fetch_ChemOnt.py --config="path/to/config.ini" --out="/path/
 At the end of the process, a *upload_ClassyFire.sh* file is also build in the output directory. This file contains all the *ISQL* commands that should be execute by Virtuoso to properly load all graphs and metadata.
 
 ```bash
-dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
-docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/upload_ClassyFire.sh'
+dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
+docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/upload_ClassyFire.sh
 ```

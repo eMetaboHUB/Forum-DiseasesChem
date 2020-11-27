@@ -1,10 +1,9 @@
 
 ## Build RDF Store:
 Use build_RDF_store.py
-This process is used to build a complete RDF Store containing data graphs from PubChem Compounds, PubChem References, PubChem Descriptors, MeSH and to identify links between PubChem compounds (CID) and PubMed publications (PMIDS). If needed, only certain data graphs can be selected and dowloaded.
-A version is always attach to a data graph.
+This process is used to build a complete RDF Store containing data graphs from PubChem Compounds, PubChem References, PubChem Descriptors, PubChem InchiKey, MeSH, MetaNetX and to identify links between PubChem compounds (CID) and PubMed publications (PMIDS). If needed, only some data graphs can be selected and dowloaded.
 
-For PubChem and MeSH ressources, this version is determine from the modification date of concerned files on the ftp server. If the last version of the ressource has already been downloaded, the program will skip this step.
+For PubChem and MeSH ressources, this version is determine from the modification date of associated files on the ftp server. If the last version of the ressource has already been downloaded, the program will skip this step.
 
 For the ressource describing links between PubChem Compounds and PubMed publications, the version can be define by the user. If nothing is set, the date will be used by default. Like previous ressources, if the version have already been created, the program will skip the step. To allow overwrting, be sure to delete the associated directory in the *additional_files*.
 
@@ -17,9 +16,9 @@ This directory contains :
   - successful_linking_ids.txt: a list of all the linking identifiers for which no link to a linked identifier was found
   - s_metdata.txt: a cache metadata file which may also be used for back-up.
 
-To faciliate to loading of these data graph in Virtuoso the output directory should be the shared directory of Virtuoso, corresponding to his *dumps* directory.
+To faciliate the loading of these data graph in Virtuoso the output directory should be the shared directory of Virtuoso, corresponding to the *dumps* directory.
 
-At the end of the process, a *upload.sh* file is also build in the output directory. This file contains all the *ISQL* commands that should be execute by Virtuoso to properly load all graphs and metadata.
+At the end of the process, two files are created: pre_upload.sh and upload_data.sh. These files contains all the *ISQL* commands that should be execute by Virtuoso to properly load graphs and metadata. pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
 
 ```bash
 dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
@@ -28,31 +27,23 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 
 #### Config file:
 
-- [GENERAL]
-  - path_out: /path/to/output/directory. Shoud be /workdir/share-virtuoso/ which have to be mapped to the dumps directory of Virtuoso, corresponding to his *dumps* directory
+- [METANETX]
+  - todo: a boolean (True/False) telling if the data need to be downloaded
+  - version: the version of MetaNetX (See [MetaNetX ftp](ftp://ftp.vital-it.ch/databases/metanetx/MNXref/))
 - [MESH]
   - todo: a boolean (True/False) telling if the data need to be downloaded
-  - out_dir_name: output directory name (ex: MeSH)
 - [COMPOUND]
   - todo: a boolean (True/False) telling if the data need to be downloaded
-  - out_dir_name: output directory name (ex: PubChem_compound)
   - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: compound/general)
-  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: compound)
 - [DESCRIPTOR]
   - todo: a boolean (True/False) telling if the data need to be downloaded
-  - out_dir_name: output directory name (ex: PubChem_Descriptor)
   - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: descriptor/compound)
-  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: descriptor)
 - [REFERENCE]
   - todo: a boolean (True/False) telling if the data need to be downloaded
-  - out_dir_name: output directory name (ex: PubChem_References)
   - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: reference)
-  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: reference)
 - [INCHIKEY]
   - todo: a boolean (True/False) telling if the data need to be downloaded
-  - out_dir_name: output directory name (ex: PubChem_InchiKey)
   - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: inchikey)
-  - ressource_name: name of the ressource as specified in the void.ttl file of PubChem (ex: inchikey)
 - [ELINK]
   - todo: a boolean (True/False) telling if the data need to be downloaded
   - run_as_test: a boolean (True/False) indicating if the Elink processes have to be run as test (only the first 30000 pmids) or full
@@ -73,3 +64,12 @@ python3 app/build_RDF_store/build_RDF_store.py --config="/path/to/config_file.in
 - out: path to output directory, should be the docker-virtuoso shared directory
 - log: path to the log directory
 - version: The version of the builded ressource. If nothing is indicated, date will be used
+
+pre_upload.sh or upload_data.sh, can then be loaded in the Virtuoso triplestore using :
+
+```bash
+dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
+docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/*upload_file*.sh
+```
+
+Be aware that these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 

@@ -23,10 +23,9 @@ Id-mapping graphs are RDF graphs providing uris equivalences. There are two type
 
 * String formatting: In RDF, strings can be formatted using literals with different approaches, having different behaviours, especially for String Escapes. This could be of importance for Inchi and SMILES identifiers that may contain "\" characters. In the turtle syntax "\" are escaped using "\\", while *xsd::string* accept directly "\". In order to correctly export SMILES or Inchi for further analysis, without supplementary "\", be sure to always export them using a classic format (csv, ..), as they will be escaped in turtle syntax for instance.
 
-The set of all external ressources and associated uris used in the process is indicated in the configuration file: *table_info.csv*. 
+The set of all external ressources and associated uris used in the process is indicated in the metadata file: *table_info.csv*. 
 The columns are:
 - ressource name
-- ressource UniChem id
 - all ressource available uris (comma separated)
 - URI used in the SBML
 - URI used in MetaNetX
@@ -38,31 +37,34 @@ Id-mapping graphs can be build using different sources, currently, two types of 
 
 use import_SBML.py
 
-During the SBMl import all external references (*bqbiol:is*) are extracted from the original graph and used to build an Id-mapping graph containing only Intra-ressources equivalences associated to the SBML. SBML graph and the associated Id-mapping graph will be stored in the Virtuoso shared directory (at *path_to_dumps*) according to *path_to_dir_from_dumps* and *path_to_dir_intra_from_dumps*, ready to be loaded.
-To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
+During the SBMl import all external references (*bqbiol:is*) are extracted from the original graph and used to build an Id-mapping graph containing only Intra-ressources equivalences associated to the SBML. SBML graph and the associated Id-mapping graph will be stored in the Virtuoso shared directory, ready to be loaded.
+To facilitate graph loading, the script return an update file (*SBML_upload_file.sh*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
 
 ```bash
-python3 app/SBML_upgrade/import_SBML.py --config="/path/to/config.ini"
+python3 app/SBML_upgrade/import_SBML.py --config="/path/to/config.ini" --out="/path/to/output/dir" --sbml="/path/to/smbl/rdf/file" --version="version"
 ```
-To load graph, use :
 
-```bash
-dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
-docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/update_file.sh'
-```
+- config: path to the configuration file
+- out: path to output directory
+- sbml: path to sbml file
+- version: version of the SBML RDF file
 
 * Config file:
 
-- [VIRTUOSO]
-  - path_to_dumps: path to Virtuoso shared directory
-  - url: the url of the Virtuoso SPARQL endpoint
-  - update_file: name of the update file
+- [FTP]
+  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 - [SBML]
-  - g_path: path to the SBML graph
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the SBML graph will be stored. Should be *HumanGEM/*
-  - path_to_table_infos: path to *table_info.csv*
-  - path_to_dir_intra_from_dumps: from Virtuoso shared directory, path to the directory where Intra-uris equivalences will be stored. Should be *Id_mapping/Intra/*)
-  - version: version of the imported SBML graph. 
+  - format: format of the SBML rdf file, supported by the python library rdflib 5.0.0 (eg. turtle)
+- [META]
+  - path: path to the metadata file (should be app/SBML_upgrade/table_info.csv)
+
+To load graph, use :
+
+```bash
+dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
+docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/SBML_upload_file.sh
+```
+
 
 
 
@@ -88,31 +90,25 @@ The Id-mapping graph for Inter and Intra uris equivalences will be stored in the
 To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
 
 ```bash
-python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.ini"
+python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.ini" --out="/path/to/out/dir" --version="version"
 ```
-To load graph, use :
-
-```bash
-dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
-docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/update_file.sh'
-```
+- config: path to the configuration file
+- out: path to output directory
+- version: version of the SBML RDF file, according to the one which was downloaded using build_rdf_store (Cf. buid_rdf_store config).
 
 * Config file:
 
-- [VIRTUOSO]
-  - path_to_dumps: path to Virtuoso shared directory
-  - url: the url of the Virtuoso SPARQL endpoint
-  - update_file: name of the update file
-- [METANETX]
-  - version: version of the Id-mapping graph. 
-  - uri: The URI of the MetaNetX data graph, ex: http://database/MetaNetX/3.0 
-  - g_path: path to MetaNetX graph file (.ttl)
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Inter-ressources equivalences graph will be stored. Should be *Id_mapping/MetaNetX/*
-  - path_to_table_infos: path to *table_info.csv*
-- [INTRA]
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-ressources equivalences graph will be stored. Should be *Id_mapping/Intra/*
+- [FTP]
+  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
+- [META]
+  - path: path to the metadata file (should be app/SBML_upgrade/table_info.csv)
 
+To load graph, use :
 
+```bash
+dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
+docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/Id_mapping_MetaNetX_upload_file.sh
+```
 
 #### Id-mapping graph - PubChem:
 
@@ -130,8 +126,13 @@ The Id-mapping graph for Inter and Intra uris equivalences will be stored in the
 To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
 
 ```bash
-python3 app/SBML_upgrade/import_PubChem_mapping.py --config="/path/to/config.ini"
+python3 app/SBML_upgrade/import_PubChem_mapping.py --config="/path/to/config.ini" --out="/path/to/out/dir" --version="version"
 ```
+
+- config: path to the configuration file
+- out: path to output directory
+- version: version of the PubChem Compound resource, according to the one which was downloaded using build_rdf_store (Cf. buid_rdf_store config). Only the *type* will be used to provide a mapping between PubChem compounds and ChEBI identifiers.
+
 To load graph, use :
 
 ```bash
@@ -141,130 +142,138 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 
 * Config file:
 
-- [VIRTUOSO]
-  - path_to_dumps: path to Virtuoso shared directory
-  - url: the url of the Virtuoso SPARQL endpoint
-  - update_file: name of the update file
-- [PUBCHEM]
-  - version: version of the Id-mapping graph. 
-  - uri: the URI of the PubChem data graph, ex: http://database/ressources/PubChem/compound/2020-04-24
-  - path_to_pubchem_dir: path to PubChem compound ressource directory
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Inter-ressources equivalences graph will be stored. Should be *Id_mapping/PubChem/*
-  - path_to_table_infos: path to *table_info.csv*
-- [INTRA]
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-ressources equivalences graph will be stored. Should be *Id_mapping/Intra/*
+- [FTP]
+  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
+- [META]
+  - path: path to the metadata file (should be app/SBML_upgrade/table_info.csv)
 
-#### Annotation - Id mapping:
+#### Annotations :
 
-use annot_SBML.py
 
-To compute this step, a SBML graph and at least one Id-mapping graph should be imported in the Virtuoso RDF Store, using corresponding update files.
-The SBML graph contains initial external identifier uris that the program will try to extends, and Id-mapping graphs contains Inter/Intra equivalences to compute this task. Used Id-mapping graphs and SBML graph will be mentionned as sources in the *void.ttl* file associated to the annotation graph.
+To compute this step, a SBML graph and at least one Id-mapping (MetaNetX or PubChem) graph should be imported in the Virtuoso RDF Store, using corresponding update files.
+The SBML graph contains initial external identifier uris that the program will try to extends, and Id-mapping graphs contains Inter/Intra equivalences for this purpose.
 
-Using imported SBML graph and Id-mapping graphs (*MAPPING_GRAPH* section), this script will extends external ressources, by creating new links using the *bqbiol:is* predicate between species and external identifiers uris.
 
 Some Inter-ressource equivalences are provided with uris that are not directly annotated in the SBML, but which are synonyms of annotated uris. Intra-ressource equivalences being represented with the *owl:sameAs* predicate, link between synonyms is implicit in the knowledge database. All uris synonyms of a same individual (like a ChEBI identifier) benefits of all annotations associated to each synonyms, because they are semanticaly the same individual.
 
-So, only Inter-uris equivalences are exported in an annotation graph because Intra equivalences are implicits in the knowledge database, using *owl:sameAs* synonyms.
+For example a specie in the SBMl can be annotated with the uris: *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>*. None Inter-ressource equivalences are explicitely provided in graphs using this uri, but, being the synonym of *<http://purl.obolibrary.org/obo/CHEBI_16424>*, which is the uri used in the MetaNetX database, all annotations associated to this uri can be linked to *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>* and thus, extends annotations in the SBML.
 
-For example a specie in the SBMl can be annotated with the uris: *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>*. None Inter-ressource equivalences are directly provided in Id-mapping using this uris, but, being the synonyms of the uri *<http://purl.obolibrary.org/obo/CHEBI_16424>* which is the uri used in the MetaNetX database, all annotations associated to this uris can be linked to *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>* to extends annotations in the SBML.
+To determine all new identifiers that can be infer from the existing ones in the SBML using Intra/Inter equivalences, we can use :
 
+```SQL
+DEFINE input:inference 'schema-inference-rules'
+DEFINE input:same-as "yes"
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+prefix owl: <http://www.w3.org/2002/07/owl#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-One result file is so provided : *infered_uris.ttl*.
-The result files is stored in the Virtuoso shared directory (at *path_to_dumps*) according to the  *path_to_dir_intra_from_dumps* specify in the corresponding section, ready to be loaded.
-To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
-
-```bash
-python3 app/SBML_upgrade/annot_SBML.py --config="/path/to/config.ini"
+select ?specie ?otherRef . 
+where {
+		?specie a SBMLrdf:Species ;
+			bqbiol:is ?ref .
+		?ref skos:closeMatch ?otherRef .
+		FILTER (
+			not exists { ?specie bqbiol:is ?otherRef }
+		)
+}
 ```
-To load graph, use :
-
-```bash
-dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
-docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/update_file.sh'
-```
-
-* Config file:
-
-- [VIRTUOSO]
-  - url: the url of the Virtuoso SPARQL endpoint
-  - path_to_dumps: path to Virtuoso shared directory
-  - update_file: name of the update file
-- [MAPPING_GRAPH]
-  - graph_uri: a list of all graphs uris corresponding to annotation graphs that should be used in the Id mapping annotation process (ex: *http://database/ressources/ressources_id_mapping/MetaNetX/version*)
-- [SBML]
-  - graph_uri: the uri of the graph corresponding to the SBML to be annotated
-- [ANNOTATION_TYPE]
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-ressources equivalences graph will be stored. Should be *annot_graphs/*
-  - version: version of the annotation graph. 
 
 ### Annotation - Inchi & SMILES:
 
-use annot_struct_SBML.py
-
-Using external ressources, such as MetaNetX, PubChem and ChEBI (*EXT_SOURCES*), this script allow to fill the SBML graph with Inchi and SMILES associated to species. For example: 
+Using external ressources, such as MetaNetX, PubChem and ChEBI, we can extract Inchi and SMILES associated to species, according to some triples such as:
   - MetaNetX: *MetaNetX:MNXM10* *mnx:smiles/mnx:inchis* *Inchi or Smiles*
 
   - ChEBI: *chebi:100014* *chebi:inchi/chebi:smiles*  *Inchi or Smiles*
 
   - PubChem: *compound:CID1*  *sio:has-attribute* *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*
-
     *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*  *sio:has-value*  *Inchi or Smiles*
 
 
-To provide more associations, the Id-mapping annotation graph, describe above can also be also used as sources (*EXT_SOURCES*) to provide more available external identifier uris.
+For all SBML species, using external identifiers provided by the *bqbiol:is* and those that we can infer from Intra/Inter equivalences using *skos:closeMatch*, in all therefore equivalent to the property path *bqbiol:is|bqbiol:is/skos:closeMatch*, we can use a SPARQL query to retrieve Inchi and SMILES annotations
 
-For one species, and using external identifiers uris provided by the *bqbiol:is* predicate a SPARQl query will try to retrieve Inchi and SMILES from differents sources.
-Two results files are then exported, one containing links between SBML species and Inchi using the *voc:hasInchi* predicate, and the second with SMILES using the *voc:hasSmiles* predicate.
-To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
+* For InchI
+```SQL
+DEFINE input:inference 'schema-inference-rules'
+DEFINE input:same-as "yes"
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+prefix mnx: <https://rdf.metanetx.org/schema/>
+prefix sio: <http://semanticscience.org/resource/>
+prefix voc:  <http://database/ressources/properties#>
+prefix owl: <http://www.w3.org/2002/07/owl#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
+SELECT ?specie ?selected_inchi
+where {
+  ?specie a SBMLrdf:Species ;
+    SBMLrdf:name ?spe_name ;
+    (bqbiol:is|bqbiol:is/skos:closeMatch) ?ref .
 
-```bash
-python3 app/SBML_upgrade/annot_struct_SBML.py --config="/path/to/config.ini"
+  { ?ref mnx:inchi ?inchi . }
+  UNION
+  { ?ref <http://purl.obolibrary.org/obo/chebi/inchi> ?inchi . }
+  UNION
+  { 
+  ?ref sio:has-attribute ?ref_pc_desc .
+  ?ref_pc_desc a sio:CHEMINF_000396 ;
+    sio:has-value ?inchi
+  }
+BIND(str(?inchi) as ?selected_inchi)
+}
 ```
-To load graph, use :
+* For SMILES
 
-```bash
-dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
-docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/update_file.sh'
+```SQL
+DEFINE input:inference 'schema-inference-rules'
+DEFINE input:same-as "yes"
+prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
+prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
+prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
+prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
+prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+prefix mnx: <https://rdf.metanetx.org/schema/>
+prefix sio: <http://semanticscience.org/resource/>
+prefix voc:  <http://database/ressources/properties#>
+prefix owl: <http://www.w3.org/2002/07/owl#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?specie ?selected_smiles
+where {
+  ?specie a SBMLrdf:Species ;
+    SBMLrdf:name ?spe_name ;
+    (bqbiol:is|bqbiol:is/skos:closeMatch) ?ref .
+
+  { ?ref mnx:smiles ?smiles . }
+  UNION
+  { ?ref <http://purl.obolibrary.org/obo/chebi/smiles> ?smiles . }
+  UNION
+  { 
+  ?ref sio:has-attribute ?ref_pc_desc .
+  ?ref_pc_desc a sio:CHEMINF_000376 ;
+    sio:has-value ?smiles
+  }
+BIND(str(?smiles) as ?selected_smiles)
+}
+
 ```
-
-* Config file:
-
-- [VIRTUOSO]
-  - url: the url of the Virtuoso SPARQL endpoint
-  - path_to_dumps: path to Virtuoso shared directory
-  - update_file: name of the update file
-- [EXT_SOURCES]
-  - graph_uri: a list of graphs used as sources. It can be graphs providing links between an identifier uri and Inchi/Smiels such as MetaNetX or ChEBI, or an Id-mapping annotation graph.
-- [SBML]
-  - graph_uri: the uri of the graph corresponding to the SBML to be annotated
-- [ANNOTATION_TYPE]
-  - path_to_dir_from_dumps: from Virtuoso shared directory, path to the directory where the Intra-ressources equivalences graph will be stored. Should be *Inchi_Smiles/*
-  - version: version of the annotation graph. 
-
-* * *
-
-To provide a complete annotation process, the above scripts can be executed in this order:
 
 
 ```bash
 # Import SBML
-python3 app/SBML_upgrade/import_SBML.py --config="/path/to/config.ini"
+python3 app/SBML_upgrade/import_SBML.py --config="/path/to/config.ini" --out="/path/to/output/dir" --sbml="/path/to/smbl/rdf/file" --version="version"
 # Import MetaNetX Id - mapping
-python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.ini"
+python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.ini" --out="/path/to/out/dir" --version="version"
 # Import PubChem Id - mapping
-python3 app/SBML_upgrade/import_PubChem_mapping.py --config="/path/to/config.ini"
+python3 app/SBML_upgrade/import_PubChem_mapping.py --config="/path/to/config.ini" --out="/path/to/out/dir" --version="version"
 ```
-Load all this graphs in Virtuoso using provided upload files.
-
-```bash
-# Create Id - mapping annotation graph for the associated SBML
-python3 app/SBML_upgrade/annot_SBML.py --config="/path/to/config.ini"
-```
-Load all this graphs in Virtuoso using provided upload files.
-
-```bash
-# Create Inchi/Smiles annotation graph for the associated SBML.
-python3 app/SBML_upgrade/annot_struct_SBML.py --config="/path/to/config.ini"
-```
+Load all this graphs in Virtuoso using provided upload files and then we can requests for identifiers, smiles, inchi, etc ...

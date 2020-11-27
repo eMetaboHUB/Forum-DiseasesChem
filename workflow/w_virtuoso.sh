@@ -36,7 +36,8 @@ function waitStarted() {
     until [ $RES -eq 0 ]; do
         echo -n "."
         sleep 1
-        docker logs ${CONTAINER_NAME} 2>&1 | grep "Server online at 1111" > /dev/null
+        # As we check logs every 1 sec (sleep 1), we only check logs for the last 2 sec (--since 2s) to avoid grapping a "Server Online message" from a previous start
+        docker logs --since 2s ${CONTAINER_NAME} 2>&1 | grep "Server online at 1111" > /dev/null
         RES=$?
     done
     echo ""
