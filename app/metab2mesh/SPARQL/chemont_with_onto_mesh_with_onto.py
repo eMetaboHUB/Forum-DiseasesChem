@@ -204,7 +204,7 @@ where
                     }
                     group by ?chemont ?mesh
                 } 
-            bind(uri(concat(\"http://database/ressources/chemont2mesh/\", ?CHEMONT, \"_\", ?MESH)) as ?id)
+            bind(uri(concat(\"https://forum.semantic-metabolomics.org/chemont2mesh/\", ?CHEMONT, \"_\", ?MESH)) as ?id)
         }
         order by ?id
     }

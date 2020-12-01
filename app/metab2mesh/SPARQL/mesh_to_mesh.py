@@ -144,7 +144,7 @@ where
                         )
                 }
             }
-            bind(uri(concat(\"http://database/ressources/mesh2mesh/\", ?MESH1, \"_\", ?MESH2)) as ?id)
+            bind(uri(concat(\"https://forum.semantic-metabolomics.org/mesh2mesh/\", ?MESH1, \"_\", ?MESH2)) as ?id)
         }
         order by ?id
     }

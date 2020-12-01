@@ -47,8 +47,8 @@ The data.frame is printed in *df_out_dir* at *out_path*
 - [VIRTUOSO]
   - url: url of the Virtuoso SPARQL endpoint
   - graph_from: uri of data source graphs, one per line, Ex: 
-             http://database/ressources/PMID_CID/2020-04-20
-             http://database/ressources/reference/2020-04-19
+             https://forum.semantic-metabolomics.org/PMID_CID/2020-04-20
+             https://forum.semantic-metabolomics.org/reference/2020-04-19
 - **X_Y**
   - name: name of the coocurences variable (ex: CID_MESH)
   - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each combinations of modalities of X and Y

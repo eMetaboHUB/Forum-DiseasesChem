@@ -195,7 +195,7 @@ where
                     }
                     group by ?specie ?mesh
                 } 
-            bind(uri(concat(\"http://database/ressources/metab2mesh/\", ?SPECIE, \"_\", ?MESH)) as ?id)
+            bind(uri(concat(\"https://forum.semantic-metabolomics.org/metab2mesh/\", ?SPECIE, \"_\", ?MESH)) as ?id)
         }
         order by ?id
     }

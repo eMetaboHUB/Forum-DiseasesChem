@@ -178,7 +178,7 @@ where
                     }
                     group by ?cid ?mesh
                 } 
-            bind(uri(concat(\"http://database/ressources/compound2mesh/\", ?CID, \"_\", ?MESH)) as ?id)
+            bind(uri(concat(\"https://forum.semantic-metabolomics.org/compound2mesh/\", ?CID, \"_\", ?MESH)) as ?id)
         }
         order by ?id
     }

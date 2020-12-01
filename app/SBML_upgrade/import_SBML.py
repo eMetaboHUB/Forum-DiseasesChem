@@ -37,7 +37,7 @@ sbml_rdf_format = config["SBML"].get("format")
 gem_path = path_to_dumps + "GEM/" + sbml_version
 
 # URIS
-base_uri_SBML = "http://database/ressources/SMBL/"
+base_uri_SBML = "https://forum.semantic-metabolomics.org/SMBL/"
 
 # PROCESSES
 uri = base_uri_SBML + sbml_version

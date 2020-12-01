@@ -264,6 +264,9 @@ workflow/w_virtuoso.sh -d ./docker-virtuoso -s share stop
 workflow/w_virtuoso.sh -d ./docker-virtuoso -s share clean
 ```
 
+**Note**: the Virtuoso session could be stop directly after the counts calculation and is not necessary for the post-processes.
+It is recommended to stop and re-start the Virtuoso session between each calculation session, eg. between CID-MESH and CHEBI-MESH, to always work with a fresh session.
+
 New directory *Analyzes* should have been created at the end of the process in the virtuoso shared directory, instantiating associations between chemical entities and MeSH in a triple formalism, which can be then be load in a Virtuoso triplestore to explore relations.
 
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory

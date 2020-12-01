@@ -99,7 +99,7 @@ else:
     # Close Pool
     pool.close()
     pool.join()
-    export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, [rdflib.URIRef("http://database/ressources/PubChem/compound"), rdflib.URIRef("http://database/ressources/ChemOnt")], path_direct_p, path_alternative_p, ftp)
+    export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, graph_sizes, [rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/compound"), rdflib.URIRef("https://forum.semantic-metabolomics.org/ChemOnt")], path_direct_p, path_alternative_p, ftp)
 
 # The same for the both: 
 version = ClassyFire_direct_p.version

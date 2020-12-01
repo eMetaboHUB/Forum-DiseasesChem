@@ -208,7 +208,6 @@ prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 prefix mnx: <https://rdf.metanetx.org/schema/>
 prefix sio: <http://semanticscience.org/resource/>
-prefix voc:  <http://database/ressources/properties#>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
@@ -243,7 +242,6 @@ prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
 prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 prefix mnx: <https://rdf.metanetx.org/schema/>
 prefix sio: <http://semanticscience.org/resource/>
-prefix voc:  <http://database/ressources/properties#>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 

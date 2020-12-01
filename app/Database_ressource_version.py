@@ -27,8 +27,8 @@ class Database_ressource_version:
         if not self.version:
             self.version = date.today().isoformat()
         # On crée l'URI de la version
-        self.uri_version = rdflib.URIRef("http://database/ressources/" + self.ressource + "/" + self.version)
-        g_v.add((rdflib.URIRef("http://database/ressources/" + self.ressource), DCTERMS['hasVersion'], self.uri_version))
+        self.uri_version = rdflib.URIRef("https://forum.semantic-metabolomics.org/" + self.ressource + "/" + self.version)
+        g_v.add((rdflib.URIRef("https://forum.semantic-metabolomics.org/" + self.ressource), DCTERMS['hasVersion'], self.uri_version))
         g_v.add((self.uri_version, DCTERMS["created"], rdflib.Literal(date.today().isoformat(), datatype=XSD.date)))
         return g_v
     

@@ -255,7 +255,7 @@ if todo_Elink:
     while(len(pmid_cid.request_failure) != 0):
         pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, additional_files_out_path)
     # Export ressource metadata
-    pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef("http://database/ressources/PubChem/reference"), rdflib.URIRef("http://database/ressources/PubChem/compound")])
+    pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/reference"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/compound")])
     # Export versions and uris versions
     pmid_cid_uri_version = pmid_cid.ressource_version.uri_version
     pmid_cid_endpoint_uri_version = pmid_cid.ressource_version_endpoint.uri_version
