@@ -5,10 +5,11 @@ from datetime import date
 from rdflib.namespace import XSD, DCTERMS, RDF, VOID
 
 class Database_ressource_version:
-    """This class represent a ressource version in the database, represented in a RDF model. It is composed of:
-    - ressource: the name of the ressource for which a new version will be created
-    - uri_version: the new URI of the new version, created by the object it-self
-    - version_graph: the graph containing information about the created version
+    """This class represent a version of a resource in the Knowledge graph. It is composed of:
+    - ressource: the name of the resource for which a new version will be created
+    - version: the version
+    - uri_version: the URI of this version
+    - version_graph: the metadata graph containing information about the created version
     """
     def __init__(self, ressource, version):
         self.ressource = ressource
@@ -34,7 +35,7 @@ class Database_ressource_version:
     
     def create_data_graph(self, namespace_list, namespace_dict):
         """
-        This function is used to create a new data graph to the ressource version. A data-graph is a graph containing triples associated to the ressource
+        This function is used to create a new data graph for the ressource version. A data-graph is a graph containing triples associated to the ressource
         - namespace_list: a list of the namespaces that should be associated to the graph
         - namespace_dict: a dict containing all the used namespaces.
         """
@@ -46,9 +47,9 @@ class Database_ressource_version:
     
     def add_version_attribute(self, predicate, object):
         """
-        The function is used to add a new triples to the version graph Subject of the triple will be the URI of the version-graph.
+        The function is used to add a new triple to the version graph, Subject of this triple will be the URI the resource version.
         - predicate: a rdfli.URIRef representing the predicate of the triple
-        - a rdfli.URIRef representing the object of the triple
+        - object: a rdfli.URIRef representing the object of the triple
         """
         # Add property
         self.version_graph.add((self.uri_version, predicate, object))
@@ -66,7 +67,7 @@ class Database_ressource_version:
     
     def add_DataDump(self, graph_file, ftp):
         """
-        This function will create an attribute void:dataDump to indicate the location of the data files on the provided ftp server. The ftp server address on which created data will be stored.
+        This function will create an attribute void:dataDump to indicate the location of data file(s) on the provided ftp server.
         - graph_file: the graph file name
         - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server.
         If an empty string is used, dataDump triples will not be added to the void.ttl
