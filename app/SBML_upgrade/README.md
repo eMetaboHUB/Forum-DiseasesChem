@@ -211,7 +211,7 @@ prefix sio: <http://semanticscience.org/resource/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT ?specie ?selected_inchi
+SELECT distinct ?specie ?selected_inchi
 where {
   ?specie a SBMLrdf:Species ;
     SBMLrdf:name ?spe_name ;
@@ -245,7 +245,7 @@ prefix sio: <http://semanticscience.org/resource/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT ?specie ?selected_smiles
+SELECT distinct ?specie ?selected_smiles
 where {
   ?specie a SBMLrdf:Species ;
     SBMLrdf:name ?spe_name ;
