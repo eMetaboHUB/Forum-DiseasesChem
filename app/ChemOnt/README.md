@@ -11,6 +11,7 @@ For a molecule, ChemOnt classes are organised in 2 main catergories:
 *Djoumbou Feunang, Y., Eisner, Wishart, D.S., 2016. ClassyFire: automated chemical classification with a comprehensive, computable taxonomy. J Cheminform 8, 61. https://doi.org/10.1186/s13321-016-0174-y*
 
 
+
 These both types of classes are stored separately in two different graphs.
 ### Config file
 - [PROCESSES]
@@ -29,6 +30,11 @@ python3 app/ChemOnt/fetch_ChemOnt.py --config="path/to/config.ini" --out="/path/
 - version: The version of the builded ressource. If nothing is indicated, date will be used
 
 At the end of the process, a *upload_ClassyFire.sh* file is also build in the output directory. This file contains all the *ISQL* commands that should be execute by Virtuoso to properly load all graphs and metadata.
+Three logs files are created:
+
+- classyFire.log: general logs
+- classyFire_error_ids.log: list of PubChem compound or which there was an error during fetching ChemOnt classes from the InchiKey identifier. Most of the time, it's due to a 404 error, as this InchiKey is not yet classify.
+- ids_no_classify.log: list of PubChem compounds for which the request succeed but there was no available classification.
 
 ```bash
 dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')

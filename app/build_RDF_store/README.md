@@ -3,16 +3,17 @@
 Use build_RDF_store.py
 This process is used to build a complete RDF Store containing data graphs from PubChem Compounds, PubChem References, PubChem Descriptors, PubChem InchiKey, MeSH, MetaNetX and to identify links between PubChem compounds (CID) and PubMed publications (PMIDS). If needed, only some data graphs can be selected and dowloaded.
 
-For PubChem and MeSH ressources, this version is determine from the modification date of associated files on the ftp server. If the last version of the ressource has already been downloaded, the program will skip this step.
+For PubChem and MeSH resources, this version is determine from the modification date of associated files on the ftp server. If the last version of the resource has already been downloaded, the program will skip this step. Log files are also produced for each downloaded resource.
 
-For the ressource describing links between PubChem Compounds and PubMed publications, the version can be define by the user. If nothing is set, the date will be used by default. Like previous ressources, if the version have already been created, the program will skip the step. To allow overwrting, be sure to delete the associated directory in the *additional_files*.
+For the resource describing links between PubChem Compounds and PubMed publications, the version can be define by the user. If nothing is set, the date will be used by default. Like previous resources, if the version have already been created, the program will skip the step. To allow overwriting, be sure to delete the associated directory in the *additional_files*.
 
-The *additional_files* directory contains lists of identifires treated by the program and caches metadata files, which can be used as back-up by the program if exit too early. 
+The *additional_files* directory contains lists of identifiers treated by the program and caches metadata files, which can be used as back-up by the program.
+
 This directory contains :
   - all_linked_ids: a list of all the linked identifiers found by the Elink process (ex: PubChem Compounds identifiers)
-  - all_linking_ids.txt: a list of all input identifiers used in the Elink process for which available links to linked_ids will be determined
-  - linking_ids_request_failed.txt: a list of all linking ids for which the request failed (Timeout, Server Errors, etc ...). At the end of the process this list must be empty
-  - linking_ids_without_linked_ids.txt: a list of all the linking identifiers for which at least one link to a linked identifier was found
+  - all_linking_ids.txt: a list of all input identifiers used in the Elink process for which available links to *linked_ids* will be determined
+  - linking_ids_request_failed.txt: a list of all linking ids for which the request failed (Timeout, Server Errors, etc ...). At the end of the process this list must be empty.
+  - linking_ids_without_linked_ids.txt: a list of all the linking identifiers for which at least one link to a *linked_ids* was found.
   - successful_linking_ids.txt: a list of all the linking identifiers for which no link to a linked identifier was found
   - s_metdata.txt: a cache metadata file which may also be used for back-up.
 
@@ -63,7 +64,7 @@ python3 app/build_RDF_store/build_RDF_store.py --config="/path/to/config_file.in
 - config: path to the configuration file
 - out: path to output directory, should be the docker-virtuoso shared directory
 - log: path to the log directory
-- version: The version of the builded ressource. If nothing is indicated, date will be used
+- version: The version of the builded resource. If nothing is indicated, date will be used
 
 pre_upload.sh or upload_data.sh, can then be loaded in the Virtuoso triplestore using :
 

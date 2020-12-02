@@ -22,7 +22,7 @@ Before building the triplestore, you need to create 4 directories:
 - the **data** directory: it will contain all analysis result files, such as *Compound - MeSH* associations
 - the **docker-virtuoso** directory: it will contain the Virtuoso session files and data
 - the **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image, to ensure data loading.
-- the **logs** to store logs.
+- the **logs** directory: to store logs.
 
 So, for instance, you can execute:
 ```
@@ -45,9 +45,9 @@ docker build -t forum/processes \
 This allow to build an image with correct permissions that correspond to the local host. (https://vsupalov.com/docker-shared-permissions/)
 
 In this container, three directories are intented to be bind with the host:
-- out: to export results in data
-- share-virtuoso: to create new RDF files in the Virtuoso shared directory
-- logs-app: to export logs
+- out: to export results in data (**data** on host)
+- share-virtuoso: to create new RDF files in the Virtuoso shared directory (**docker-virtuoso/share** on host)
+- logs-app: to export logs (**logs** on host)
 
 Then, you can launch it using:
 
@@ -77,6 +77,7 @@ docker exec -it forum_scripts bash
 You can then navigate in the container (like in a classic docker) to modify configuration files, make tests on scripts, check mount directories, etc ...
 
 Finally, all commands can be launch in a detach mode from the host, like :
+
 ```bash
 docker exec --detach forum_scripts ./command -param v1 -param2 v2 ...
 ```
@@ -89,7 +90,7 @@ This command will be execute in the container, running in the background.
 Finally, the forum/processes container must not be used to start/stop/clean the Virtuoso triplestore (See 3.1)
 
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
-Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *data* and *docker-virtuoso/share*, instead of using ./data and ./docker-virtuoso/share in the next examples.
+Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *out* and *share-virtuoso*, instead of using *data* and *docker-virtuoso/share* in the next examples.
 
 **If you want to restart an analysis from scratch, be sure to remove all logs before!**
 
@@ -206,7 +207,7 @@ To compute associations between chemical entities and MeSH descriptors, you can 
 
 For each analysis: all results and intermediary data will be exported in a dedicated sub-directory named as the resource (option u).
 In this sub-directory, you can find count data associated with Chemical entities, MeSH descriptors and their co-occurrences (eg. directory MESH_PMID).
-In the sub-directory results, you can find the table that resume counts for each association. This table that is used later to compute Fisher exact tests on each association. From this table to the final result table containing all statistical values, there are several intermediary files produced.
+In the sub-directory results, you can find the table that resume counts for each association. This table is used later to compute Fisher exact tests on each association. From this table to the final result table containing all statistical values, there are several intermediary files produced.
 
 These intermediary files are:
 - r_fisher.csv: correspond to the table containing results after the Fisher exact test computation.
@@ -224,7 +225,7 @@ Some example of commands that can be used to compute each analysis are shown bel
 ```
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CID_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/2020-10-10/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CID_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/release-2020/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 
@@ -236,7 +237,7 @@ eg.:
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CHEBI_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-10-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CHEBI_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/release-2020/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 #### 3.3.3 - Compute Chemont - MeSH associations
@@ -247,8 +248,22 @@ eg.:
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020-10-10 -m app/metab2mesh/config/CHEMONT_MESH/2020-10-10/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/2020-10-10/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CHEMONT_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
+
+#### 3.3.4 - Compute MeSH - MeSH associations
+
+```bash
+./workflow/w_compound2mesh.sh -v version -m /path/to/config/MeSH2MeSH -t path/to/config/triplesConverter/MeSH2MeSH -u MESH_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+```
+
+eg.:
+```bash
+./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/MESH_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+```
+
+Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus by default, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redondant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
+
 
 ### 3.4 - Shutdown Virtoso session
 
@@ -265,9 +280,8 @@ workflow/w_virtuoso.sh -d ./docker-virtuoso -s share clean
 ```
 
 **Note**: the Virtuoso session could be stop directly after the counts calculation and is not necessary for the post-processes.
-It is recommended to stop and re-start the Virtuoso session between each calculation session, eg. between CID-MESH and CHEBI-MESH, to always work with a fresh session.
 
-New directory *Analyzes* should have been created at the end of the process in the virtuoso shared directory, instantiating associations between chemical entities and MeSH in a triple formalism, which can be then be load in a Virtuoso triplestore to explore relations.
+New directory *EnrichmentAnalysis* should have been created at the end of the process in the virtuoso shared directory, instantiating associations between chemical entities and MeSH in a triple formalism, which then can be load in a Virtuoso triplestore to explore relations.
 
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory
 
@@ -336,16 +350,17 @@ A Virtuoso session should be available at your localhost:Listen_port
 To load data in the triplestore, you can use upload files generated by the different previous steps as follows: 
 
 ```bash
-docker exec -t container_name bash -c '/usr/local/virtuoso-opensource/bin/isql-v 1111 dba "DB_password" ./dumps/upload.sh'
+dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
+docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/*upload_file*.sh
 ```
 The dumps directory of the Virtuoso container should be mapped on your docker-virtuoso/share.
 
 The created upload files contains different information:
 - *upload.sh*: contains ontologies, thesaurus and vocabularies
-- *upload_data.sh*: contains triples from PubChem, MeSH and those extracted using Elink
+- *upload_data.sh*: contains triples from PubChem, MeSH, MetaNetX and those extracted using Elink
 - *pre_upload.sh*: is a light version of *upload_data.sh* using only PubChem Compounds triples indicating compound types and without loading PubChem Descriptor.
 - *upload_ClassyFire.sh*: contains triples indicating the chemont classes of PubChem compounds with annotated literature
-- *upload_Enrichment_ANALYSIS.sh*: contains triples instanciating relation between chemical entities and MeSh descriptors, there are *upload_Enrichment_CID_MESH.sh*, *upload_Enrichment_CHEBI_MESH.sh*, *upload_Enrichment_CHEMONT_MESH.sh* for the different chemical entities
+- *upload_Enrichment_ANALYSIS.sh*: contains triples instanciating relations between chemical entities and MeSH descriptors, there are *upload_Enrichment_CID_MESH.sh*, *upload_Enrichment_CHEBI_MESH.sh*, *upload_Enrichment_CHEMONT_MESH.sh* for the different chemical entities
 
 
 ## 5 - Share directory export:
@@ -355,27 +370,30 @@ Be sure to remove the *pre_upload.sh* before compressing the share directory
 
 ## 6 - Versionning :
 
-Created data-graphs are named graphs for which the associated uri identify the graph and triples it contains in the RDF store. By this specific uri, each data-graph is associated to a version of a specific ressource. There are several main ressources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
+Created graphs are *named graphs* for which the associated uri identify the graph and triples it contains in the triplestore. By this specific uri, each graph represent a version of a specific resource. There are several main resources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
 
-When a new graph is created, a new version of the associated ressource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *http://database/ressources/PubChem/compound/version_X* is created as a version of the ressource *http://database/ressources/PubChem/compound*.
+When a new graph is created, a new version of the associated resource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *https://forum.semantic-metabolomics.org/PubChem/compound/version_X* is created as a version of the ressource *https://forum.semantic-metabolomics.org/PubChem/compound*.
 
-Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the data-graph in the same directory. An example of a *void.ttl* associated to a PubChem reference ressource is describe bellow:
+Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the graph in the same directory. An example of a *void.ttl* associated to a PubChem reference ressource is describe bellow:
 
 ```sql
-<http://database/ressources/PubChem/reference> dcterms:hasVersion <http://database/ressources/PubChem/reference/version_X> .
+<https://forum.semantic-metabolomics.org/PubChem/reference> dcterms:hasVersion <https://forum.semantic-metabolomics.org/PubChem/reference/2020-11-04> .
 
-<http://database/ressources/PubChem/reference/version_X> a void:Dataset ;
-    dcterms:created "creation date of the data-graph"^^xsd:date ;
+<https://forum.semantic-metabolomics.org/PubChem/reference/2020-11-04> a void:Dataset ;
+    dcterms:created "2020-12-01"^^xsd:date ;
     dcterms:description "The reference subset contains RDF triples for the type and basic metadata of a given PMID."@en ;
     dcterms:subject <http://dbpedia.org/page/Reference> ;
     dcterms:title "PubChemRDF reference subset"@en ;
-    void:dataDump a list of all files associated to the graph, ex: 
-        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000001.ttl.gz>,
+    void:dataDump <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000001.ttl.gz>,
         <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000002.ttl.gz>,
-        ... ;
-    void:distinctSubjects number of distincts subjects in the graph^^xsd:long ;
+        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000003.ttl.gz>,
+        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000004.ttl.gz>,
+        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2meshheading_000001.ttl.gz>,
+        ...
+        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference_type.ttl.gz> ;
+    void:distinctSubjects "13783773"^^xsd:long ;
     void:exampleResource <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID10395478> ;
-    void:triples "total number of triples in the graph "^^xsd:long ;
+    void:triples "313705646"^^xsd:long ;
     void:uriLookupEndpoint <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> ;
-    void:uriSpace "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"^^xsd:string .
+    void:uriSpace "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"^^xsd:string 
 ```
