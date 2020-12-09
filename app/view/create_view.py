@@ -57,39 +57,50 @@ prefix2 = getattr(module, 'prefix2')
 
 print("=============================================")
 
-print("Send compound related MeSH query ... ", end = '')
+print("- Send compound related MeSH query -")
 # CID -[skos:related]-> MeSH
-get_view(url, prefix1, getattr(module, 'cid_mesh'), [config["GRAPHS"].get("cid_mesh"), config["GRAPHS"].get("mesh")], ids["CID"], os.path.join(args.out, "cid-mesh.csv"))
+get_view(url = url, prefix = prefix1, request = getattr(module, 'cid_mesh'), g_from = [config["GRAPHS"].get("cid_mesh"), config["GRAPHS"].get("mesh")], cpd_list = ids["CID"], out = os.path.join(args.out, "cid-mesh.csv"))
 
 # MeSH -[hasParent]-> MeSH
-print("Ok\nSend MeSH hierarchical relations query ... ", end = '')
-get_view(url, prefix2, getattr(module, 'mesh_hierarchical_relations'), [config["GRAPHS"].get("cid_mesh"), config["GRAPHS"].get("mesh")], ids["CID"], os.path.join(args.out, "mesh-parentTreeNumber-relations.csv"))
+print("Ok\nSend MeSH hierarchical relations query -")
+get_view(url = url, prefix = prefix2, request = getattr(module, 'mesh_hierarchical_relations'), g_from = [config["GRAPHS"].get("mesh")], out = os.path.join(args.out, "mesh-parentTreeNumber-relations.csv"))
+
+# MeSH -[hasLabel]-> MeSH
+print("- Send MeSH label query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'mesh_label'), g_from = [config["GRAPHS"].get("mesh")], out = os.path.join(args.out, "mesh-labels.csv"))
 
 # MeSH -[skos:related]-> MeSH
-print("Ok\nSend contextual (MeSH - MeSH) relations query ... ", end = '')
-# get_view(url, prefix1, getattr(module, 'mesh_mesh'), [config["GRAPHS"].get("cid_mesh"), config["GRAPHS"].get("mesh_mesh"), config["GRAPHS"].get("mesh")], ids["CID"], os.path.join(args.out, "mesh-mesh-relations.csv"))
+print("- Send contextual (MeSH - MeSH) relations query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'cid_mesh_related_mesh'), g_from = [config["GRAPHS"].get("cid_mesh"), config["GRAPHS"].get("mesh_mesh"), config["GRAPHS"].get("mesh")], cpd_list = ids["CID"], out = os.path.join(args.out, "mesh-mesh-relations.csv"))
 
 # CID -[type]-> ChEBI
-print("Ok\nSend cid - ChEBI relations query ... ", end = '')
-get_view(url, prefix2, getattr(module, 'cid_chebi'), [config["GRAPHS"].get("cid_chebi_type")], ids["CID"], os.path.join(args.out, "cid-chebi.csv"))
+print("- Send cid - ChEBI relations query - ")
+get_view(url = url, prefix = prefix2, request = getattr(module, 'cid_chebi'), g_from = [config["GRAPHS"].get("cid_chebi_type")], cpd_list = ids["CID"], out = os.path.join(args.out, "cid-chebi.csv"))
 
 # ChEBI -[hasParent]-> ChEBI
-print("Ok\nSend ChEBI hierarchical relations query ... ", end = '')
-get_view(url, prefix1, getattr(module, 'chebi_hierarchical_relations'), [config["GRAPHS"].get("cid_chebi_type"), config["GRAPHS"].get("chebi")], ids["CID"], os.path.join(args.out, "chebi-subClassOf-relations.csv"))
+# Attention: dans les relations contextuelles, on cherche des MeSH reliés ensemble, MAIS, les deux membres de la relation sont reliés aux composé d'intéret. C'est donc les relations related, entre MeSH reliés aux composés.
+print("- Send ChEBI hierarchical relations query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'chebi_hierarchical_relations'), g_from = [config["GRAPHS"].get("chebi")], out = os.path.join(args.out, "chebi-subClassOf-relations.csv"))
+
+print("- Send ChEBI label query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'chebi_label'), g_from = [config["GRAPHS"].get("chebi")], out = os.path.join(args.out, "chebi-labels.csv"))
 
 # ChEBI -[skos:related]-> MeSH
-print("Ok\nSend ChEBI - MeSH to MeSH relations query ... ", end = '')
-get_view(url, prefix1, getattr(module, 'cid_related_chebi_related_mesh'), [config["GRAPHS"].get("cid_chebi_type"), config["GRAPHS"].get("chebi"), config["GRAPHS"].get("chebi_mesh")], ids["CID"], os.path.join(args.out, "chebi-mesh-relations.csv"))
+print("- Send ChEBI - MeSH to MeSH relations query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'cid_related_chebi_related_mesh'), g_from = [config["GRAPHS"].get("cid_chebi_type"), config["GRAPHS"].get("chebi"), config["GRAPHS"].get("chebi_mesh")], cpd_list = ids["CID"], out = os.path.join(args.out, "chebi-mesh-relations.csv"))
 
 # CID -[type]-> ChemOnt
-print("Ok\nSend cid - ChemOnt relations query ... ", end = '')
-get_view(url, prefix2, getattr(module, 'cid_chemont'), [config["GRAPHS"].get("cid_chemont_type")], ids["CID"], os.path.join(args.out, "cid-chemont.csv"))
+print("- Send cid - ChemOnt relations query -")
+get_view(url = url, prefix = prefix2, request = getattr(module, 'cid_chemont'), g_from = [config["GRAPHS"].get("cid_chemont_type")], cpd_list = ids["CID"], out = os.path.join(args.out, "cid-chemont.csv"))
 
 # ChemOnt -[hasParent]-> ChemOnt
-print("Ok\nSend ChemOnt hierarchical relations query ... ", end = '')
-get_view(url, prefix1, getattr(module, 'chemont_hierarchical_relations'), [config["GRAPHS"].get("cid_chemont_type"), config["GRAPHS"].get("chemont")], ids["CID"], os.path.join(args.out, "chemont-subClassOf-relations.csv"))
+print("- Send ChemOnt hierarchical relations query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'chemont_hierarchical_relations'), g_from = [config["GRAPHS"].get("chemont")], out = os.path.join(args.out, "chemont-subClassOf-relations.csv"))
+
+print("- Send ChEBI label query -", end = '')
+get_view(url = url, prefix = prefix1, request = getattr(module, 'chemont_label'), g_from = [config["GRAPHS"].get("chemont")], out = os.path.join(args.out, "chemont-labels.csv"))
 
 # ChemOnt -[skos:related]-> ChemOnt
-print("Ok\nSend Chemont - MeSH to MeSH relations query ... ", end = '')
-get_view(url, prefix1, getattr(module, 'cid_related_chemont_related_mesh'), [config["GRAPHS"].get("cid_chemont_type"), config["GRAPHS"].get("chemont"), config["GRAPHS"].get("chemont_mesh")], ids["CID"], os.path.join(args.out, "chemont-mesh-relations.csv"))
+print("- Send Chemont - MeSH to MeSH relations query -")
+get_view(url = url, prefix = prefix1, request = getattr(module, 'cid_related_chemont_related_mesh'), g_from = [config["GRAPHS"].get("cid_chemont_type"), config["GRAPHS"].get("chemont"), config["GRAPHS"].get("chemont_mesh")], cpd_list = ids["CID"], out = os.path.join(args.out, "chemont-mesh-relations.csv"))
 print("Ok")
