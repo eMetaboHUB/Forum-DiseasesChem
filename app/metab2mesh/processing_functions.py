@@ -6,6 +6,7 @@ import multiprocessing as mp
 import pandas as pd
 import importlib
 import sys
+from bs4 import BeautifulSoup 
 
 
 
@@ -314,11 +315,12 @@ def ask_for_graph(url, graph_uri):
         "query": "ASK WHERE { GRAPH <" + graph_uri + "> { ?s ?p ?o } }"
     }
     r = requests.post(url = url, headers = header, data = data)
+    r_parser = BeautifulSoup(r.text, features = "html.parser")
     if r.status_code != 200:
         print("Error in request while trying to check if all needed graphs exists.\nImpossible to continue, exit.\n")
-        print(r.text)
+        print(r_parser.text)
         sys.exit(3)
-    if r.text == "true":
+    if r_parser.text == "true":
         return True
     return False
 

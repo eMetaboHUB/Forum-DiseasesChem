@@ -39,6 +39,7 @@ header = {
 data = {
     "format": "csv",
 }
+print("Check graphs ... ", end = '')
 # First step is to test if all the needed graph are present in the RDF Store :
 for uri in config['VIRTUOSO'].get("graph_from").split('\n'):
     if not ask_for_graph(url, uri):
@@ -73,7 +74,7 @@ with open(out + "/wordcloud.log", "w") as log_fail:
 # Send query
 query = prefix + formated_SPARQL_request
 
-print("Sending request ... ", end = '')
+print("Ok\nSending request ... ", end = '')
 
 r_data = data
 r_data["query"] = query
@@ -96,4 +97,4 @@ if(len(lines) > 1):
 else:
     print("\nNo results for association between chemical: " + chem + " and MeSH Descriptor: " + MeSH + ". Check identifiers or if there really are associations")
 
-print("Ok\nExport MeSH coocurences to out ...")
+print("Ok")

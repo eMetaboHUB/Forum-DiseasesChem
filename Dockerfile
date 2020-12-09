@@ -32,6 +32,7 @@ RUN apt update && \
     pip3 install numpy==1.18.2 &&\
     pip3 install elementpath==1.4.3 &&\
     pip3 install requests==2.23.0 &&\
+    pip3 install BeautifulSoup4==4.9.3 &&\
     pip3 install pandas==1.0.3 &&\
     apt remove -y libxml2 libxml2-dev libxslt1-dev gcc &&\
     apt autoremove -y &&\
