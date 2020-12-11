@@ -63,8 +63,8 @@ services:
         image: tenforce/virtuoso
         container_name: ${CONTAINER_NAME}
         environment:
-            VIRT_Parameters_NumberOfBuffers: 2720000   # See virtuoso/README.md to adapt value of this line
-            VIRT_Parameters_MaxDirtyBuffers: 2000000    # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_NumberOfBuffers: 5450000   # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_MaxDirtyBuffers: 4000000    # See virtuoso/README.md to adapt value of this line
             VIRT_Parameters_MaxCheckpointRemap: 680000
             VIRT_Parameters_TN_MAX_memory: 2000000000
             VIRT_SPARQL_ResultSetMaxRows: 10000000000
