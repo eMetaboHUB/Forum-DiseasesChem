@@ -197,6 +197,7 @@ To compute associations between chemical entities and MeSH descriptors, you can 
   - u: name of the computed resource
   - d: path to the data directory
   - s: path to the Virtuoso shared directory
+  - l: path to log directory
 - **Optionals:**
   - v: version of the analysis (optional, date used as default).
   - c: chunksize for parsing files (optional, default 100000)
@@ -215,6 +216,8 @@ These intermediary files are:
 - r_fisher_q_w.csv: correspond to the results after computation of the fragility index. This file is the final result table.
 
 At the end of this procedure all significant associations, according to the threshold in the configuration file, are converted in a triple formalism to be instantiated in the knowledge graph. See details of the procedure in the README of Analyzes/Enrichment_to_graph.
+
+**RQ:** To release memory for Virtuoso temp files and others, you can also stop and start again the triplestore using the w_virtuoso.sh script between each computation.
 
 Some example of commands that can be used to compute each analysis are shown below, using default values options c,p,o,i :
 
