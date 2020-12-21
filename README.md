@@ -166,6 +166,8 @@ eg.
 workflow/w_virtuoso.sh -d ./docker-virtuoso -s share start
 ```
 
+The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfBuffers* and *MaxDirtyBuffers*), also dedicating 8 GB per SPARQL query for computation processes (see *MaxQueryMem*). This configuration can be modify in the w_virtuoso.sh script.
+
 *Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to required the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
 
 - *Option details:*
