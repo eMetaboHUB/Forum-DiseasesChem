@@ -51,3 +51,12 @@ where
     ?chebi rdfs:subClassOf+ chebi:24431 .    
     ?chebi rdfs:label ?chebi_label
 }
+
+# FOR SPECIES
+select distinct (strafter(STR(?specie),"http:doi.org/10.1126/scisignal.aaz1482#") as ?SPECIE) (str(?label) as ?SPECIE_LABEL)
+FROM <SBML>
+where
+{
+    ?specie a SBMLrdf:Species ;
+        SBMLrdf:name ?label
+}

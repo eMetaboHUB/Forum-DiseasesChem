@@ -1,5 +1,6 @@
 prefix = """
     DEFINE input:inference \"schema-inference-rules\"
+    DEFINE input:same-as \"yes\"
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -17,6 +18,7 @@ prefix = """
     PREFIX model: <http:doi.org/10.1126/scisignal.aaz1482#>
     PREFIX SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
     PREFIX bqbiol: <http://biomodels.net/biology-qualifiers#>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 """
 
 count_distinct_pmids_by_SPECIE = """
@@ -47,7 +49,7 @@ where
                         limit %d
                         offset %d
                     }
-                    ?specie bqbiol:is ?cid .
+                    ?specie (bqbiol:is|bqbiol:is/skos:closeMatch) ?cid .
                     ?cid cito:isDiscussedBy ?pmid .
                     ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
                     FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
@@ -102,7 +104,7 @@ where
                         where
                         {
                             ?specie a SBMLrdf:Species .
-                            ?specie bqbiol:is ?cid .
+                            ?specie (bqbiol:is|bqbiol:is/skos:closeMatch) ?cid .
                             ?cid cito:isDiscussedBy ?pmid .
                         }
                     }
@@ -141,7 +143,7 @@ where
                 offset %d
             }
             ?specie a SBMLrdf:Species .
-            ?specie bqbiol:is ?cid .
+            ?specie (bqbiol:is|bqbiol:is/skos:closeMatch) ?cid .
             ?cid cito:isDiscussedBy ?pmid .
             ?pmid (fabio:hasSubjectTerm/meshv:treeNumber|fabio:hasSubjectTerm/meshv:hasDescriptor/meshv:treeNumber) ?tn .
             FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\")) .
@@ -182,7 +184,7 @@ where
                             limit %d
                             offset %d
                         }
-                        ?specie bqbiol:is ?cid .
+                        ?specie (bqbiol:is|bqbiol:is/skos:closeMatch) ?cid .
                         ?cid cito:isDiscussedBy ?pmid .
                         ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
                         ?mesh_ini a meshv:TopicalDescriptor .
@@ -232,7 +234,7 @@ where
                         limit %d
                         offset %d
                     }
-                    ?specie bqbiol:is ?cid .
+                    ?specie (bqbiol:is|bqbiol:is/skos:closeMatch) ?cid .
                     ?cid cito:isDiscussedBy ?pmid .
                     ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
                     ?mesh_ini a meshv:TopicalDescriptor .
@@ -254,43 +256,6 @@ offset %d
 """
 
 
-MESH_name = """
-select ?MESH str(?str_f_label)
-%s
-where
-{
-    {
-        select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) MIN(str(?label)) as ?str_f_label
-        where
-        {
-            {
-                select ?mesh
-                where
-                {
-                    {
-                        select distinct ?mesh
-                        where
-                        {
-                            ?mesh a meshv:TopicalDescriptor .
-                            ?mesh meshv:active 1 .
-                            ?mesh meshv:treeNumber ?tn .
-                            FILTER(REGEX(?tn,\"(C|A|D|G|B|F|I|J)\"))
-                        }
-                        order by ?mesh
-                    }
-                }
-                limit %d
-                offset %d
-            }
-        ?mesh rdfs:label ?label
-        }
-        group by ?mesh
-        order by ?mesh
-    }
-}
-limit %d
-offset %d
-"""
 
 count_number_of_SPECIE = """
 select (count(distinct ?specie) as ?count_SPECIE)
