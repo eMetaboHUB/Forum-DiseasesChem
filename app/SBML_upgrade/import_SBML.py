@@ -37,12 +37,12 @@ sbml_rdf_format = config["SBML"].get("format")
 gem_path = path_to_dumps + "GEM/" + sbml_version
 
 # URIS
-base_uri_SBML = "https://forum.semantic-metabolomics.org/SMBL/"
+base_uri_SBML = "https://forum.semantic-metabolomics.org/SBML/"
 
 # PROCESSES
 uri = base_uri_SBML + sbml_version
 
-print("Try to move SMBL file to Virtuoso shared directory ... ", end = '')
+print("Try to move SBML file to Virtuoso shared directory ... ", end = '')
 if not os.path.exists(gem_path):
     os.makedirs(gem_path)
 try:

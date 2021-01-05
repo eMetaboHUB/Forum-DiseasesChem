@@ -94,7 +94,7 @@ python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.in
 ```
 - config: path to the configuration file
 - out: path to output directory
-- version: version of the SBML RDF file, according to the one which was downloaded using build_rdf_store (Cf. buid_rdf_store config).
+- version: version of the MetaNetX RDF resource, according to the one which was downloaded using build_rdf_store (Cf. buid_rdf_store config).
 
 * Config file:
 
