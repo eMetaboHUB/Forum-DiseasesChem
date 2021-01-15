@@ -43,39 +43,43 @@ The data.frame is printed in *df_out_dir* at *out_path*
 - [DEFAULT]
   - split: a boolean (True/False) that indicates if the resulting table should be split in smaller parts while exporting
   - file_size: number of lines per outputed table, if split is set to True
-  - request_file: the name of the *sparql_queries.py* file containg queries variable. This file **must** be place in the dedicated SPARQL directory
+  - request_file: the name of the SPARQL request file containing queries, located in *app/metab2mesh/SPARQL*.
 - [VIRTUOSO]
   - url: url of the Virtuoso SPARQL endpoint
-  - graph_from: uri of data source graphs, one per line, Ex: 
-             https://forum.semantic-metabolomics.org/PMID_CID/2020-04-20
-             https://forum.semantic-metabolomics.org/reference/2020-04-19
+  - graph_from: uri of data source graphs, one per line, Ex:
+    https://forum.semantic-metabolomics.org/PMID_CID/2020-04-20
+    https://forum.semantic-metabolomics.org/reference/2020-04-19
 - **X_Y**
   - name: name of the coocurences variable (ex: CID_MESH)
-  - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each combinations of modalities of X and Y
-  - Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities in the grouping variable
+  - Request_name: name of the variable in the SPARQL request file containing the string of the request that will be used to count the number of individuals associated to each combinations of modalities of X and Y
+  - Size_Request_name: name of the variable in the SPARQL request file containing the string of the request which will be used to count the number of modalities in the grouping variable
   - limit_pack_ids: Modality pack size that will be used to divide modalities of the grouping variable in smaller groups to allow parallelization (ex: 10000)
   - limit_selected_ids: Maximal number of lines return by Virtuoso in one request. Use to manage pagination (ex: 1000000). Virtuoso max is 2^20
   - n_processes: Number of processes that will be used to send queries in parallel
   - out_dir: output directory name for coocurences
 - **X**
   - name: name of the X variable (ex: CID)
-  - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each modalities of X
-  - Size_Request_name:  name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities of the variable X
+  - Request_name: name of the variable in the SPARQL request file containing the string of the request that will be used to count the number of individuals associated to each modalities of X
+  - Size_Request_name:  name of the variable in the SPARQL request file containing the string of the request which will be used to count the number of modalities of the variable X
   - limit_pack_ids:  Modality pack size that will be used to divide modalities of X in smaller groups to allow parallelization (ex: 10000)
   - limit_selected_ids: Maximal number of lines return by Virtuoso in one request. By default it can be set to limit_pack_ids + 1
   - n_processes: Number of processes that will be used to send queries in parallel
   - out_dir: output directory name for variable X
 - **Y**
   - name: name of the Y variable (ex: CID)
-  - Request_name: name of the variable in sparql_queries.py containing the string of the request that will be used to count the number of individuals associated to each modalities of Y
-  - Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of modalities of the variable Y
+  - Request_name: name of the variable in the SPARQL request file containing the string of the request that will be used to count the number of individuals associated to each modalities of Y
+  - Size_Request_name: name of the variable in the SPARQL request file containing the string of the request which will be used to count the number of modalities of the variable Y
   - limit_pack_ids: Modality pack size that will be used to divide modalities of Y in smaller groups to allow parallelization (ex: 10000)
   - limit_selected_ids: Maximal number of lines return by Virtuoso in one request. By default it can be set to limit_pack_ids + 1
   - n_processes: Number of processes that will be used to send queries in parallel
   - out_dir: output directory name for variable Y
 - **U**
   - name: Name of the variable representing individuals (ex: PMID)
-  - Size_Request_name: name of the variable in sparql_queries.py containing the string of the request which will be used to count the number of individuals in all the concerned set: that present at least one modality of variable X and one modality of variable Y
+  - Size_Request_name: name of the variable in the SPARQL request file containing the string of the request which will be used to count the number of individuals in all the concerned set: that present at least one modality of variable X and one modality of variable Y
+  - limit_pack_ids: Modality pack size that will be used to divide modalities of U in smaller groups to allow parallelization (ex: 100000)
+  - limit_selected_ids: 2
+  - n_processes: Number of processes that will be used to send queries in parallel
+  - out_dir: output directory name for variable Y
 
 run from workdir:
 ```python
