@@ -30,7 +30,7 @@ mkdir -p docker-virtuoso/share
 ```
 
 Two possibility to build the triplestore:
-- You can use the docker-image provided which contains all needed packages and libraries.
+- You can use the provided docker-image which contains all needed packages and libraries.
 - Or, you can execute them on your own environment, but check that all needed packages are installed.
 
 If you want to use the docker image, first build it :
@@ -88,7 +88,7 @@ This command will be execute in the container, running in the background.
 Finally, the forum/processes container must not be used to start/stop/clean the Virtuoso triplestore (See 3.1)
 
 **Warnings:** Be sure to map the docker-virtuoso/share and the data directory inside your forum/processes container.
-Also, if you use the docker forum/processes, you should use in your commands,  directories that bind on the previously created directories: *out* and *share-virtuoso*, instead of using *data* and *docker-virtuoso/share* in the next examples.
+Also, if you use the docker forum/processes, you should use in your commands, directories that bind on the previously created directories: *out* and *share-virtuoso*, instead of using *data* and *docker-virtuoso/share* in the next examples.
 
 **If you want to restart an analysis from scratch, be sure to remove all logs before!**
 
@@ -105,24 +105,24 @@ There are two configuration files related to this step:
 Then, from *metdiseasedatabase* directory execute: 
 
 ```bash
-./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -p mdpForum -s path/to/virtuoso/shared/directory -l /path/to/log/dir
+./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -s path/to/virtuoso/shared/directory -l /path/to/log/dir
 ```
 eg.:
 
 ```bash
-./workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -p mdpForum -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -v test -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 - *Option details:*
   - b: path to the config file of build_rdf_store (eg. app/build_RDF_store/config/config.ini)
   - c: path to the config file of Chemont processes (eg.  app/ChemOnt/config/version/config.ini)
   - v: The version of the analysis. This is optional, if nothing is set, the date will be used
-  - p: pydio password to get data
   - s: path to the Virtuoso shared directory (eg ./docker-virtuoso/share)
+  - l: path to log dir (eg ./logs)
 
 This process should have created several sub-directories in the Virtuoso shared directory: ClassyFire, MeSH, MetaNetX, PMID_CID, PMID_CID_endpoints, PubChem_Compound, PubChem_Descriptor, PubChem_InchiKey, PubChem_References, vocabulary
 
-The vocabulary directory contains files associated to the schema of used ontology, they can be download using the docker ressource directory or at:
+The vocabulary directory contains files associated to the schema of used ontology, they can be download using the docker resource directory or at:
 
 - MeSH: ftp://ftp.nlm.nih.gov/online/mesh/rdf/vocabulary_1.0.0.ttl
 - ChEBI: ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl
@@ -142,7 +142,16 @@ pre_upload.sh is a light version of upload_data.sh which is loading only data ne
 
 ### 2.2 - Or ... Download RDF files from FTP
 
-Several datasets are used to compute associations between studied entities. Some dataset are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external ressource can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM ftp server at ftp://FORUM/. Files used to upload datasets in the Virutoso triples store, originally created by the workflow, are also provided.
+Several datasets are used to compute associations between studied entities. Some datasets are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* (or *dcat:downloadURL*) predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external resources can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM sftp server at *ftp.semantic-metabolomics.org* (see details on web-portal). We provide a generic *user* and a public *password* to login.
+
+*user:* forum
+*password*: xxxx
+
+example :
+```bash
+sftp forum@ftp.semantic-metabolomics.org:/forum-dev/sftp/forum/share.tar.gz
+```
+
 
 
 ## 3 - Compute chemical entities to MeSH associations
@@ -176,7 +185,7 @@ Several checks can be used to ensure that the loading was done correctly:
 
 1) At the end of each laoding file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Globally, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
 
-2) Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. A good start could be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, be sure to add the content of the prefix variable at the beginning of your request and use only the first 100 elements for instance by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for tests.
+2) Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. A good start could be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, be sure to add the content of the prefix variable at the beginning of your request and use only the first 100 elements by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for tests.
 
 3) TODO: Implement tests
 
@@ -200,7 +209,7 @@ To compute associations between chemical entities and MeSH descriptors, you can 
   - l: path to log directory
 - **Optionals:**
   - v: version of the analysis (optional, date used as default).
-  - c: chunksize for parsing files (optional, default 100000)
+  - c: chunksize for parsing files (optional, default 100000). We recommend not to increase this parameter much because it could greatly increase the computation times.
   - p: number of used cores (optional, default 5)
   - o: threshold used in fragility index (optional, default 1e-6)
   - i: alpha of Jeffrey's CI for fragility index computation (optional, default 0.05)
@@ -292,7 +301,7 @@ In the data directory, you can also retrieved all processed results, such as the
 
 Identifiers are not always convinients to study results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
 To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
-Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify. But, you can use the [PubChem identifier exchange service](https://pubchem.ncbi.nlm.nih.gov/idexchange/idexchange.cgi) to retrieve PubChem molecule names from their PubChem ID. You can extract a specific set of PubChem Compounds identifiers using the SPARQL endpoint and you can also get all the PubChem Compound identifier of molecules related to Pubmed articles by using the log file *all_linked_ids.txt*, located */path/to/logs/additional_files/version/all_linked_ids.txt*.
+Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify. Label files are also provided on the sftp server (See on web-portal).
 
 
 ## 4 - Build a custom triplestore
@@ -375,9 +384,9 @@ Be sure to remove the *pre_upload.sh* before compressing the share directory
 
 Created graphs are *named graphs* for which the associated uri identify the graph and triples it contains in the triplestore. By this specific uri, each graph represent a version of a specific resource. There are several main resources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
 
-When a new graph is created, a new version of the associated resource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *https://forum.semantic-metabolomics.org/PubChem/compound/version_X* is created as a version of the ressource *https://forum.semantic-metabolomics.org/PubChem/compound*.
+When a new graph is created, a new version of the associated resource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *https://forum.semantic-metabolomics.org/PubChem/compound/version_X* is created as a version of the resource *https://forum.semantic-metabolomics.org/PubChem/compound*.
 
-Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the graph in the same directory. An example of a *void.ttl* associated to a PubChem reference ressource is describe bellow:
+Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the graph in the same directory. An example of a *void.ttl* associated to a PubChem reference resource is describe bellow:
 
 ```sql
 <https://forum.semantic-metabolomics.org/PubChem/reference> dcterms:hasVersion <https://forum.semantic-metabolomics.org/PubChem/reference/2020-11-04> .

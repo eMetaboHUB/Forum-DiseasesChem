@@ -15,7 +15,6 @@ usage () {
 	echo "-b path/to/buid_rdf_store/config"
 	echo "-c /path/to/Chemont/config"
 	echo "-v version (optional, date as default value)"
-	echo "-p pydio password"
 	echo "-s /path/to/docker-virtuoso/share/dir"
 	echo "-l /path/to/logs/dir"
 }
@@ -28,7 +27,6 @@ while getopts b:c:v:p:s:l: flag
             b) CONFIG_BUILD_RDF_STORE=${OPTARG};;
 			c) CONFIG_CHEMONT=${OPTARG};;
             v) VERSION=${OPTARG};;
-            p) PYDIO_PASSWD=${OPTARG};;
 			s) RESOURCES_DIR=${OPTARG};;
 			l) LOGSDIR=${OPTARG};;
 			?) usage; exit 1;;
@@ -36,7 +34,7 @@ while getopts b:c:v:p:s:l: flag
 	    esac
 	done
 
-if [ -z "$CONFIG_BUILD_RDF_STORE" ] || [ -z "$CONFIG_CHEMONT" ] || [ -z "$PYDIO_PASSWD" ] || [ -z "$RESOURCES_DIR" ] || [ -z "$LOGSDIR" ]
+if [ -z "$CONFIG_BUILD_RDF_STORE" ] || [ -z "$CONFIG_CHEMONT" ] || [ -z "$RESOURCES_DIR" ] || [ -z "$LOGSDIR" ]
 then
 	echo "One (or few) mandatory options seem missing. Mandatory options are: -b -c -p -s -l" ;
 	usage ;
@@ -46,20 +44,26 @@ fi
 mkdir -p $LOGSDIR
 
 echo "--  Create triple store !"
-echo "1) Get vocabulary and external data files from pydio ..."
+echo "1) Get vocabulary and external data files from sftp ..."
 
-ARCHIVE_TAR_GZ_PYDIO=upload.tar.gz 
-URL_PYDIO_TTL="https://pfem.clermont.inra.fr/pydio/public/7af464/dl/"
-OPTION_PYDIO_INRAE="-u none:$PYDIO_PASSWD"
+ARCHIVE_TAR_GZ=upload.tar.gz 
+URL_SFTP="ftp.semantic-metabolomics.org:/forum-dev/sftp/forum/upload.tar.gz"
+USER="mdelmas"
+PASSWORD="Sa23;10on"
 
 # Init log
-LOG_VOC="${LOGSDIR}/get_pydio.log"
+LOG_VOC="${LOGSDIR}/get_voc.log"
 echo "" > $LOG_VOC
 
-echo "wget --user none --password ${PYDIO_PASSWD} ${URL_PYDIO_TTL}${ARCHIVE_TAR_GZ_PYDIO} -P ${RESOURCES_DIR}/"
-wget --user none --password ${PYDIO_PASSWD} -P ${RESOURCES_DIR}/ ${URL_PYDIO_TTL}${ARCHIVE_TAR_GZ_PYDIO} 2>&1 | tee -a $LOG_VOC
-tar xvf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ_PYDIO} -C ${RESOURCES_DIR} --overwrite 2>&1 | tee -a $LOG_VOC
-rm -rf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ_PYDIO} 2>&1 | tee -a $LOG_VOC
+echo "sftp ${USER}@${URL_SFTP}"
+if [[ ! -d ~/.ssh ]]
+then
+	mkdir ~/.ssh; chmod 0700 ~/.ssh
+fi
+ssh-keyscan -H ftp.semantic-metabolomics.org >> ~/.ssh/known_hosts
+sshpass -p ${PASSWORD} sftp ${USER}@${URL_SFTP} ${RESOURCES_DIR}/ 2>&1 | tee -a $LOG_VOC
+tar xvf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ} -C ${RESOURCES_DIR} --overwrite 2>&1 | tee -a $LOG_VOC
+rm -rf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ} 2>&1 | tee -a $LOG_VOC
 
 echo "2) Build rdf store"
 
