@@ -56,7 +56,10 @@ LOG_VOC="${LOGSDIR}/get_voc.log"
 echo "" > $LOG_VOC
 
 echo "sftp ${USER}@${URL_SFTP}"
-mkdir ~/.ssh; chmod 0700 ~/.ssh
+if [[ ! -d ~/.ssh ]]
+then
+	mkdir ~/.ssh; chmod 0700 ~/.ssh
+fi
 ssh-keyscan -H ftp.semantic-metabolomics.org >> ~/.ssh/known_hosts
 sshpass -p ${PASSWORD} sftp ${USER}@${URL_SFTP} ${RESOURCES_DIR}/ 2>&1 | tee -a $LOG_VOC
 tar xvf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ} -C ${RESOURCES_DIR} --overwrite 2>&1 | tee -a $LOG_VOC
