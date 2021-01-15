@@ -1,7 +1,5 @@
 # FORUM Knowledge graph Database
 
-This repository contains some usefull methods to provides links between PubChem compound identifiers, litteratures (PMIDs) and MeSH
-
 ## 1 - Install
 
 ### 1.1 - Install Docker:
