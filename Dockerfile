@@ -24,7 +24,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # INSTALL STUFF
 RUN apt update && \
     apt install -y \
-    wget curl vim htop \
+    wget curl vim htop sshpass \
     libxml2 libxml2-dev libxslt1-dev gcc \
     python3 python3-dev python3-setuptools python3-pip &&\
     pip3 install eutils==0.6.0 &&\
