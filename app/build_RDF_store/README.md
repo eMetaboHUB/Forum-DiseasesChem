@@ -56,6 +56,8 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 - [FTP]
   - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 
+To get an API Key, you can need an NCBI account.
+
 run from workdir:
 ```python
 python3 app/build_RDF_store/build_RDF_store.py --config="/path/to/config_file.ini" --out="path/to/out/dir" --log="path/to/log/dir" --version="version"
