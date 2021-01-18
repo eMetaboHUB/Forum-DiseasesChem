@@ -185,7 +185,14 @@ pre_upload.sh is a light version of upload_data.sh which is loading only data ne
 
 #### 2.2 - Or ... Download RDF files from FTP
 
-Several datasets are used to compute associations between studied entities. Some dataset are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external ressource can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM ftp server at ftp.semantic-metabolomics.org. Files used to upload datasets in the Virutoso triples store, originally created by the workflow, are also provided.
+*user:* forum
+*password*: xxxx
+
+example :
+```bash
+sftp forum@ftp.semantic-metabolomics.org:/forum-dev/sftp/forum/share.tar.gz
+```
+
 
 
 ### 3 - Compute chemical entities to MeSH associations
