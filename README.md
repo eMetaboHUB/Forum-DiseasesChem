@@ -1,12 +1,55 @@
 # FORUM Knowledge graph Database
 
-## 1 - Install
+[<img width="200" height="200" src="FORUM_logo2.png">](https://github.com/eMetaboHUB/FORUM-MetDiseaseDatabase) FORUM is an open knowledge network aiming at supporting metabolomics results interpretation in biomedical sciences and automated reasoning.
+Containing more than 8 billion statements, it federates data from several life-science resources such as PubMed, ChEBI and PubMed.
+Leveraging the bridges in this linked dataset, we automatically extract associations between compound and biomedical concepts, using literature metadata enrichment.
+Find more about the method in our preprint here: [BioXiv](www.notre-url-ici.com)
 
-### 1.1 - Install Docker:
+The FORUM content can be exploited through this portal in two ways:
+- The first one, *"Find associations"* allows to search for the relevant association extracted by the system. From a compound name or a chemical family, find related biomedical concepts. Alternatively, you can also, from a biomedical focus, find related compounds. The results provide measures of the association strength and link to the supporting articles in PubMed.
+- The second one, *"Ask Anything"*, requires to be familiar with the SPARQL language and allow to directly query the content of the whole knowledge network using our endpoint interface.
+
+The endpoint can also be accessed programmatically and built from source to support further developments. The source code for the Knowledge Network creation and computation of the association can be found on this repo here. Do not hesitate to contact us at [semantics-metabolomics AT inrae DOT fr] for more information.
+
+The FORUM project is supported by **INRAE**, France's National Research Institute for Agriculture, Food and Environment, The H2020 **Goliath** project and the INRAE CATI **EMPREINTE**.
+
+| | | |
+|---|---|---|
+| [<img style="" markdown="1" width="200" height="200" src="https://www.inrae.fr/themes/custom/inrae_socle/public/images/etat_logo.svg">](https://www.inrae.fr/) | [<img markdown="1" width="200" height="200" src="https://www.inrae.fr/themes/custom/inrae_socle/logo.svg">](https://www.inrae.fr/) | [<img style="" markdown="1" width="200" height="120" src="https://beatinggoliath.eu/wp-content/uploads/sites/343/2019/03/Goliath-logo-with-subtext.png">](https://beatinggoliath.eu/) |
+  
+
+## The FORUM team: 
+
+ * **Maxime Delmas**, INRAE Toulouse              - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](http://orcid.org/0000-0002-9352-0624)  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
+ * **Christophe Duperier**, INRAE Clermont Fd    - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">]()  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
+ * **Clément Frainay**, INRAE Toulouse           - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](https://orcid.org/0000-0003-4313-2786)  [<img src="https://www.twitter.com/favicon.ico">](https://twitter.com/clement_frainay?lang=en)  [<img width="16" height="16" src="https://github.com/fluidicon.png">](https://github.com/cfrainay)
+ * **Olivier Filangi**, INRAE Rennes             - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">]()  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
+ * **Franck Giacomoni**, INRAE Clermont Fd      - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">](https://www.linkedin.com/in/franck-giacomoni-1979a074/?originalSubdomain=fr) [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](https://orcid.org/0000-0001-6063-4214) [<img src="https://www.twitter.com/favicon.ico">](https://twitter.com/franckgiacomoni) [<img width="16" height="16" src="https://github.com/fluidicon.png">](https://github.com/fgiacomoni)
+ * **Nils Paulhe**, INRAE Clermont Fd           - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">](https://www.linkedin.com/in/nils-paulhe-06713059/) [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](https://orcid.org/0000-0003-4550-1258)  [<img src="https://www.twitter.com/favicon.ico">](https://twitter.com/nilspaulhe)  [<img width="16" height="16" src="https://github.com/fluidicon.png">](https://github.com/npaulhe)
+ * **Florence Vinson**, INRAE Toulouse          - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">]()  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
+
+
+
+
+## infobox score
+
+For identified weak associations, the fragility index represents the minimum number of supporting articles withdrawn that would make the association fall below our inclusion criteria. See **[citation]** for more details
+
+## infobox associations
+
+The strength of an association is estimated from the frequency of compound mention and biomedical topic co-occurrence in PubMed articles. We test for independence using right-tailed Fisher Exact test adjusted for multiple comparisons using the Benjamini-Hochberg procedure. More details in **[citation]**
+
+
+
+## Technical information 
+
+### 1 - Install environment
+
+#### 1.1 - Install Docker:
 
 Follow instructions at https://docs.docker.com/engine/install/ubuntu/
 
-### 1.2 - Install Virtuoso Docker container :
+#### 1.2 - Install Virtuoso Docker container :
 
 - Check that the docker virtuoso image is installed :
 If not 
@@ -92,11 +135,11 @@ Also, if you use the docker forum/processes, you should use in your commands, di
 
 **If you want to restart an analysis from scratch, be sure to remove all logs before!**
 
-## 2 - Prepare the triplestore
+### 2 - Prepare the triplestore
 
 To build the initial triplestore, you can use the script w_buildTripleStore.sh or directly download RDF files from the FTP server.
 
-### 2.1 - Build the triplestore
+#### 2.1 - Build the triplestore
 
 There are two configuration files related to this step:
 - The first contains parameters about the creation of the triplestore. See README in the *build_RDF_store* sub-directory for option details.
@@ -140,25 +183,16 @@ The ChEBI ontology file is often updated and the actual version of the ChEBI ont
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
 pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
 
-### 2.2 - Or ... Download RDF files from FTP
+#### 2.2 - Or ... Download RDF files from FTP
 
-Several datasets are used to compute associations between studied entities. Some datasets are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* (or *dcat:downloadURL*) predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external resources can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM sftp server at *ftp.semantic-metabolomics.org* (see details on web-portal). We provide a generic *user* and a public *password* to login.
-
-*user:* forum
-*password*: xxxx
-
-example :
-```bash
-sftp forum@ftp.semantic-metabolomics.org:/forum-dev/sftp/forum/share.tar.gz
-```
+Several datasets are used to compute associations between studied entities. Some dataset are provided by some external resources (eg. PubChem, MeSH, ...) and some others are created (eg. PMID_CID, EnrichmentAnalysis, ...). Each dataset is contained in a specific named graph, for which metadata are annotated, providing useful information (See Versionning section). Among these metadata, the *void:dataDump* predicate provides the location of the corresponding data files, which then can be downloaded. Dataset from external ressource can be downloaded from their corresponding FTP server, while all created data, used in the current release, can be found on the FORUM ftp server at ftp.semantic-metabolomics.org. Files used to upload datasets in the Virutoso triples store, originally created by the workflow, are also provided.
 
 
-
-## 3 - Compute chemical entities to MeSH associations
+### 3 - Compute chemical entities to MeSH associations
 
 Once the initial data of the triplestore have been created, an initial session of the Virtuoso triplestore must be started in order to compute associations between chemical entities and MeSH descriptors.
 
-### 3.1 - Initialyze the Virtuoso session
+#### 3.1 - Initialyze the Virtuoso session
 
 
 **Warning:** The management script of the triplestore Virtuoso, *w_virtuoso.sh*, must be run directly **on the host**, without using the forum docker (forum/processes). Indeed, while starting the forum/processes container, the option *--network="host"* will allows that the container will use the host’s networking.
@@ -189,13 +223,13 @@ Several checks can be used to ensure that the loading was done correctly:
 
 3) TODO: Implement tests
 
-### 3.2 - Set configuration files: 
+#### 3.2 - Set configuration files: 
 
 For each analysis, there are two main configuration files: 
 - The first refer to parameters required during the requesting process. See README in the *metab2mesh* sub-directory for option details.
 - The second refer to parameters required in the conversion process of association results to RDF triples. See README in the *Analyzes/Enrichment_to_graph* sub-directory for option details.
 
-### 3.3 - Computation
+#### 3.3 - Computation
 
 To compute associations between chemical entities and MeSH descriptors, you can use: w_compound2mesh.sh
 
@@ -230,7 +264,7 @@ At the end of this procedure all significant associations, according to the thre
 
 Some example of commands that can be used to compute each analysis are shown below, using default values options c,p,o,i :
 
-#### 3.3.1 - Compute PubChem compounds - MeSH associations
+##### 3.3.1 - Compute PubChem compounds - MeSH associations
 
 ```bash
 ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
@@ -241,7 +275,7 @@ eg.:
 ```
 
 
-#### 3.3.2 - Compute ChEBI - MeSH associations
+##### 3.3.2 - Compute ChEBI - MeSH associations
 
 ```bash
 ./workflow/w_compound2mesh.sh -v version -m /path/to/config/ChEBI2MeSH -t path/to/config/triplesConverter/ChEBI2MeSH -u CHEBI_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
@@ -252,7 +286,7 @@ eg.:
 ./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CHEBI_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/release-2020/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
-#### 3.3.3 - Compute Chemont - MeSH associations
+##### 3.3.3 - Compute Chemont - MeSH associations
 
 ```bash
 ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Chemont2MeSH -t path/to/config/triplesConverter/Chemont2MeSH -u CHEMONT_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
@@ -263,7 +297,7 @@ eg.:
 ./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CHEMONT_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
-#### 3.3.4 - Compute MeSH - MeSH associations
+##### 3.3.4 - Compute MeSH - MeSH associations
 
 ```bash
 ./workflow/w_compound2mesh.sh -v version -m /path/to/config/MeSH2MeSH -t path/to/config/triplesConverter/MeSH2MeSH -u MESH_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
@@ -277,7 +311,7 @@ eg.:
 Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus by default, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redondant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
 
 
-### 3.4 - Shutdown Virtoso session
+#### 3.4 - Shutdown Virtoso session
 
 When all computations have been achieved, the temporary Virtuoso session can be down, using: 
 
@@ -297,14 +331,14 @@ New directory *EnrichmentAnalysis* should have been created at the end of the pr
 
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory
 
-### 3.5 MeSH, Chemont, ChEBI and CID labels
+#### 3.5 MeSH, Chemont, ChEBI and CID labels
 
 Identifiers are not always convinients to study results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
 To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
 Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify. Label files are also provided on the sftp server (See on web-portal).
 
 
-## 4 - Build a custom triplestore
+### 4 - Build a custom triplestore
 
 To build a custom triplestore, you need to start a new virtuoso session. You can use the docker-compose file created in the docker-virtuoso directory by w_buildTripleStore.sh or build your own with different parameters. An example is presented:
 
@@ -375,12 +409,12 @@ The created upload files contains different information:
 - *upload_Enrichment_ANALYSIS.sh*: contains triples instanciating relations between chemical entities and MeSH descriptors, there are *upload_Enrichment_CID_MESH.sh*, *upload_Enrichment_CHEBI_MESH.sh*, *upload_Enrichment_CHEMONT_MESH.sh* for the different chemical entities
 
 
-## 5 - Share directory export:
+### 5 - Share directory export:
 
 Be sure to remove the *pre_upload.sh* before compressing the share directory
 
 
-## 6 - Versionning :
+### 6 - Versionning :
 
 Created graphs are *named graphs* for which the associated uri identify the graph and triples it contains in the triplestore. By this specific uri, each graph represent a version of a specific resource. There are several main resources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
 
