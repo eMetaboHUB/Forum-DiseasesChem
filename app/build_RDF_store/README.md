@@ -3,23 +3,23 @@
 Use build_RDF_store.py
 This process is used to build a complete RDF Store containing data graphs from PubChem Compounds, PubChem References, PubChem Descriptors, PubChem InchiKey, MeSH, MetaNetX and to identify links between PubChem compounds (CID) and PubMed publications (PMIDS). If needed, only some data graphs can be selected and dowloaded.
 
-For PubChem and MeSH resources, this version is determine from the modification date of associated files on the ftp server. If the last version of the resource has already been downloaded, the program will skip this step. Log files are also produced for each downloaded resource.
+For PubChem and MeSH resources, this version is determined from the modification date of associated files on the ftp server. If the last version of the resource has already been downloaded, the program will skip this step. Log files are also produced for each downloaded resource.
 
-For the resource describing links between PubChem Compounds and PubMed publications, the version can be define by the user. If nothing is set, the date will be used by default. Like previous resources, if the version have already been created, the program will skip the step. To allow overwriting, be sure to delete the associated directory in the *additional_files*.
+For the resource describing links between PubChem Compounds and PubMed publications, the version can be defined by the user. If nothing is set, the date will be used by default. Like previous resources, if the version have already been created, the program will skip the step. To allow overwriting, be sure to delete the associated directory in the *additional_files*.
 
 The *additional_files* directory contains lists of identifiers treated by the program and caches metadata files, which can be used as back-up by the program.
 
 This directory contains :
   - all_linked_ids: a list of all the linked identifiers found by the Elink process (ex: PubChem Compounds identifiers)
-  - all_linking_ids.txt: a list of all input identifiers used in the Elink process for which available links to *linked_ids* will be determined
+  - all_linking_ids.txt: a list of all input identifiers used in the Elink process for which available links to *linked_ids* will be researched
   - linking_ids_request_failed.txt: a list of all linking ids for which the request failed (Timeout, Server Errors, etc ...). At the end of the process this list must be empty.
-  - linking_ids_without_linked_ids.txt: a list of all the linking identifiers for which at least one link to a *linked_ids* was found.
-  - successful_linking_ids.txt: a list of all the linking identifiers for which no link to a linked identifier was found
+  - linking_ids_without_linked_ids.txt: a list of all the linking identifiers for which no link to a linked identifier was found
+  - successful_linking_ids.txt: a list of all the linking identifiers for which at least one link to a *linked_ids* was found.
   - s_metdata.txt: a cache metadata file which may also be used for back-up.
 
-To faciliate the loading of these data graph in Virtuoso the output directory should be the shared directory of Virtuoso, corresponding to the *dumps* directory.
+To facilitate the loading of these data graph in Virtuoso the output directory should be the shared directory of Virtuoso, corresponding to the *dumps* directory.
 
-At the end of the process, two files are created: pre_upload.sh and upload_data.sh. These files contains all the *ISQL* commands that should be execute by Virtuoso to properly load graphs and metadata. pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
+At the end of the process, two files are created: pre_upload.sh and upload_data.sh. These files contain all the *ISQL* commands that should be executed by Virtuoso to properly load graphs and metadata. pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
 
 ```bash
 dockvirtuoso=$(docker-compose ps | grep virtuoso | awk '{print $1}')
@@ -56,7 +56,7 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 - [FTP]
   - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 
-To get an API Key, you can need an NCBI account.
+To get an API Key, you can need a [NCBI account](https://www.ncbi.nlm.nih.gov/account/register/).
 
 run from workdir:
 ```python
@@ -74,5 +74,3 @@ pre_upload.sh or upload_data.sh, can then be loaded in the Virtuoso triplestore 
 dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
 docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/*upload_file*.sh
 ```
-
-Be aware that these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 

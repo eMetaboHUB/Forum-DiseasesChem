@@ -1,10 +1,10 @@
 # ChemOnt
 
-In order to provide a MeSH enrichment from ChemOnt classes, the goal of this procedure is to retrieve ChemOnt classes associated to PubChem compounds, using only thoose for which a literature is available. The literature information is extracted from PMID - CID graphs, while the InchiKey annotation from PubChem InchiKey graphs.
+In order to provide a MeSH enrichment from ChemOnt classes, the goal of this procedure is to retrieve ChemOnt classes associated to PubChem compounds, using only those for which a literature is available. The literature information is extracted from PMID - CID graphs, while the InchiKey annotation from PubChem InchiKey graphs.
 
 ChemOnt classes associated to a PubChem compound are accessible through their InchiKey at the URL http://classyfire.wishartlab.com/entities/INCHIKEY.json
 
-For a molecule, ChemOnt classes are organised in 2 main catergories: 
+For a molecule, ChemOnt classes are organised in 2 main categories: 
 - A *Direct-parent* class: representing the most dominant structural feature of the chemical compounds
 - Some *Alternative parents* classes: Chemical features that also describe the molecule but do not have an ancestor–descendant relationship with each other or with the *Direct Parent* class. 
 
@@ -15,9 +15,9 @@ For a molecule, ChemOnt classes are organised in 2 main catergories:
 These both types of classes are stored separately in two different graphs.
 ### Config file
 - [PROCESSES]
-  - n_processes: The number of molecule that will be treated in parralel. The input table will be divided in *n_processes* sub-tables, which will be treated independtly in parralel.
+  - n_processes: The number of molecule that will be treated in parallel. The input table will be divided in *n_processes* sub-tables, which will be treated independently in parallel.
 - [FTP]
-  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
+  - ftp: The ftp server address on which created data will be stored. A valid address is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 
 How to run:
 ```python
@@ -27,9 +27,9 @@ python3 app/ChemOnt/fetch_ChemOnt.py --config="path/to/config.ini" --out="/path/
 - config: path to the configuration file
 - out: path to output directory, should be the docker-virtuoso shared directory
 - log: path to the log directory
-- version: The version of the builded ressource. If nothing is indicated, date will be used
+- version: The version of the built resource. If nothing is indicated, date will be used
 
-At the end of the process, a *upload_ClassyFire.sh* file is also build in the output directory. This file contains all the *ISQL* commands that should be execute by Virtuoso to properly load all graphs and metadata.
+At the end of the process, a *upload_ClassyFire.sh* file is also build in the output directory. This file contains all the *ISQL* commands that should be executed by Virtuoso to properly load all graphs and metadata.
 Three logs files are created:
 
 - classyFire.log: general logs

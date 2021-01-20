@@ -20,7 +20,7 @@ The FORUM project is supported by **INRAE**, France's National Research Institut
 
 ## The FORUM team: 
 
- * **Maxime Delmas**, INRAE Toulouse              - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](http://orcid.org/0000-0002-9352-0624)  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
+ * **Maxime Delmas**, INRAE Toulouse              - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">](https://www.linkedin.com/in/maxime-delmas-0642071a3/) [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](http://orcid.org/0000-0002-9352-0624)  [<img src="https://www.twitter.com/favicon.ico">](https://twitter.com/DelmasMaxime1)
  * **Christophe Duperier**, INRAE Clermont Fd    - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">]()  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
  * **Clément Frainay**, INRAE Toulouse           - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">](https://orcid.org/0000-0003-4313-2786)  [<img src="https://www.twitter.com/favicon.ico">](https://twitter.com/clement_frainay?lang=en)  [<img width="16" height="16" src="https://github.com/fluidicon.png">](https://github.com/cfrainay)
  * **Olivier Filangi**, INRAE Rennes             - [<img width="16" height="16" src="https://static-exp1.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca">]() [<img src="https://orcid.org/static/release-1.293.0/img/favicon.ico">]()  [<img src="https://www.twitter.com/favicon.ico">]()  [<img width="16" height="16" src="https://github.com/fluidicon.png">]()
@@ -62,7 +62,7 @@ Documentation at [tenforce/virtuoso](https://hub.docker.com/r/tenforce/virtuoso)
 Before building the triplestore, you need to create 4 directories:
 - the **data** directory: it will contain all analysis result files, such as *Compound - MeSH* associations
 - the **docker-virtuoso** directory: it will contain the Virtuoso session files and data
-- the **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image, to ensure data loading.
+- the **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image.
 - the **logs** directory: to store logs.
 
 So, for instance, you can execute:
@@ -178,19 +178,19 @@ The vocabulary directory contains files associated to the schema of used ontolog
 
 The ChEBI ontology file is often updated and the actual version of the ChEBI ontology used in the triplestore is ChEBI 193 (Release of 01 Nov. 2020), as refer in the URI of the ChEBI Graph in FORUM.
 
-*Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt seems to be stable.
+*Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt ontology seems to be stable.
 
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
-pre_upload.sh is a light version of upload_data.sh which is loading only data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. This light upload version can be used to have a light version of the RDF triplestore, without all information about compounds. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
+pre_upload.sh is a light version of upload_data.sh, only loading data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
 
 #### 2.2 - Or ... Download RDF files from FTP
 
-*user:* forum
-*password*: xxxx
+- *user:* forum
+- *password*: Forum2021Cov!
 
 example :
 ```bash
-sftp forum@ftp.semantic-metabolomics.org:/forum-dev/sftp/forum/share.tar.gz
+sftp forum@ftp.semantic-metabolomics.org:/share.tar.gz
 ```
 
 
@@ -216,7 +216,7 @@ workflow/w_virtuoso.sh -d ./docker-virtuoso -s share start
 
 The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfBuffers* and *MaxDirtyBuffers*), also dedicating 8 GB per SPARQL query for computation processes (see *MaxQueryMem*). This configuration can be modify in the w_virtuoso.sh script.
 
-*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to required the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
+*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to request the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
 
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
@@ -224,7 +224,7 @@ The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfB
 
 Several checks can be used to ensure that the loading was done correctly:
 
-1) At the end of each laoding file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Globally, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
+1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Globally, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
 
 2) Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. A good start could be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, be sure to add the content of the prefix variable at the beginning of your request and use only the first 100 elements by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for tests.
 
@@ -250,7 +250,7 @@ To compute associations between chemical entities and MeSH descriptors, you can 
   - l: path to log directory
 - **Optionals:**
   - v: version of the analysis (optional, date used as default).
-  - c: chunksize for parsing files (optional, default 100000). We recommend not to increase this parameter much because it could greatly increase the computation times.
+  - c: chunksize for parsing files (optional, default 100000). We recommend not to increase this parameter much because it could greatly increase the computation time.
   - p: number of used cores (optional, default 5)
   - o: threshold used in fragility index (optional, default 1e-6)
   - i: alpha of Jeffrey's CI for fragility index computation (optional, default 0.05)
@@ -315,7 +315,7 @@ eg.:
 ./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/MESH_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
-Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus by default, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redondant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
+Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redundant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
 
 
 #### 3.4 - Shutdown Virtoso session
@@ -340,9 +340,9 @@ In the data directory, you can also retrieved all processed results, such as the
 
 #### 3.5 MeSH, Chemont, ChEBI and CID labels
 
-Identifiers are not always convinients to study results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
+Identifiers are not always convenient to explore results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
 To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
-Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify. Label files are also provided on the sftp server (See on web-portal).
+Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify, but those can be retrieved using the [pubchem identifier exchange](https://pubchemdocs.ncbi.nlm.nih.gov/identifier-exchange-service). Label files are also provided on the sftp server (See on web-portal).
 
 
 ### 4 - Build a custom triplestore
@@ -427,7 +427,7 @@ Created graphs are *named graphs* for which the associated uri identify the grap
 
 When a new graph is created, a new version of the associated resource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *https://forum.semantic-metabolomics.org/PubChem/compound/version_X* is created as a version of the resource *https://forum.semantic-metabolomics.org/PubChem/compound*.
 
-Several other types of metadata are associated to the created graph. All these metadata information are indicated in a metadata-graph, named *void.ttl*, which is automatically created with the graph in the same directory. An example of a *void.ttl* associated to a PubChem reference resource is describe bellow:
+Several other types of metadata are associated to the created graph. All this metadata information is indicated in a metadata-graph, named *void.ttl*, which is automatically created with the graph in the same directory. An example of a *void.ttl* associated to a PubChem reference resource is described bellow:
 
 ```sql
 <https://forum.semantic-metabolomics.org/PubChem/reference> dcterms:hasVersion <https://forum.semantic-metabolomics.org/PubChem/reference/2020-11-04> .
