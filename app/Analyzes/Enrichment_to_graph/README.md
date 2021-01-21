@@ -6,7 +6,7 @@ The goal of this analysis is to convert significant associations from enrichment
 
 The main source is an enrichment result table, created from the knowledge graph.
 
-Several graphs can be created from the same enrichment table using differents parameters.
+Several graphs can be created from the same enrichment table using different parameters.
 
 Each created graph is linked to the configuration file used to create it, indicating source files and parameters, always placed in the description attribute of the associated void.ttl
 
@@ -15,9 +15,9 @@ Each created graph is linked to the configuration file used to create it, indica
 All used configuration files are stored in the *config* directory.
 
 - [FTP]
-  - ftp: The ftp server address on which created data will be stored. A valid adress is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
+  - ftp: The ftp server address on which created data will be stored. A valid address is not mandatory as data will not be automatically upload to the ftp server, but this will be used to provide metadata (*void:dataDump* triples) in corresponding void.ttl files.
 - [METADATA]
-  - ressource: The name of the association ressource (eg. EnrichmentAnalysis/CID_MESH) 
+  - ressource: The name of the association resource (eg. EnrichmentAnalysis/CID_MESH) 
   - targets = URIs of graphs targeted by this analysis (eg. PubChem and MESH graph URIs)
 - [PARSER] 
   - chunk_size: The chunk size used to read the enrichment result file (eg. 1000000)
@@ -28,14 +28,14 @@ All used configuration files are stored in the *config* directory.
   - name: A list of prefix associated to namespaces, in the same order as in *ns* (eg. *compound*)
 - [SUBJECTS]
   - name: The column name in the enrichment result file corresponding to desired triple subjects (eg. CID)
-  - namespace: The namespace prefix of subjects, see NAMESPACE section (eg. compound)
+  - namespace: The namespace of subjects, see NAMESPACE section (eg. compound)
   - prefix: A prefix which can be added before the content of the subject column (eg. CID)
 - [PREDICATES]
   - name: The predicate (eg. related)
-  - namespace: The namespace prefix of the predicate, see NAMESPACE section (eg. skos)
+  - namespace: The namespace of the predicate, see NAMESPACE section (eg. skos)
 - [OBJECTS]
   - name: The column name in the enrichment result file corresponding to desired triple objects (eg. MESH)
-  - namespace: The namespace prefix of subjects, see NAMESPACE section
+  - namespace: The namespace of subjects, see NAMESPACE section
   - prefix: A prefix which can be added before the content of the subject column.
 - [OUT]
   - file_prefix = Output file name
@@ -49,7 +49,7 @@ Two configuration files are required in this process. The first (*config* argume
 
 - config: path to the configuration file for the conversion process
 - c2mconfig: path to the configuration used in the computation analysis (metab2mesh_requesting_virtuoso)
-- c2mname: name of the converted ressource (eg. CID_MESH)
+- c2mname: name of the converted resource (eg. CID_MESH)
 - input: path to the input result table
 - version: the analysis version
 - out: path to output directory
@@ -63,4 +63,4 @@ dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
 docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/*upload_Enrichment_SUBJECT_OBJECT*.sh
 ```
 
-Several metadata are created to fully describe the created triples. The created graph is defined to be a void:Linkset and its location on the ftp server is indicated using the *void:dataDump* predicate. The result table that have been filtered to produce these triples is also indicated with the *dcterm:source* predicate. For this resource table, its location on the ftp server is also indicated using the *dcat:downloadURL* predicate and all graphs that that have been used as resource in the computation process (metab2mesh_requesting_virtuoso), to produce this table, are also indicated using the predicate *dcterm:source*.
+Metadata are created to fully describe the created triples. The created graph is defined to be a void:Linkset and its location on the ftp server is indicated using the *void:dataDump* predicate. The result table that have been filtered to produce these triples is also indicated with the *dcterm:source* predicate. For this resource table, its location on the ftp server is also indicated using the *dcat:downloadURL* predicate and all graphs that have been used as resource in the computation process (metab2mesh_requesting_virtuoso), to produce this table, are also indicated using the predicate *dcterm:source*.
