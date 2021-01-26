@@ -69,4 +69,4 @@ cid_pmid_out_path = out_path + config['X']['out_dir'] + "/"
 mesh_pmid_out_path = out_path + config['Y']['out_dir'] + "/"
 univers_out_path = out_path + config['U']['out_dir'] + "/"
 
-df_metab2mesh = prepare_data_frame(config, cid_mesh_out_path , cid_pmid_out_path , mesh_pmid_out_path, univers_out_path, out_path +  "results/", config['DEFAULT'].getboolean("split"))
+df = prepare_data_frame(config, cid_mesh_out_path , cid_pmid_out_path , mesh_pmid_out_path, univers_out_path, out_path +  "results/", config['DEFAULT'].getboolean("split"))

@@ -12,7 +12,7 @@ from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
-parser.add_argument("--c2mconfig", help="path to the configuration of the compound2MeSH analysis (metab2mesh_requesting_virtuoso)")
+parser.add_argument("--c2mconfig", help="path to the configuration of the compound2MeSH analysis (requesting_virtuoso)")
 parser.add_argument("--c2mname", help="name of the raw ressource used in computation processes (eg. CID_MESH)")
 parser.add_argument("--input", help="path to the input result table")
 parser.add_argument("--version", help="Analysis version")
@@ -80,8 +80,6 @@ f_i = 1
 # Intialyze counts:
 n_subjects = 0
 n_objects = 0
-
-# a = requests.put("https://pfem.clermont.inra.fr/pydio/public/7af464/test.csv", data=open("data/metab2mesh/with_Mesh_Thesaurus/2020-07-07/tutu.csv", 'r').read(), auth=("none","F0rum_p455w0rd"))
 
 print("Starting read file by chunk of size " + str(chunk_size))
 df_chunk = pd.read_csv(input_table_path, chunksize=chunk_size)

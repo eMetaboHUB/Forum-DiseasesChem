@@ -294,10 +294,10 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, ou
     if split:
         file_size = config['DEFAULT'].getint('file_size')
         for i, start in enumerate(range(0, df_size, file_size)):
-            data[start:start+file_size].to_csv(out_path + 'metab2mesh_{}.csv'.format(i), index = False)
+            data[start:start+file_size].to_csv(out_path + 'associations_{}.csv'.format(i), index = False)
     # The result is fully writen on one file
     else:
-        data.to_csv(out_path + 'metab2mesh.csv', index = False)
+        data.to_csv(out_path + 'associations.csv', index = False)
     return data
 
 def ask_for_graph(url, graph_uri):

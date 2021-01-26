@@ -2,10 +2,10 @@
 
 BASEDIR=$(dirname $0)
 
-#EG. bash workflow/w_compound2mesh.sh -v test -m app/metab2mesh/config/CHEBI_MESH_Thesaurus_Onto/test/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-07-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share
+#EG. bash workflow/w_computation.sh -v test -m app/computation/config/CHEBI_MESH_Thesaurus_Onto/test/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/2020-07-10/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share
 
 # -v: la version de l'analyse CID/CHEBI/CHEMONT to mesh
-# -m: le chemin vers le fichier de configuration de l'analyse compound2mesh (eg. app/metab2mesh/config/CID_MESH_Thesaurus/test/config.ini)
+# -m: le chemin vers le fichier de configuration de l'analyse compound2mesh (eg. app/computation/config/CID_MESH_Thesaurus/test/config.ini)
 # -t: le chemin vers le fichier de configuration du processus association-to-triples (eg. app/Analyzes/Enrichment_to_graph/config/CID_MESH/2020-07-07/config.ini)
 # -u: le nom de la ressource créée par l'analyse (eg. CID_MESH ou CHEBI_MESH)
 # -d: le chemin vers le répertoire où écrire les données (eg. ./data)
@@ -67,33 +67,33 @@ LOG="${LOGSDIR}/processes_${RESSOURCE_NAME}.log"
 echo "" > $LOG
 
 # Compute fisher exact tests
-echo " - compute compound2mesh"
+echo " - compute associations"
 
-OUT_M="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/"
+OUT_M="${DATA}/computation/${RESSOURCE_NAME}/${VERSION}/"
 
-python3 -u app/metab2mesh/metab2mesh_requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
+python3 -u app/computation/requesting_virtuoso.py --config=$CONFIG_COMPOUND2MESH --out=$OUT_M 2>&1 | tee -a $LOG
 
 echo " - compute fisher exact tests"
 
-IN_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/results/metab2mesh.csv"
-OUT_F="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher.csv"
+IN_F="${DATA}/computation/${RESSOURCE_NAME}/${VERSION}/results/associations.csv"
+OUT_F="${DATA}/computation/${RESSOURCE_NAME}/${VERSION}/r_fisher.csv"
 
-Rscript app/metab2mesh/post-processes/compute_fisher_exact_test.R --file=$IN_F --chunksize=$CHUNKSIZE --parallel=$PARALLEL --p_out=$OUT_F 2>&1 | tee -a $LOG
+Rscript app/computation/post-processes/compute_fisher_exact_test.R --file=$IN_F --chunksize=$CHUNKSIZE --parallel=$PARALLEL --p_out=$OUT_F 2>&1 | tee -a $LOG
 
 # Compute post-processes (eg. q.value)
 echo " - Compute benjamini and Holchberg procedure"
 
 IN_Q=$OUT_F
-OUT_Q="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher_q.csv"
+OUT_Q="${DATA}/computation/${RESSOURCE_NAME}/${VERSION}/r_fisher_q.csv"
 
-Rscript app/metab2mesh/post-processes/post_process_metab2mesh.R --p_metab2mesh=$IN_Q --p_out=$OUT_Q 2>&1 | tee -a $LOG
+Rscript app/computation/post-processes/post_process.R --p_associations=$IN_Q --p_out=$OUT_Q 2>&1 | tee -a $LOG
 
 # Compute weakness test
 echo " - Compute weakness tests"
 
 IN_W=$OUT_Q
-OUT_W="${DATA}/metab2mesh/${RESSOURCE_NAME}/${VERSION}/r_fisher_q_w.csv"
-Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=$THRESHOLD --alphaCI=$ALPHACI --chunksize=$CHUNKSIZE --parallel=$PARALLEL --p_out=$OUT_W 2>&1 | tee -a $LOG
+OUT_W="${DATA}/computation/${RESSOURCE_NAME}/${VERSION}/r_fisher_q_w.csv"
+Rscript app/computation/post-processes/weakness/weakness_test.R --file=$IN_W --threshold=$THRESHOLD --alphaCI=$ALPHACI --chunksize=$CHUNKSIZE --parallel=$PARALLEL --p_out=$OUT_W 2>&1 | tee -a $LOG
 
 # Upload step: Aboard
 # FTP="ftp://data/anayse/version"

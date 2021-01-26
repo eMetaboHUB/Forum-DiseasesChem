@@ -124,7 +124,7 @@ docker exec --detach forum_scripts ./command -param v1 -param2 v2 ...
 ```
 eg.
 ```bash
-docker exec --detach forum_scripts ./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+docker exec --detach forum_scripts ./workflow/w_computation.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 This command will be execute in the container, running in the background.
 
@@ -145,7 +145,7 @@ There are two configuration files related to this step:
 - The first contains parameters about the creation of the triplestore. See README in the *build_RDF_store* sub-directory for option details.
 - The second contains parameters to integrate chemont classes in the triplestore. See README in the *Chemont* sub-directory for option details.
 
-Then, from *metdiseasedatabase* directory execute: 
+Then, from the base directory execute: 
 
 ```bash
 ./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -s path/to/virtuoso/shared/directory -l /path/to/log/dir
@@ -216,7 +216,7 @@ workflow/w_virtuoso.sh -d ./docker-virtuoso -s share start
 
 The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfBuffers* and *MaxDirtyBuffers*), also dedicating 8 GB per SPARQL query for computation processes (see *MaxQueryMem*). This configuration can be modify in the w_virtuoso.sh script.
 
-*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to request the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the compound2mesh configuration file at the attribute url.
+*Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to request the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the configuration file for requesting the endpoint.
 
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
@@ -233,12 +233,12 @@ Several checks can be used to ensure that the loading was done correctly:
 #### 3.2 - Set configuration files: 
 
 For each analysis, there are two main configuration files: 
-- The first refer to parameters required during the requesting process. See README in the *metab2mesh* sub-directory for option details.
+- The first refer to parameters required during the requesting process. See README in the *computation* sub-directory for option details.
 - The second refer to parameters required in the conversion process of association results to RDF triples. See README in the *Analyzes/Enrichment_to_graph* sub-directory for option details.
 
 #### 3.3 - Computation
 
-To compute associations between chemical entities and MeSH descriptors, you can use: w_compound2mesh.sh
+To compute associations between chemical entities and MeSH descriptors, you can use: w_computation.sh
 
 *Option details:*
 - **Mandatory options**:
@@ -274,45 +274,45 @@ Some example of commands that can be used to compute each analysis are shown bel
 ##### 3.3.1 - Compute PubChem compounds - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+./workflow/w_computation.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CID_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/release-2020/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2020 -m app/computation/config/CID_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/release-2020/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 
 ##### 3.3.2 - Compute ChEBI - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/ChEBI2MeSH -t path/to/config/triplesConverter/ChEBI2MeSH -u CHEBI_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+./workflow/w_computation.sh -v version -m /path/to/config/ChEBI2MeSH -t path/to/config/triplesConverter/ChEBI2MeSH -u CHEBI_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CHEBI_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/release-2020/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2020 -m app/computation/config/CHEBI_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/release-2020/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 ##### 3.3.3 - Compute Chemont - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/Chemont2MeSH -t path/to/config/triplesConverter/Chemont2MeSH -u CHEMONT_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+./workflow/w_computation.sh -v version -m /path/to/config/Chemont2MeSH -t path/to/config/triplesConverter/Chemont2MeSH -u CHEMONT_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/CHEMONT_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2020 -m app/computation/config/CHEMONT_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 ##### 3.3.4 - Compute MeSH - MeSH associations
 
 ```bash
-./workflow/w_compound2mesh.sh -v version -m /path/to/config/MeSH2MeSH -t path/to/config/triplesConverter/MeSH2MeSH -u MESH_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+./workflow/w_computation.sh -v version -m /path/to/config/MeSH2MeSH -t path/to/config/triplesConverter/MeSH2MeSH -u MESH_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
 eg.:
 ```bash
-./workflow/w_compound2mesh.sh -v 2020 -m app/metab2mesh/config/MESH_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2020 -m app/computation/config/MESH_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redundant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
