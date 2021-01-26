@@ -2,12 +2,6 @@ import argparse, sys, os, requests, json
 import configparser
 from processing_functions import ask_for_graph, import_request_file
 
-
-# Running examples: 
-# Imidocarb dipropionate & Tick Borne Diseases: 
-# - python3 app/metab2mesh/create_wordcloud.py --chem="9983292" --chemType="PubChem" --MeSH="D017282" --config="app/metab2mesh/config/wordcloud/request_config.ini" --out="/home/mxdelmas/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/Analyzes/wordcloud" --TreeList="C|A|D|G|B|F|I|J"
-# ChEBI:Fluoroalkanoic acid & Female Urogenital and Pregnancy complications
-# - python3 app/metab2mesh/create_wordcloud.py --chem="35551" --chemType="ChEBI" --MeSH="D005261" --config="app/metab2mesh/config/wordcloud/request_config.ini" --out="/home/mxdelmas/Documents/Thèse/building_database/FORUM/metdiseasedatabase/data/Analyzes/wordcloud" --TreeList="C|A|D|G|B|F|I|J"
 parser = argparse.ArgumentParser()
 parser.add_argument("--chem", help="Identifier of the chemical involved in the association", type=str)
 parser.add_argument("--chemType", help="Type of the chemical identifier: PubChem, ChEBI or ChemOnt", type=str)

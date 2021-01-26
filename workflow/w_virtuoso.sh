@@ -22,9 +22,9 @@ CMD=${@:$OPTIND:1}
 
 echo $CMD
 
-COMPOSE_PROJECT_NAME="metdisease"
+COMPOSE_PROJECT_NAME="forum-KG"
 LISTEN_PORT="9980"
-PASSWORD="FORUM-Met-Disease-DB"
+PASSWORD="FORUM"
 GRAPH="http://default#"
 ALLOW_UDPATE="false"
 

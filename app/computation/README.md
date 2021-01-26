@@ -1,6 +1,6 @@
 ## Compound2MeSH :
 
-use metab2mesh_requesting_virtuoso.py
+use requesting_virtuoso.py
 
 To compute enrichment tests and post-analyses on associations between different modalities of a variable X (ex: PubChem compounds) and another variable Y (ex: MeSH Descriptors), a contingency table must be build for each available combinations between modalities of X and Y. For example if X represent the variable *PubChem compounds*, modalities of X are the set of PubChem identifiers (CID) store in the RDF store. In the same way, if Y represent *MeSH Descriptors*, modalities of Y should be the set of available MeSH Descirptors in the current MeSH thesaurus.
 To build a contingency table for a given combination of modalities between X and Y, named *x* and *y*, 4 counts are needed. These counts represent a number of individuals which have properties associated to modalities of *x* and/or *y*. In the previous example, PMID (PubMed publications) should be used as individuals as they are linked to PubChem compound by a property *cito:discusses* and linked to MeSH by the property *fabio:hasSubjectTerm* in the RDF store.
@@ -43,7 +43,7 @@ The data.frame is printed in *df_out_dir* at *out_path*
 - [DEFAULT]
   - split: a boolean (True/False) that indicates if the resulting table should be split in smaller parts while exporting
   - file_size: number of lines per outputed table, if split is set to True
-  - request_file: the name of the SPARQL request file containing queries, located in *app/metab2mesh/SPARQL*.
+  - request_file: the name of the SPARQL request file containing queries, located in *app/computation/SPARQL*.
 - [VIRTUOSO]
   - url: url of the Virtuoso SPARQL endpoint
   - graph_from: uri of data source graphs, one per line, Ex:
@@ -83,7 +83,7 @@ The data.frame is printed in *df_out_dir* at *out_path*
 
 run from workdir:
 ```python
-python3 app/metab2mesh/metab2mesh_requesting_virtuoso.py --config="/path/to/config.ini" --out="path/to/out/dir"
+python3 app/computation/requesting_virtuoso.py --config="/path/to/config.ini" --out="path/to/out/dir"
 ```
 - config: path to the configuration file
 - out: path to the output directory

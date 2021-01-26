@@ -19,15 +19,15 @@ For each association, are computed :
 
 ### Parameters
 
-- file: The path to the input file (obtain with *metab2mesh_requesting_virtuoso.py*)
+- file: The path to the input file (obtain with *requesting_virtuoso.py*)
 - chunksize: Chunks size while reading the input file
 - parallel: The number of cores to be used
 - p_out: The path to the output file
 
 ```bash
-Rscript app/metab2mesh/post-processes/compute_fisher_exact_test.R --file="/path/to/input" --chunksize=nchunk --parallel=ncores --p_out="/path/to/out"
+Rscript app/computation/post-processes/compute_fisher_exact_test.R --file="/path/to/input" --chunksize=nchunk --parallel=ncores --p_out="/path/to/out"
 ```
-According to the configuration file of the compound2mesh procedure (metab2mesh_requesting_virtuoso.py), the resulting table contains the statistical analysis for each association between modalities of the variable $X$ and the variable $Y$.
+According to the configuration file of the compound2mesh procedure (requesting_virtuoso.py), the resulting table contains the statistical analysis for each association between modalities of the variable $X$ and the variable $Y$.
 
 ## Step 2 - Adjust p-values
 
@@ -35,11 +35,11 @@ After all *p-values* have been computed, we need to estimate the False Discovery
 
 ### Parameters
 
-- p_metab2mesh: The path to the input file containing association and related statistics (obtained at step 1)
+- p_associations: The path to the input file containing association and related statistics (obtained at step 1)
 - p_out: The path to the output file
 
 ```bash
-Rscript app/metab2mesh/post-processes/post_process_metab2mesh.R --p_metab2mesh="/path/to/file" --p_out="/path/to/out"
+Rscript app/computation/post-processes/post_process.R --p_associations="/path/to/file" --p_out="/path/to/out"
 ```
 
 ## Step 3 - Weakness testing
@@ -56,7 +56,7 @@ For more details, see the article.
 
 ### Parameters
 
-- file: path to the input file (obtain with *metab2mesh_requesting_virtuoso.py*)
+- file: path to the input file (obtain with *requesting_virtuoso.py*)
 - threshold: the significance threshold (eg. 1e-6)
 - alphaCI: the alpha related to the covidence interval (eg. 0.05 for a CI at 95%)
 - chunksize: the size of the chunk while reading the input file
@@ -64,5 +64,5 @@ For more details, see the article.
 - p_out: The path to the output file
 
 ```bash
-Rscript app/metab2mesh/post-processes/weakness/weakness_test.R --file="/path/to/input" --threshold=th --alphaCI=alpha --chunksize=nchunk --parallel=ncores --p_out="/path/to/out"
+Rscript app/computation/post-processes/weakness/weakness_test.R --file="/path/to/input" --threshold=th --alphaCI=alpha --chunksize=nchunk --parallel=ncores --p_out="/path/to/out"
 ```

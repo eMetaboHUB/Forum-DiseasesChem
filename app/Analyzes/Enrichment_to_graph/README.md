@@ -45,10 +45,10 @@ All used configuration files are stored in the *config* directory.
 ```bash
 python3 app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config="path/to/config/conversion" --c2mconfig="path/to/config/computation" --c2mname="resource name" --input="path/to/input" --version="version" --out="path/to/out/dir"
 ```
-Two configuration files are required in this process. The first (*config* argument) correspond to the configuration file describe above, used for the conversion process. The second (*c2mconfig* argument) is the configuration file that was used during the computation process (metab2mesh_requesting_virtuoso). This configuration file is needed to describe all the data that was used to create these triples.
+Two configuration files are required in this process. The first (*config* argument) correspond to the configuration file describe above, used for the conversion process. The second (*c2mconfig* argument) is the configuration file that was used during the computation process (requesting_virtuoso). This configuration file is needed to describe all the data that was used to create these triples.
 
 - config: path to the configuration file for the conversion process
-- c2mconfig: path to the configuration used in the computation analysis (metab2mesh_requesting_virtuoso)
+- c2mconfig: path to the configuration used in the computation analysis (requesting_virtuoso)
 - c2mname: name of the converted resource (eg. CID_MESH)
 - input: path to the input result table
 - version: the analysis version
@@ -63,4 +63,4 @@ dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
 docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/*upload_Enrichment_SUBJECT_OBJECT*.sh
 ```
 
-Metadata are created to fully describe the created triples. The created graph is defined to be a void:Linkset and its location on the ftp server is indicated using the *void:dataDump* predicate. The result table that have been filtered to produce these triples is also indicated with the *dcterm:source* predicate. For this resource table, its location on the ftp server is also indicated using the *dcat:downloadURL* predicate and all graphs that have been used as resource in the computation process (metab2mesh_requesting_virtuoso), to produce this table, are also indicated using the predicate *dcterm:source*.
+Metadata are created to fully describe the created triples. The created graph is defined to be a void:Linkset and its location on the ftp server is indicated using the *void:dataDump* predicate. The result table that have been filtered to produce these triples is also indicated with the *dcterm:source* predicate. For this resource table, its location on the ftp server is also indicated using the *dcat:downloadURL* predicate and all graphs that have been used as resource in the computation process (requesting_virtuoso), to produce this table, are also indicated using the predicate *dcterm:source*.
