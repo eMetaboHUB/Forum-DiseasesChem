@@ -193,6 +193,14 @@ example :
 sftp forum@ftp.semantic-metabolomics.org:/share.tar.gz
 ```
 
+All data and results can be downloaded from the sftp server.    
+
+- A copy of the whole KG is store in the share.tar.gz archive.
+- Raw results of associations between PubChem, Chemont, ChEBI and MeSH are accessible in directories: CID_MESH, CHEMONT_MESH, CHEBI_MESH, MESH_MESH
+- RDF triples associated with significant relations are available in the EnrichmentAnalysis directory (included in share.tar.gz)
+- Created triples to instantiate relations between PubChem compounds, PubMed articles or Chemont classes are stored respectively in directories: PMID_CID, PMID_CID_endpoints and ClassyFire (included in share.tar.gz)
+- Labels of PubChem compounds, chemical classes, MeSH and their respective tree-Numbers are available in the label directory
+
 
 
 ### 3 - Compute chemical entities to MeSH associations
