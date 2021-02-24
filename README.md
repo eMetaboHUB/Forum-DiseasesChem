@@ -207,6 +207,11 @@ All data and results can be downloaded from the sftp server.
 
 Once the initial data of the triplestore have been created, an initial session of the Virtuoso triplestore must be started in order to compute associations between chemical entities and MeSH descriptors.
 
+#### Recommendations:
+
+You may need to disable "Strict checking of void variables" in the SPARQL query editor when you use transitivity in queries.
+
+
 #### 3.1 - Initialyze the Virtuoso session
 
 
