@@ -421,7 +421,7 @@ The created upload files contains different information:
 Be sure to remove the *pre_upload.sh* before compressing the share directory
 
 
-### 6 - Versionning :
+### 6 - Versioning:
 
 Created graphs are *named graphs* for which the associated uri identify the graph and triples it contains in the triplestore. By this specific uri, each graph represent a version of a specific resource. There are several main resources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
 
