@@ -56,7 +56,7 @@ The remaining categories are ignored during computation, but can nonetheless app
 
 ## License
 
-The FORUM association dataset is publically available without license restrictions. Licensing information of external resources used by FORUM accessed at the links below:
+The FORUM association dataset is publically available without license restrictions. Licensing information of external resources used by FORUM can be accessed at the links below:
 
 - [PubChem](https://pubchemdocs.ncbi.nlm.nih.gov/downloads)
 - [MeSH](https://www.nlm.nih.gov/databases/download/terms_and_conditions.html) Courtesy of the U.S. National Library of Medicine
