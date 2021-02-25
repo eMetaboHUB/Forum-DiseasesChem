@@ -31,15 +31,42 @@ The FORUM project is supported by **INRAE**, France's National Research Institut
 
 
 
-## infobox score
+## About the association results
 
-For identified weak associations, the fragility index represents the minimum number of supporting articles withdrawn that would make the association fall below our inclusion criteria. See **[citation]** for more details
+FORUM provides well grounded associations between MeSH terms and compounds, through their PubChem Compound identifier (CID). FORUM also provide associations with chemical classes using ChEBI and ChemOnt ontologies (note that classes describing a single compound are ignored, as well as the broadest ones). FORUM choose to retain only the strongest associations by applying stringent inclusion criteria, thus, please bear in mind that the absence of an association do not mean a non-association.
 
-## infobox associations
+The strength of an association is estimated from the frequency of compound mention and biomedical topic co-occurrence in PubMed article. We test for independence using right-tailed Fisher Exact test adjusted for multiple comparisons using the Benjamini-Hochberg procedure, and report the obtained q-value.
 
-The strength of an association is estimated from the frequency of compound mention and biomedical topic co-occurrence in PubMed articles. We test for independence using right-tailed Fisher Exact test adjusted for multiple comparisons using the Benjamini-Hochberg procedure. More details in **[citation]**
+We also report the Odds ratio to gauge the relative effect size, as well as the raw number of papers mentioning both the compound and the biomedical topic.
 
+We identify weak associations by computing a confidence interval on the co-occurence proportion. For identified weak associations, you can get more details by hovering the (i) icon to display a measure of their weakness, which represent the minimum number of supporting articles withdraw that would make the association fall below our inclusion criteria. See our preprint for more details.
 
+The results provide associations with most domains of the MeSH thesaurus. The MeSH root allows to easily filter out by top-level categories:
+
+- Anatomy [A]
+- Organisms [B]
+- Diseases [C]
+- Chemicals and Drugs [D]
+- Psychiatry and Psychology [F]
+- Biological Sciences [G]
+- Anthropology, Education, Sociology and Social Phenomena [I]
+- Technology and Food and Beverages [J] 
+
+The remaining categories are ignored during computation, but can nonetheless appear in the results for terms belonging to multiple categories that include at least one of the above. More fine-grained filtering can be done from the MeSH tree numbers provided in the export file.
+
+## License
+
+The FORUM association dataset is publically available without license restrictions. Licensing information of external resources used by FORUM accessed at the links below:
+
+- [PubChem](https://pubchemdocs.ncbi.nlm.nih.gov/downloads)
+- [MeSH](https://www.nlm.nih.gov/databases/download/terms_and_conditions.html) Courtesy of the U.S. National Library of Medicine
+- [ChEBI](https://www.ebi.ac.uk/chebi/aboutChebiForward.do)
+- [MetaNetX](https://www.metanetx.org/mnxdoc/mnxref.html)
+- [CheMont](http://classyfire.wishartlab.com/downloads)
+
+## Acknowledgement
+
+We thank the teams behind [PubChem](https://pubchem.ncbi.nlm.nih.gov/), [PubMed](https://pubmed.ncbi.nlm.nih.gov/), [MeSH](https://meshb.nlm.nih.gov/search), [CheBI](https://www.ebi.ac.uk/chebi/), [MetaNetX](https://www.metanetx.org/) and [ChemOnt](http://classyfire.wishartlab.com) for gratefully providing open data as well as great support for their use, which has made FORUM possible. The FORUM project is not affiliated with any of the cited source. The FORUM project is supported by INRAE, France's National Research Institute for Agriculture, Food and Environment, The H2020 Goliath project and the INRAE CATI EMPREINTE. 
 
 ## Technical information 
 
