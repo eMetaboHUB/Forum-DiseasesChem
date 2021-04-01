@@ -6,6 +6,8 @@ import rdflib
 from datetime import date
 from rdflib.namespace import XSD, DCTERMS, RDF, VOID
 
+# python3 app/build_RDF_store/create_master_void.py --path="./docker-virtuoso/share" --version="2021"
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--path", help="path to the Virtuoso share directory")
 parser.add_argument("--version", help="version of the triplestore")
