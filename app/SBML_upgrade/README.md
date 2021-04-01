@@ -33,6 +33,8 @@ The columns are:
 
 Id-mapping graphs can be build using different sources, currently, two types of Id-mapping graphs can be build using MetaNetX and PubChem, both providing Inter and Intra-resource equivalences.
 
+There is a single configuration file for all imports at *SBML_upgrade/config/config.ini* !
+
 #### Import SBML:
 
 use import_SBML.py
@@ -275,3 +277,5 @@ python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.in
 python3 app/SBML_upgrade/import_PubChem_mapping.py --config="/path/to/config.ini" --out="/path/to/out/dir" --version="version"
 ```
 Load all this graphs in Virtuoso using provided upload files and then we can requests for identifiers, smiles, inchi, etc ...
+
+**All this workflow can be achieved using: workflow/w_upload_metabolic_network**
