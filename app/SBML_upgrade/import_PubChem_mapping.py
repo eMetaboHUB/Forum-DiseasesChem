@@ -10,7 +10,7 @@ from processing_functions import *
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
 parser.add_argument("--out", help="path to output directory")
-parser.add_argument("--version", help="version of the PMID-CID ressource, if none, the date is used")
+parser.add_argument("--version", help="version of the PubChem type ressource, if none, the date is used")
 args = parser.parse_args()
 
 if not os.path.exists(args.config):

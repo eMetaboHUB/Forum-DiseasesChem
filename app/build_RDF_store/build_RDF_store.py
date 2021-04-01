@@ -30,7 +30,7 @@ namespaces = {
     "cito": rdflib.Namespace("http://purl.org/spar/cito/"),
     "compound": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"),
     "reference": rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"),
-    "endpoint":	rdflib.Namespace("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/"),
+    "endpoint":	rdflib.Namespace("https://forum.semantic-metabolomics.org/mention/"),
     "obo": rdflib.Namespace("http://purl.obolibrary.org/obo/"),
     "dcterms": rdflib.Namespace("http://purl.org/dc/terms/"),
     "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
