@@ -46,7 +46,7 @@ echo "1) Import SBML"
 LOG_SBML="${LOGSDIR}/load_SBML.log"
 echo "" > $LOG_SBML
 
-python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config=$CONFIG --out=$RESOURCES_DIR --version=$SBML_VERSION 2>&1 | tee -a $LOG_SBML
+python3 app/SBML_upgrade/import_SBML.py --config=$CONFIG --out=$RESOURCES_DIR --sbml=$SBML_PATH --version=$SBML_VERSION 2>&1 | tee -a $LOG_SBML
 
 echo "2) Import PubChem mapping"
 
