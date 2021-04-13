@@ -194,7 +194,7 @@ Using external resources, such as MetaNetX, PubChem and ChEBI, we can extract In
 
   - PubChem: *compound:CID1*  *sio:has-attribute* *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*
     *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*  *sio:has-value*  *Inchi or Smiles*
-
+  *Warning:* These annotations from PubChem's Compound and Descriptor graphs can consume a lot of resources to load as the graphs are huge, with several billions of triples. But for metabolic network annotation, PubChem's data could be very redundant with ChEBI and MetaNetX information, which are also more generally used in SBML annotation. We advise to only use MetaNetX and ChEBI annotation in a first time and then, if annotations are not sufficient, try to add PubChem's Compound and Descriptor graphs. 
 
 For all SBML species, using external identifiers provided by the *bqbiol:is* and those that we can infer from Intra/Inter equivalences using *skos:closeMatch*, in all therefore equivalent to the property path *bqbiol:is|bqbiol:is/skos:closeMatch*, we can use a SPARQL query to retrieve Inchi and SMILES annotations
 
