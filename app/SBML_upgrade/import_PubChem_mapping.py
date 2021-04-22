@@ -54,13 +54,13 @@ for path in glob.glob(path_to_pubchem_dir + "*_type*.ttl.gz"):
         g.parse(f, format="turtle")
 
 print("Ok\nCreate PubChem mapping graph: ")
-uri_pubchem_inter_eq = map_ids.create_graph_from_pubchem_type(g, path_to_dumps + "Id_mapping/PubChem/", uri_source_graph)
+uri_pubchem_inter_eq = map_ids.create_graph_from_pubchem_type(g, path_to_dumps + "Id_mapping/Inter/PubChem/", uri_source_graph)
 print("Create PubChem Intra equivalences graph: ")
 uri_pubchem_intra_eq = map_ids.export_intra_eq(path_to_dumps + "Id_mapping/Intra/", "PubChem")
 
 print("Create upload files ...", end = '')
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/PubChem/" + Pubchem_v + "/", "*.ttl.gz", str(uri_pubchem_inter_eq), update_f_name)
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/PubChem/" + Pubchem_v + "/", "void.ttl", str(uri_pubchem_inter_eq), update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Inter/PubChem/" + Pubchem_v + "/", "*.ttl.gz", str(uri_pubchem_inter_eq), update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Inter/PubChem/" + Pubchem_v + "/", "void.ttl", str(uri_pubchem_inter_eq), update_f_name)
 
 create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "PubChem/" + Pubchem_v + "/", "*.ttl.gz", str(uri_pubchem_intra_eq), update_f_name)
 create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "PubChem/" + Pubchem_v + "/", "void.ttl", str(uri_pubchem_intra_eq), update_f_name)

@@ -53,12 +53,12 @@ with gzip.open(path_to_g_MetaNetX, "rb") as f_MetaNetX:
     graph_metaNetX.parse(f_MetaNetX, format="turtle")
 print("Ok\nTry de create URIs equivalences from MetaNetX graph: ")
 # Create graphs :
-uri_MetaNetX_inter_eq = map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + "Id_mapping/MetaNetX/", uri_source_graph)
+uri_MetaNetX_inter_eq = map_ids.create_graph_from_MetaNetX(graph_metaNetX, path_to_dumps + "Id_mapping/Inter/MetaNetX/", uri_source_graph)
 uri_MetaNetX_intra_eq = map_ids.export_intra_eq(path_to_dumps + "Id_mapping/Intra/", "MetaNetX")
 
 print("Create upload files ... ", end = '')
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", str(uri_MetaNetX_inter_eq), update_f_name)
-create_upload_file_from_resource(path_to_dumps, "Id_mapping/MetaNetX/" + MetaNetX_v + "/", "void.ttl", str(uri_MetaNetX_inter_eq), update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Inter/MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", str(uri_MetaNetX_inter_eq), update_f_name)
+create_upload_file_from_resource(path_to_dumps, "Id_mapping/Inter/MetaNetX/" + MetaNetX_v + "/", "void.ttl", str(uri_MetaNetX_inter_eq), update_f_name)
 
 create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "*.ttl.gz", str(uri_MetaNetX_intra_eq), update_f_name)
 create_upload_file_from_resource(path_to_dumps, "Id_mapping/Intra/" + "MetaNetX/" + MetaNetX_v + "/", "void.ttl", str(uri_MetaNetX_intra_eq), update_f_name)

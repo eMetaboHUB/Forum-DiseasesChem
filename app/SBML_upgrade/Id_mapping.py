@@ -176,7 +176,7 @@ class Id_mapping:
         - graph_metaNetX: a rdflib object graph associated to the MetaNetX RDF graph
         - path_out: a path to out files
         """
-        ressource_version_MetaNetX = Database_ressource_version(ressource = "Id_mapping/MetaNetX", version = self.version)
+        ressource_version_MetaNetX = Database_ressource_version(ressource = "Id_mapping/Inter/MetaNetX", version = self.version)
         n_triples = 0
         subjects = set()
         path_out = path_out + ressource_version_MetaNetX.version + "/"
@@ -273,7 +273,7 @@ class Id_mapping:
         - pubchem_graph: a rdflib object graph associated to the PubChem type RDF graph
         - path_out: path to the output directory
         """
-        ressource_version_PubChem = Database_ressource_version(ressource = "Id_mapping/PubChem", version = self.version)
+        ressource_version_PubChem = Database_ressource_version(ressource = "Id_mapping/Inter/PubChem", version = self.version)
         n_triples = 0
         subjects = set()
         path_out = path_out + ressource_version_PubChem.version + "/"
