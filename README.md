@@ -3,7 +3,7 @@
 [<img width="200" height="200" src="FORUM_logo2.png">](https://github.com/eMetaboHUB/FORUM-MetDiseaseDatabase) FORUM is an open knowledge network aiming at supporting metabolomics results interpretation in biomedical sciences and automated reasoning.
 Containing more than 8 billion statements, it federates data from several life-science resources such as PubMed, ChEBI and PubMed.
 Leveraging the bridges in this linked dataset, we automatically extract associations between compound and biomedical concepts, using literature metadata enrichment.
-Find more about the method in our preprint here: [BioXiv](www.notre-url-ici.com)
+Find more about the method in our preprint here: [BioXiv](https://www.biorxiv.org/content/10.1101/2021.02.12.430944v1)
 
 The FORUM content can be exploited through this portal in two ways:
 - The first one, *"Find associations"* allows to search for the relevant association extracted by the system. From a compound name or a chemical family, find related biomedical concepts. Alternatively, you can also, from a biomedical focus, find related compounds. The results provide measures of the association strength and link to the supporting articles in PubMed.
