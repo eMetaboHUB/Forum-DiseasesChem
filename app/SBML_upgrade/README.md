@@ -33,6 +33,8 @@ The columns are:
 
 Id-mapping graphs can be build using different sources, currently, two types of Id-mapping graphs can be build using MetaNetX and PubChem, both providing Inter and Intra-resource equivalences.
 
+There is a single configuration file for all imports at *SBML_upgrade/config/config.ini* !
+
 #### Import SBML:
 
 use import_SBML.py
@@ -192,7 +194,7 @@ Using external resources, such as MetaNetX, PubChem and ChEBI, we can extract In
 
   - PubChem: *compound:CID1*  *sio:has-attribute* *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*
     *descriptor:CID1_IUPAC_InChI/descriptor:CID1_IUPAC_Canonical_SMILES*  *sio:has-value*  *Inchi or Smiles*
-
+  *Warning:* These annotations from PubChem's Compound and Descriptor graphs can consume a lot of resources to load as the graphs are huge, with several billions of triples. But for metabolic network annotation, PubChem's data could be very redundant with ChEBI and MetaNetX information, which are also more generally used in SBML annotation. We advise to only use MetaNetX and ChEBI annotation in a first time and then, if annotations are not sufficient, try to add PubChem's Compound and Descriptor graphs. 
 
 For all SBML species, using external identifiers provided by the *bqbiol:is* and those that we can infer from Intra/Inter equivalences using *skos:closeMatch*, in all therefore equivalent to the property path *bqbiol:is|bqbiol:is/skos:closeMatch*, we can use a SPARQL query to retrieve Inchi and SMILES annotations
 
@@ -211,7 +213,7 @@ prefix sio: <http://semanticscience.org/resource/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT distinct ?specie ?selected_inchi
+SELECT distinct strafter(STR(?specie), "model_URI") as ?SPECIE) ?selected_inchi
 where {
   ?specie a SBMLrdf:Species ;
     SBMLrdf:name ?spe_name ;
@@ -245,7 +247,7 @@ prefix sio: <http://semanticscience.org/resource/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT distinct ?specie ?selected_smiles
+SELECT distinct (strafter(STR(?specie), "model_URI") as ?SPECIE) ?selected_smiles
 where {
   ?specie a SBMLrdf:Species ;
     SBMLrdf:name ?spe_name ;
@@ -275,3 +277,5 @@ python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config="/path/to/config.in
 python3 app/SBML_upgrade/import_PubChem_mapping.py --config="/path/to/config.ini" --out="/path/to/out/dir" --version="version"
 ```
 Load all this graphs in Virtuoso using provided upload files and then we can requests for identifiers, smiles, inchi, etc ...
+
+**All this workflow can be achieved using: workflow/w_upload_metabolic_network**

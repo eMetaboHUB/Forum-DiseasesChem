@@ -168,6 +168,8 @@ To build the initial triplestore, you can use the script w_buildTripleStore.sh o
 
 #### 2.1 - Build the triplestore
 
+##### 2.1.1 - The core triplestore
+
 There are two configuration files related to this step:
 - The first contains parameters about the creation of the triplestore. See README in the *build_RDF_store* sub-directory for option details.
 - The second contains parameters to integrate chemont classes in the triplestore. See README in the *Chemont* sub-directory for option details.
@@ -209,6 +211,22 @@ The ChEBI ontology file is often updated and the actual version of the ChEBI ont
 
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
 pre_upload.sh is a light version of upload_data.sh, only loading data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
+
+
+##### 2.1.2 - Integration of metabolic networks.
+
+Metabolic networks could also be integrated into the triplestore using the workflow script: w_upload_metabolic_network.
+During this process Id-mapping graphs from the metabolic network itself but also from PubChem and MetaNetX are also integrated. See the directory *SBML_upgrade* for more details.
+
+```bash
+workflow/w_upload_metabolic_network.sh -a /path/to/metablic/network -b SBLM_version -c path/to/config/file -d MetaNetX_version -e PubChem_version -s /path/to/virtuoso/share/directory -l /path/to/log/dir
+```
+
+eg.
+
+```bash
+workflow/w_upload_metabolic_network.sh -a out/HumanGEM/rdf/v1.6/HumanGEM.ttl -b Human1/1.6 -c app/SBML_upgrade/config/config_SBML.ini -d 4.1 -e 2020-12-03 -s /workdir/share-virtuoso -l /workdir/logs-app
+```
 
 #### 2.2 - Or ... Download RDF files from FTP
 
@@ -316,7 +334,7 @@ Some example of commands that can be used to compute each analysis are shown bel
 ```bash
 ./workflow/w_computation.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
-eg.:
+eg.
 ```bash
 ./workflow/w_computation.sh -v 2020 -m app/computation/config/CID_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/release-2020/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
@@ -328,7 +346,7 @@ eg.:
 ./workflow/w_computation.sh -v version -m /path/to/config/ChEBI2MeSH -t path/to/config/triplesConverter/ChEBI2MeSH -u CHEBI_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
-eg.:
+eg.
 ```bash
 ./workflow/w_computation.sh -v 2020 -m app/computation/config/CHEBI_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/release-2020/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
@@ -339,7 +357,7 @@ eg.:
 ./workflow/w_computation.sh -v version -m /path/to/config/Chemont2MeSH -t path/to/config/triplesConverter/Chemont2MeSH -u CHEMONT_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
-eg.:
+eg.
 ```bash
 ./workflow/w_computation.sh -v 2020 -m app/computation/config/CHEMONT_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
@@ -350,13 +368,26 @@ eg.:
 ./workflow/w_computation.sh -v version -m /path/to/config/MeSH2MeSH -t path/to/config/triplesConverter/MeSH2MeSH -u MESH_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
 
-eg.:
+eg.
 ```bash
 ./workflow/w_computation.sh -v 2020 -m app/computation/config/MESH_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
 ```
 
 Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redundant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
 
+
+##### 3.3.5 - Compute SPECIE - MeSH associations
+
+Metabolic networks data (*workflow/w_upload_metabolic_network.sh*)
+eg.
+```bash
+workflow/w_computation.sh -v version -m path/to/Specie2MeSH/config/file -t path/to/config/triplesConverter/Specie2MeSH -u SPECIE_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
+```
+ 
+eg.
+```bash
+workflow/w_computation.sh -v 2020 -m app/computation/config/SPECIE_MESH_Thesaurus/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/SPECIE_MESH/release-2020/config.ini -u SPECIE_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
+```
 
 #### 3.4 - Shutdown Virtoso session
 
@@ -461,7 +492,7 @@ The created upload files contains different information:
 Be sure to remove the *pre_upload.sh* before compressing the share directory
 
 
-### 6 - Versionning :
+### 6 - Versioning:
 
 Created graphs are *named graphs* for which the associated uri identify the graph and triples it contains in the triplestore. By this specific uri, each graph represent a version of a specific resource. There are several main resources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
 
