@@ -116,18 +116,18 @@ EOF
 		            docker exec \
                         ${CONTAINER_NAME} \
                         isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh
-                echo " -- Load SBML."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/SBML_upload_file.sh
-                echo " -- Load PubChem Mapping."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_PubChem_upload_file.sh
-                echo " -- Load MetaNetX Mapping."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_MetaNetX_upload_file.sh
+                # echo " -- Load SBML."
+                #     docker exec \
+                #         ${CONTAINER_NAME} \
+                #         isql-v 1111 dba "${PASSWORD}" ./dumps/SBML_upload_file.sh
+                # echo " -- Load PubChem Mapping."
+                #     docker exec \
+                #         ${CONTAINER_NAME} \
+                #         isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_PubChem_upload_file.sh
+                # echo " -- Load MetaNetX Mapping."
+                #     docker exec \
+                #         ${CONTAINER_NAME} \
+                #         isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_MetaNetX_upload_file.sh
                 echo " -- Load data."
                     docker exec \
                         ${CONTAINER_NAME} \
