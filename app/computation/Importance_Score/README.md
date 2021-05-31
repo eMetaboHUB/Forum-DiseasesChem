@@ -6,9 +6,9 @@ The TF-IDF is a metric used in text-mining approaches to estimate the importance
 
 For a relation between a chemical and a MeSH descriptor, we apply a similar approach to estimate which co-mentioned descriptors appear to be the most important to describe this relation. We used the frequency of MeSH annotation in the corpus of articles supporting the relation, regarding the inverse frequency of the MeSH annotation in the whole FORUM KG. This importance score proposes a ranking of MeSH concepts that seems to be the most relevant to describe the relation.
 
-We estimate the importance of a MeSH descriptor $k$ annotated in publications supporting the relation between a compound $i$ and a MeSH descriptor $j$:
+We estimate the importance of a MeSH descriptor $`k`$ annotated in publications supporting the relation between a compound $`i`$ and a MeSH descriptor $`j`$:
 
-$$Score=\frac{N^{k}_{i,j}}{N_{i,j}} \times log(\frac{N_{..}}{N_{.k}})$$
+$`Score=\frac{N^{k}_{i,j}}{N_{i,j}} \times log(\frac{N_{..}}{N_{.k}})`$
 
 The computation of the Importance-Score for a given relation between a chemical compound/class and a MeSH descriptor can be done in 2 steps :
 
@@ -23,9 +23,9 @@ Args:
 - chem: Identifier of the chemical involved in the association
 - chemType: Type of the chemical identifier: PubChem, ChEBI or ChemOnt
 - MeSH: Identifier of the MeSH involved in the association
-- config: Path to the request configuration file
+- config: Path to the configuration file
 - out: Path to output file
-- TreeList: List of Tree MeSH code, sperated by a |. Ex: C|A|D|G|B|F|I|J"
+- TreeList: List of Tree MeSH code to consider, sperated by a |. Ex: C|A|D|G|B|F|I|J"
 
 In config file (you should not have to modify this file): 
 
@@ -38,7 +38,7 @@ In config file (you should not have to modify this file):
     https://forum.semantic-metabolomics.org/PubChem/reference/2020-12-03
 - [NAMESPACES]
   - PubChem: PubChem compound namespace (http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID)
-  - ChEBI: ChEBI classes namespace (http://purl.obolibrary.org/obo/CHEBI_)
+  - ChEBI: ChEBI classes namespace (http://purl.obolibrary.org/obo/)
   - MeSH: MeSH namespace (http://id.nlm.nih.gov/mesh/)
   - ChemOnt classes namespace (http://purl.obolibrary.org/obo/)
 
