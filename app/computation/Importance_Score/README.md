@@ -10,6 +10,12 @@ We estimate the importance of a MeSH descriptor $`k`$ annotated in publications 
 
 $`Score=\frac{N^{k}_{i,j}}{N_{i,j}} \times log(\frac{N_{..}}{N_{.k}})`$
 
+- $`N_{i,j}`$ the number of articles supporting the co-occurrence between the compound $`i`$ and the MeSH descriptor $`j`$.
+- $`N^{k}_{i,j}`$ the number of articles discussing the MeSH descriptor $`k`$ among those supporting the relation between $`i`$ and $`j`$.
+- $`N_{.k}`$ The total number of articles discussing $`k`$ in the KG.
+- $`N_{..}`$ The total number of articles in the KG. 
+
+
 The computation of the Importance-Score for a given relation between a chemical compound/class and a MeSH descriptor can be done in 2 steps :
 
 ### 1)  Determine sur frequency of co-mnetioned MeSH descriptors
