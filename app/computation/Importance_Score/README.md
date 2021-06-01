@@ -1,10 +1,10 @@
-# Compute Importance Score
+# Compute the score for ranking co-annotated MeSH descriptors
 
-To estimate the importance of each MeSH descriptor supporting a relation, we propose to compute a score, analog to the TF-IDF, using the frequency of the MeSH descriptor in the corpus of articles supporting the relation, compared to its frequency in the whole KG.
+To estimate the importance of each MeSH descriptor supporting a relation, we propose to compute a score, analog to the TF-IDF, using the frequency of the MeSH descriptor in the corpus of articles supporting the relation, adjusted by its frequency in the whole KG.
 
 The TF-IDF is a metric used in text-mining approaches to estimate the importance of a word in a document, regarding a collection of documents. It is related to the frequency of the word in the document (Term-Frequency) and the inverse of the frequency of documents that mention it in the collection (Inverse-Document-Frequency). So, the more a word is frequent in the document and rarely mentioned in the whole collection, the more this word seems important to characterize this document.
 
-For a relation between a chemical and a MeSH descriptor, we apply a similar approach to estimate which co-mentioned descriptors appear to be important to describe this relation. We used the frequency of MeSH annotation in the corpus of articles supporting the relation, regarding the inverse frequency of the MeSH annotation in the whole FORUM KG. This importance score proposes a ranking of MeSH concepts that seems to be relevant to describe the relation.
+For a relation between a chemical and a MeSH descriptor, we apply a similar approach to estimate which co-mentioned descriptors appear to be important to describe this relation. We used the frequency of MeSH annotation in the corpus of articles supporting the relation, regarding the inverse frequency of the MeSH annotation in the whole FORUM KG. This importance score proposes a ranking of MeSH concepts that seem to be relevant to describe the relation.
 
 We estimate the importance of a MeSH descriptor $`k`$ annotated in publications supporting the relation between a compound $`i`$ and a MeSH descriptor $`j`$:
 
