@@ -4,7 +4,7 @@ To estimate the importance of each MeSH descriptor supporting a relation, we pro
 
 The TF-IDF is a metric used in text-mining approaches to estimate the importance of a word in a document, regarding a collection of documents. It is related to the frequency of the word in the document (Term-Frequency) and the inverse of the frequency of documents that mention it in the collection (Inverse-Document-Frequency). So, the more a word is frequent in the document and rarely mentioned in the whole collection, the more this word seems important to characterize this document.
 
-For a relation between a chemical and a MeSH descriptor, we apply a similar approach to estimate which co-mentioned descriptors appear to be the most important to describe this relation. We used the frequency of MeSH annotation in the corpus of articles supporting the relation, regarding the inverse frequency of the MeSH annotation in the whole FORUM KG. This importance score proposes a ranking of MeSH concepts that seems to be the most relevant to describe the relation.
+For a relation between a chemical and a MeSH descriptor, we apply a similar approach to estimate which co-mentioned descriptors appear to be important to describe this relation. We used the frequency of MeSH annotation in the corpus of articles supporting the relation, regarding the inverse frequency of the MeSH annotation in the whole FORUM KG. This importance score proposes a ranking of MeSH concepts that seems to be relevant to describe the relation.
 
 We estimate the importance of a MeSH descriptor $`k`$ annotated in publications supporting the relation between a compound $`i`$ and a MeSH descriptor $`j`$:
 
@@ -12,7 +12,7 @@ $`Score=\frac{N^{k}_{i,j}}{N_{i,j}} \times log(\frac{N_{..}}{N_{.k}})`$
 
 - $`N_{i,j}`$ the number of articles supporting the co-occurrence between the compound $`i`$ and the MeSH descriptor $`j`$.
 - $`N^{k}_{i,j}`$ the number of articles discussing the MeSH descriptor $`k`$ among those supporting the relation between $`i`$ and $`j`$.
-- $`N_{.k}`$ The total number of articles discussing $`k`$ in the KG.
+- $`N_{.k}`$ The total number of articles discussing the MeSH descriptor $`k`$ in the KG.
 - $`N_{..}`$ The total number of articles in the KG. 
 
 
@@ -22,7 +22,7 @@ The computation of the Importance-Score for a given relation between a chemical 
 
 Use *co_annotated_MeSH.py*
 
-Create a table of co-mentioned MeSH descriptors for a given relation between a chemical and a MeSH biomedical concept.
+Creates a table of co-mentioned MeSH descriptors for a given relation between a chemical and a MeSH descriptor.
 
 Args: 
 
@@ -31,7 +31,7 @@ Args:
 - MeSH: Identifier of the MeSH involved in the association
 - config: Path to the configuration file
 - out: Path to output file
-- TreeList: List of Tree MeSH code to consider, sperated by a |. Ex: C|A|D|G|B|F|I|J"
+- TreeList: List of MeSH category codes to consider, sperated by a |. Ex: C|A|D|G|B|F|I|J"
 
 In config file (you should not have to modify this file): 
 
@@ -58,30 +58,30 @@ Example for the relation between Oxyfedrine (PubChem CID 5489013) and Myocardial
 python3 app/computation/Importance_Score/co_annotated_MeSH.py --chem="5489013" --chemType="PubChem" --MeSH="D017202" --config="app/computation/config/co_annotated_MeSH/request_config.ini" --TreeList="C|A|D|G|B|F|I|J" --out="out/path/CID5489013_D017202_co_annotated_MeSH.csv"
 ```
 
-### 2) Compute the Importance-Score
+### 2) Compute the Score
 
 Use *Importance_Score.R*
 
-From the table of co-mentioned MeSH descriptors associated to a particular relation (See co_annotated_MeSH.py), create the table of Importance-Score and an associated figure displaying the top n most important terms.
+From the table of co-mentioned MeSH descriptors associated to a particular relation (See co_annotated_MeSH.py), creates the score table and an associated figure displaying the top n most important terms.
 
 Args:
 
-- MeSH_context: path to file containing the co-annotated MeSH. Should be the output file of co_annotated_MeSH.py
-- MeSH_corpora: path to the table containing the corpora sizes of MeSH descriptors, provided in the Importance_Score directory: TOTAL_MESH_PMID.csv)
-- cooc: The observed co-occurrence between the both entities
+- MeSH_context: Path to file containing the co-annotated MeSH. Should be the output of co_annotated_MeSH.py
+- MeSH_corpora: Path to the table containing the corpora sizes of MeSH descriptors, provided in the Importance_Score directory: TOTAL_MESH_PMID.csv)
+- cooc: The observed co-occurrence between both entities
 - Chem_name: A name for the chemical
-- MeSH_name: A name for the MeSh descriptor
+- MeSH_name: A name for the MeSH descriptor
 - Collection_size: The total number of publications in the collection. For the current release :
   - 8877780 related to PubChem Compounds
   - 7897020 related to ChEBI classes
   - 8826139 related to ChemOnt classes
 - Chem_MeSH_ID: If the compound has also a dedicated MeSH descriptor, it is advised to remove it from the analysis to avoid an irrelevant result. Indicate the associated MeSH descriptor using the option or skip it if none.
-- n_top: the top 'n' to display in the figure
-- path_out: path to the output directory
+- n_top: The top 'n' to display in the figure
+- path_out: Path to the output directory
 
-To request with ChEBI identifier, you must add the prefix 'CHEBI_' to the identifier like "CHEBI_35551" to refer to the class of fluoroalkanoic acid (CHEBI:35551)
+To request with ChEBI identifiers, you must add the prefix 'CHEBI_' to the identifier, like "CHEBI_35551" to refer to the class of fluoroalkanoic acid (CHEBI:35551)
 
-To request with ChemOnt identifier, you must add the prefix 'CHEMONTID_' to the identifier like "CHEMONTID_0001343" to refer to the class of 1,2-oxazines (C0001343)
+To request with ChemOnt identifiers, you must add the prefix 'CHEMONTID_' to the identifier, like "CHEMONTID_0001343" to refer to the class of 1,2-oxazines (C0001343)
 
 ```bash
 Rscript app/computation/Importance_Score/Importance_Score.R --MeSH_context="/path/to/co_annotated_MeSH.csv" --MeSH_corpora="path/to/mesh/corpora" --cooc=COOC --Chem_name="Cpd Name" --MeSH_name="MeSH Name" --Collection_size=N --Chem_MeSH_ID="ChemID" --n_top=20 --path_out="/path/out/dir"
