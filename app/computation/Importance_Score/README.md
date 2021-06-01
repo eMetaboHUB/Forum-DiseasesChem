@@ -18,7 +18,7 @@ $`Score=\frac{N^{k}_{i,j}}{N_{i,j}} \times log(\frac{N_{..}}{N_{.k}})`$
 
 The computation of the Importance-Score for a given relation between a chemical compound/class and a MeSH descriptor can be done in 2 steps :
 
-### 1)  Determine sur frequency of co-mnetioned MeSH descriptors
+### 1)  Determine sur frequency of co-mentioned MeSH descriptors
 
 Use *co_annotated_MeSH.py*
 
@@ -58,7 +58,7 @@ Example for the relation between Oxyfedrine (PubChem CID 5489013) and Myocardial
 python3 app/computation/Importance_Score/co_annotated_MeSH.py --chem="5489013" --chemType="PubChem" --MeSH="D017202" --config="app/computation/config/co_annotated_MeSH/request_config.ini" --TreeList="C|A|D|G|B|F|I|J" --out="out/path/CID5489013_D017202_co_annotated_MeSH.csv"
 ```
 
-### 2) Compute the Score
+### 2) Compute the score
 
 Use *Importance_Score.R*
 
