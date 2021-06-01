@@ -164,6 +164,12 @@ Also, if you use the docker forum/processes, you should use in your commands, di
 
 ### 2 - Prepare the triplestore
 
+The building of the KG from scratch can take several days, including the download of the raw data, and the computation of relations between chemical compounds/classes and MeSH descriptors. The building of the KG was achieved on a server using 189GB of memory and 12 cpus.
+
+We deployed the FORUM KG using Virtuoso on a server with 16 cpus and 128 GB of memory. We strongly recommend to deploy it on a SSD-type storage as it can take more than 20 days on a classic storage. 
+
+Also, all metadata related to the FORUM KG are provided in a VoID file accessible at https://forum.semantic-metabolomics.fr/.well-known/void and directly queryable on the SPARQL endpoint.
+
 To build the initial triplestore, you can use the script w_buildTripleStore.sh or directly download RDF files from the FTP server.
 
 #### 2.1 - Build the triplestore
