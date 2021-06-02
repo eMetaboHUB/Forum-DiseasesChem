@@ -2,8 +2,7 @@ library(optparse)
 library(tidyverse)
 
 
-# Rscript app/computation/Importance_Score.R --MeSH_context="/path/to/mesh/context" --MeSH_corpora="path/to/mesh/corpora" --cooc=COOC --Chem_name="Cpd Name" --MeSH_name="MeSH Name" --Collection_size=N --Chem_MeSH_ID="ChemID" --n_top=20 --path_out="/path/out"
-
+# Rscript Rscript app/computation/co_annotation_score/score.R --MeSH_context="path/to/co-annotation_file.csv" --MeSH_corpora="app/computation/co_annotation_score/TOTAL_MESH_PMID.csv" --cooc=cooc --Chem_name="Chem name" --MeSH_name="MeSH name" --Collection_size=N --Chem_MeSH_ID="id" --n_top=n --path_out="out/dir/path"
 option_list <- list(
   make_option(c("--MeSH_context"), type="character", default=NULL,
               help="Input MeSH context file from co_annotated_MeSH.py", metavar="character"),
@@ -20,17 +19,17 @@ option_list <- list(
   make_option(c("--Chem_MeSH_ID"), type="character", default=NA,
               help="If the compoud has also a dedicated MeSH descriptor, it is advaised to remove it from the analysis to avoid an irrelevant result.", metavar="character"),
   make_option(c("--n_top"), type="character", default=NULL,
-              help="Ranked 'n.top' co-mentioned MeSH by importance score", metavar="character"),
+              help="Ranked 'n.top' co-mentioned MeSH by score", metavar="character"),
   make_option(c("--path_out"), type="character", default=NULL,
               help="path to out dir", metavar="character")
 );
 
 
-compute_Importance_Score <- function(mesh_context, coocurence, N, total_pmid_mesh, mesh_chem = NA, n.top = 20){
+compute_score <- function(mesh_context, coocurence, N, total_pmid_mesh, mesh_chem = NA, n.top = 20){
   
-  # Prepare data and compute Importance-Score
+  # Prepare data and compute the score
   total_pmid_mesh <- total_pmid_mesh %>% mutate(IDF = log(N/TOTAL_PMID_MESH))
-  mesh_context <- mesh_context %>% mutate(TF = count/coocurence) %>% left_join(total_pmid_mesh, "MESH") %>% mutate(TF.IDF = TF * IDF)
+  mesh_context <- mesh_context %>% mutate(TF = count/coocurence) %>% left_join(total_pmid_mesh, "MESH") %>% mutate(Score = TF * IDF)
   # If the compoud has also a dedicated MeSH descriptor, it is advaised to remove it from the analysis to avoid an irrelevant result.
   if(! is.na(mesh_chem)){
     if(mesh_chem %in% mesh_context$MESH){
@@ -40,8 +39,8 @@ compute_Importance_Score <- function(mesh_context, coocurence, N, total_pmid_mes
       warning("Unknow MeSH or no co-occurences for this descriptor")
     }
   }
-  # Order by Importance score
-  mesh_context <- mesh_context[order(mesh_context$TF.IDF, decreasing = TRUE), ]
+  # Order by score
+  mesh_context <- mesh_context[order(mesh_context$Score, decreasing = TRUE), ]
   return(mesh_context)
 }
 
@@ -69,16 +68,16 @@ if(any(mesh_context$count > cooc)){
 # Cretae output dir if not exists
 dir.create(path = path_out, showWarnings = FALSE, recursive = T)
 fig_path <- file.path(path_out, paste0(Chem_name, '_', MeSH_name, '.png'))
-table_path <- file.path(path_out, paste0("Importance_Score_", Chem_name, '_', MeSH_name, '.csv'))
+table_path <- file.path(path_out, paste0("Score_", Chem_name, '_', MeSH_name, '.csv'))
 
-IS <- compute_Importance_Score(mesh_context, cooc, N, total_pmid_mesh, mesh_chem, n.top)
+IS <- compute_score(mesh_context, cooc, N, total_pmid_mesh, mesh_chem, n.top)
 
 
 
 # Create Figure
-  ggplot(IS[1:n.top, ], aes(x = reorder(label, TF.IDF), y = TF.IDF)) +
+  ggplot(IS[1:n.top, ], aes(x = reorder(label, Score), y = Score)) +
   geom_col() +
-  labs(x = NULL, y = "Importance score") + 
+  labs(x = NULL, y = "Score") + 
   coord_flip() + 
   theme_classic() + 
   # ylim(c(0,10)) + 
