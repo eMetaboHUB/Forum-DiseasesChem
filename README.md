@@ -252,7 +252,7 @@ All data and results can be downloaded from the sftp server.
 - Created triples to instantiate relations between PubChem compounds, PubMed articles or Chemont classes are stored respectively in directories: PMID_CID, PMID_CID_endpoints and ClassyFire (included in share.tar.gz)
 - Labels of PubChem compounds, chemical classes, MeSH and their respective tree-Numbers are available in the label directory
 
-
+**We plan to update the FORUM Knowledge graph every year.**
 
 ### 3 - Compute chemical entities to MeSH associations
 
