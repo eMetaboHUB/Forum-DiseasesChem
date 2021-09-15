@@ -1,0 +1,154 @@
+# Notes: 
+To get the url of the requests, we have to send the request from the sparql endpoint, but it does not seems to be a good idea ... the string is very long aand chaotic
+
+header = {
+"Content-Type": "application/x-www-form-urlencoded",
+"Accept": "text/csv"
+}
+
+url = "https://forum.semantic-metabolomics.fr/sparql/"
+
+PREFIX = """
+DEFINE input:inference \"schema-inference-rules\"
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+PREFIX cito: <http://purl.org/spar/cito/>
+PREFIX fabio:	<http://purl.org/spar/fabio/> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+PREFIX chemont: <http://purl.obolibrary.org/obo/CHEMONTID_>
+"""
+
+# PUBCHEM - MESH / MESH - PUBCHEM
+
+R = """
+SELECT distinct (strafter(STR(?pmid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?PMID)
+
+FROM <https://forum.semantic-metabolomics.org/PMID_CID/2020>
+FROM <https://forum.semantic-metabolomics.org/PMID_CID_endpoints/2020>
+FROM <https://forum.semantic-metabolomics.org/PubChem/reference/2020-12-03>
+FROM <https://forum.semantic-metabolomics.org/MeSHRDF/2020-12-07>
+
+WHERE
+{
+    cid:CIDXXXXX cito:isDiscussedBy ?pmid .
+    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+    ?mesh_ini a meshv:TopicalDescriptor .
+    ?mesh_ini meshv:active 1 .
+    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+    mesh:XXXXX meshv:treeNumber ?tn .
+    ?pmid dcterms:date ?date
+}
+ORDER BY DESC(?date)
+limit 1000
+"""
+
+data = {
+"format": "csv",
+"query": PREFIX + R
+}
+
+
+# CHEBI - MESH / MESH - CHEBI
+
+R = """
+select distinct (strafter(STR(?pmid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?PMID)
+
+FROM <https://forum.semantic-metabolomics.org/PMID_CID/2020>
+FROM <https://forum.semantic-metabolomics.org/PMID_CID_endpoints/2020>
+FROM <https://forum.semantic-metabolomics.org/PubChem/reference/2020-12-03>
+FROM <https://forum.semantic-metabolomics.org/MeSHRDF/2020-12-07>
+FROM <https://forum.semantic-metabolomics.org/PubChem/compound/2020-12-03>
+FROM <https://forum.semantic-metabolomics.org/ChEBI/2020-11-01>
+
+WHERE
+{   
+    ?cid a chebi:XXXX .
+    ?cid cito:isDiscussedBy ?pmid .
+    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+    ?mesh_ini a meshv:TopicalDescriptor .
+    ?mesh_ini meshv:active 1 .
+    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+    mesh:XXXX meshv:treeNumber ?tn .
+    ?pmid dcterms:date ?date
+}
+ORDER BY DESC(?date)
+limit 1000
+"""
+
+# CHEMONT - MESH / MESH - CHEMONT
+
+R = """
+select distinct (strafter(STR(?pmid),"\http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?PMID)
+
+FROM <https://forum.semantic-metabolomics.org/PMID_CID/2020>
+FROM <https://forum.semantic-metabolomics.org/PMID_CID_endpoints/2020>
+FROM <https://forum.semantic-metabolomics.org/PubChem/reference/2020-12-03>
+FROM <https://forum.semantic-metabolomics.org/MeSHRDF/2020-12-07>
+FROM <https://forum.semantic-metabolomics.org/ClassyFire/direct-parent/2020>
+FROM <https://forum.semantic-metabolomics.org/ChemOnt/2016-08-27>
+
+WHERE
+{
+    ?cid a chemont:XXXX .
+    ?cid cito:isDiscussedBy ?pmid .
+    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+    ?mesh_ini a meshv:TopicalDescriptor .
+    ?mesh_ini meshv:active 1 .
+    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+    FILTER(REGEX(?tn,"(C|A|D|G|B|F|I|J)")) .
+    mesh:XXXX meshv:treeNumber ?tn .
+    ?pmid dcterms:date ?date
+}
+ORDER BY DESC(?date)
+limit 1000
+"""
+
+
+# MESH - MESH
+R = """
+select distinct (strafter(STR(?pmid),"\http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?PMID)
+
+FROM <https://forum.semantic-metabolomics.org/PMID_CID_endpoints/2020>
+FROM <https://forum.semantic-metabolomics.org/PubChem/reference/2020-12-03>
+FROM <https://forum.semantic-metabolomics.org/MeSHRDF/2020-12-07>
+
+WHERE
+{
+    {
+        select distinct ?pmid
+        where
+        {
+            ?endp obo:IAO_0000136 ?pmid .
+            ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+            ?mesh_ini a meshv:TopicalDescriptor .
+            ?mesh_ini meshv:active 1 .
+            ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn .
+            mesh:XXXX meshv:treeNumber ?tn .
+        }
+    }
+
+    ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini_2 .
+    ?mesh_ini_2 a meshv:TopicalDescriptor .
+    ?mesh_ini_2 meshv:active 1 .
+    ?mesh_ini_2 (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber+) ?tn_2 .
+    mesh:XXXX meshv:treeNumber ?tn_2 .
+    ?pmid dcterms:date ?date
+}
+ORDER BY DESC(?date)
+limit 1000
+"""
+
+r = requests.post(url = url, headers = header, data = data)
+
+
