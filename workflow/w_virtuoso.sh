@@ -132,10 +132,10 @@ EOF
                     docker exec \
                         ${CONTAINER_NAME} \
                         isql-v 1111 dba "${PASSWORD}" ./dumps/upload_MetaNetX.sh
-                echo " -- Load data."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/pre_upload.sh
+                # echo " -- Load data."
+                #     docker exec \
+                #         ${CONTAINER_NAME} \
+                #         isql-v 1111 dba "${PASSWORD}" ./dumps/pre_upload.sh
                 # echo " -- Load ClassyFire."
                 #     docker exec \
                 #         ${CONTAINER_NAME} \

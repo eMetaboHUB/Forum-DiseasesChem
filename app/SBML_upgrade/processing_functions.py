@@ -15,7 +15,7 @@ def create_upload_file_from_resource(path_out, path_to_graph_dir, file_pattern, 
     - target_graph: an URI corresponding to the associated resource graph
     - update_file_name: name of the update file 
     """
-    with open(path_out + update_file_name, "a") as update_f:
+    with open(os.path.join(path_out, update_file_name), "a") as update_f:
         update_f.write("delete from DB.DBA.load_list ;\n")
         update_f.write("ld_dir_all ('./dumps/" + path_to_graph_dir + "', '" + file_pattern + "', '" + target_graph + "');\n")
         update_f.write("rdf_loader_run();\n")
@@ -30,7 +30,7 @@ def remove_graph(path_out, uris, update_file_name):
     - uris: a list of graph uris that have to be remove
     - update_file_name: name of the update file
     """
-    with open(path_out + update_file_name, "a") as remove_f:
+    with open(os.path.join(path_out, update_file_name), "a") as remove_f:
         remove_f.write("log_enable(3,1);\n")
         for uri in uris:
             remove_f.write("SPARQL CLEAR GRAPH  \"" + uri + "\"; \n")
@@ -130,11 +130,11 @@ def get_uri_from_void(dir):
     This function is used to extract the uri assocaited to a version of a resource from the void.ttl file
     - dir: the path to the resource version directory
     """
-    if not os.path.exists(dir + "/void.ttl"):
+    if not os.path.exists(os.path.join(dir, "void.ttl")):
         print("Can't find void.ttl file in " + dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
         sys.exit(3)
     g = rdflib.Graph()
-    g.parse(dir + "/void.ttl", format = "turtle")
+    g.parse(os.path.join(dir, "void.ttl"), format = "turtle")
     uri = g.query(
         """
         SELECT (STR(?o) as ?URI)
@@ -163,7 +163,7 @@ def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version,
         if annot_graph == "void.ttl":
             continue
         sub_g = rdflib.ConjunctiveGraph()
-        sub_g.parse(path_to_annot_graphs_dir + annot_graph, format = 'turtle')
+        sub_g.parse(os.path.join(path_to_annot_graphs_dir, annot_graph), format = 'turtle')
         n_triples += len(sub_g)
         subjects = subjects.union(set([s for s in sub_g.subjects()]))
         ressource_version.add_DataDump(annot_graph)
@@ -173,4 +173,4 @@ def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version,
     ressource_version.add_version_attribute(DCTERMS["title"], rdflib.Literal(title))
     ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
     ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-    ressource_version.version_graph.serialize(destination=path_to_annot_graphs_dir + "void.ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(destination = os.path.join(path_to_annot_graphs_dir, "void.ttl"), format = 'turtle')
