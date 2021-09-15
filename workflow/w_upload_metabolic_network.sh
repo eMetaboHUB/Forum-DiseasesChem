@@ -54,7 +54,7 @@ echo "2) Import PubChem mapping"
 LOG_PUBCHEM="${LOGSDIR}/load_PubChem_mapping.log"
 echo "" > $LOG_PUBCHEM
 
-python3 app/SBML_upgrade/import_PubChem_mapping.py --config=$CONFIG --out=$RESOURCES_DIR --version=$PUBCHEM_VERSION 2>&1 | tee -a $LOG_PUBCHEM
+# python3 app/SBML_upgrade/import_PubChem_mapping.py --config=$CONFIG --out=$RESOURCES_DIR --version=$PUBCHEM_VERSION 2>&1 | tee -a $LOG_PUBCHEM
 
 
 echo "3) Import MetaNetX mapping"
@@ -63,6 +63,6 @@ echo "3) Import MetaNetX mapping"
 LOG_METANETX="${LOGSDIR}/load_MetaNetX_mapping.log"
 echo "" > $LOG_METANETX
 
-python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config=$CONFIG --out=$RESOURCES_DIR --version=$METANETX_VERSION 2>&1 | tee -a $LOG_METANETX
+# python3 app/SBML_upgrade/import_MetaNetX_mapping.py --config=$CONFIG --out=$RESOURCES_DIR --version=$METANETX_VERSION 2>&1 | tee -a $LOG_METANETX
 
 echo "End !"

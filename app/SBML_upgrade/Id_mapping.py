@@ -5,6 +5,7 @@ import re
 import os, sys
 import json
 import gzip
+import glob
 import subprocess
 import itertools
 import csv
@@ -72,7 +73,12 @@ class Id_mapping:
         ressource_version_intra = Database_ressource_version(ressource = "Id_mapping/Intra/" + source, version = self.version)
         n_triples = 0
         subjects = set()
-        path_out = path_out + source + "/" + ressource_version_intra.version + "/"
+        path_out = os.path.join(path_out, source, ressource_version_intra.version)
+        # Test if data triples already created:
+        if len(glob.glob(os.path.join(path_out, "void.ttl"))) == 1:
+            print("\n - " + os.path.join(path_out, "void.ttl") + " already exists. Intra-mapping skip.")
+            return None
+        
         if not os.path.exists(path_out):
             os.makedirs(path_out)
         for r_name in self.intra_ids_dict.keys():
@@ -89,11 +95,11 @@ class Id_mapping:
                 for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
                     current_graph.add((current_uri, OWL['sameAs'], next_uri))
             print("Ok\nExport graph for resource " + r_name + " ... ", end = '')
-            current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
+            current_graph.serialize(destination = os.path.join(path_out, g_name + ".ttl"), format='turtle')
             print("Ok\nTry to compress file " + r_name + " ... ", end = '')
             try:
                 # Use of gzip -f to force overwritting if file already exist
-                subprocess.run("gzip -f " + path_out + g_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
                 ressource_version_intra.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
@@ -111,7 +117,7 @@ class Id_mapping:
             ressource_version_intra.add_version_attribute(DCTERMS["source"], rdflib.URIRef(source_uris))
         ressource_version_intra.add_version_attribute(VOID["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_intra.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_intra.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
+        ressource_version_intra.version_graph.serialize(destination = os.path.join(path_out, "void.ttl"), format = 'turtle')
         print("Ok")
         return ressource_version_intra.uri_version
     
