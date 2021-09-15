@@ -69,10 +69,17 @@ print("Import configuration table ... ", end = '')
 map_ids.import_table_infos(meta_table, "\t")
 print("OK\nImport identifiers from SBML rdf graph to create SBML URIs intra equivalences ... ", end = '')
 map_ids.get_graph_ids_set(os.path.join(gem_path, gem_file), uri, sbml_rdf_format)
-print("Ok\nExport SBML Uris intra equivalences ... ", end = '')
+
+# Test if data triples already created:
+if len(glob.glob(os.path.join(path_to_dumps, "Id_mapping", "Intra", "SBML", sbml_version, "void.ttl"))) == 1:
+    print("\n - [SKIPPING] " + os.path.join(path_to_dumps, "Id_mapping", "Intra", "SBML", sbml_version, "void.ttl") + " already exists.")
+    print(" - [SKIPPING] Intra-mapping skip.")
+    sys.exit(1)
+
+# Else create intra-mapping
+print("- SBML Intra-mapping")
 intra_eq_uri = map_ids.export_intra_eq(os.path.join(path_to_dumps, "Id_mapping", "Intra"), "SBML")
-if intra_eq_uri:
-    print("Export upload file ... ", end = '')
-    create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version), "*.ttl.gz", str(intra_eq_uri), update_f_name)
-    create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version), "void.ttl", str(intra_eq_uri), update_f_name)
-    print("Ok")
+print("Export upload file ... ", end = '')
+create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version), "*.ttl.gz", str(intra_eq_uri), update_f_name)
+create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version), "void.ttl", str(intra_eq_uri), update_f_name)
+print("Ok")

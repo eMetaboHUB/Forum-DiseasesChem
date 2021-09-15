@@ -74,10 +74,6 @@ class Id_mapping:
         n_triples = 0
         subjects = set()
         path_out = os.path.join(path_out, source, ressource_version_intra.version)
-        # Test if data triples already created:
-        if len(glob.glob(os.path.join(path_out, "void.ttl"))) == 1:
-            print("\n - " + os.path.join(path_out, "void.ttl") + " already exists. Intra-mapping skip.")
-            return None
         
         if not os.path.exists(path_out):
             os.makedirs(path_out)
@@ -175,24 +171,35 @@ class Id_mapping:
         ids_ressource_2 = [id[1].toPython() for id in query]
         return ids_ressource_1, ids_ressource_2
     
-    def create_graph_from_MetaNetX(self, graph_metaNetX, path_out, graph_uri):
+    def create_graph_from_MetaNetX(self, path_to_g_MetaNetX, path_out, graph_uri):
         """
         This function is used to create a graph or uri equivalences between MetaNetX identifiers and other ressources. Equivalence information are fetch from the MetaNetX RDF graph. 
         Between ressource a skos:closeMatch relation is implemented (to avoid propaging false information)
-        - graph_metaNetX: a rdflib object graph associated to the MetaNetX RDF graph
+        - path_to_g_MetaNetX: path to the MetaNetX RDF graph
         - path_out: a path to out files
         """
+        # Create resource
         ressource_version_MetaNetX = Database_ressource_version(ressource = "Id_mapping/Inter/MetaNetX", version = self.version)
         n_triples = 0
         subjects = set()
-        path_out = path_out + ressource_version_MetaNetX.version + "/"
+        path_out = os.path.join(path_out, ressource_version_MetaNetX.version)
+        
+        # Import graph :
+        print("Try to load MetanetX graph from " + path_to_g_MetaNetX + " ... ", end = '')
+        graph_metaNetX = rdflib.Graph()
+        with gzip.open(path_to_g_MetaNetX, "rb") as f_MetaNetX:
+            graph_metaNetX.parse(f_MetaNetX, format="turtle")
+        print("Ok")
+
+        # Create our dir
         if not os.path.exists(path_out):
             os.makedirs(path_out)
+        
         selected_ressource = [r for r in self.uri_MetaNetX.keys() if len(self.uri_MetaNetX[r]) > 0 and r != "metanetx"]
         for ressource in selected_ressource:
             # On crée le graph MetaNetX .vs. ressource
             print("Treating resource: " + ressource + " with MetaNetX :")
-            g_name = ("MetaNetX_" + ressource)
+            g_name = "MetaNetX_" + ressource
             print("Get ids mapping ... ", end = '')
             current_graph = ressource_version_MetaNetX.create_data_graph([], None)
             current_graph.bind("skos", SKOS)
@@ -207,10 +214,10 @@ class Id_mapping:
                 current_graph.add((uri_1, SKOS['closeMatch'], uri_2))
             # On écrit le graph :
             print("Ok\nExport graph for resource " + ressource + " ... ", end = '')
-            current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
+            current_graph.serialize(destination = os.path.join(path_out, g_name + ".ttl"), format='turtle')
             try:
                 # Use of gzip -f to force overwritting if file already exist
-                subprocess.run("gzip -f " + path_out + g_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
                 ressource_version_MetaNetX.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
@@ -249,10 +256,10 @@ class Id_mapping:
                 current_graph.add((uri_1, SKOS['closeMatch'], uri_2))
             # On écrit le graph :
             print("Ok\nExport graph for resource " + ressource + " ...", end = '')
-            current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
+            current_graph.serialize(destination = os.path.join(path_out, g_name + ".ttl"), format='turtle')
             try:
                 # Use of gzip -f to force overwritting if file already exist
-                subprocess.run("gzip -f " + path_out + g_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
                 ressource_version_MetaNetX.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
@@ -269,8 +276,9 @@ class Id_mapping:
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
         ressource_version_MetaNetX.add_version_attribute(VOID["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_MetaNetX.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_MetaNetX.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
+        ressource_version_MetaNetX.version_graph.serialize(destination = os.path.join(path_out, "void.ttl"), format = 'turtle')
         print("Ok")
+        graph_metaNetX = None
         return ressource_version_MetaNetX.uri_version
     
     def create_graph_from_pubchem_type(self, pubchem_graph, path_out, graph_uri):
