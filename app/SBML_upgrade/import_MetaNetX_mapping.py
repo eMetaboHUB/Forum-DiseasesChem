@@ -26,20 +26,20 @@ except configparser.Error as e:
     sys.exit(3)
 
 # Global
-path_to_dumps = args.out + "/"
+path_to_dumps = args.out
 meta_table = config["META"].get("path")
 ftp = config["FTP"].get("ftp")
 
 # MetaNetX:
 MetaNetX_v = args.version
 
-path_to_MetaNetX_dir = path_to_dumps + "MetaNetX/" + MetaNetX_v
-path_to_g_MetaNetX = path_to_MetaNetX_dir + "/" + "metanetx.ttl.gz"
+path_to_MetaNetX_dir = os.path.join(path_to_dumps, "MetaNetX", MetaNetX_v)
+path_to_g_MetaNetX = os.path.join(path_to_MetaNetX_dir, "metanetx.ttl.gz")
 
 uri_source_graph = get_uri_from_void(path_to_MetaNetX_dir)
 
 update_f_name = "Id_mapping_MetaNetX_upload_file.sh"
-with open(path_to_dumps + update_f_name, "w") as update_f:
+with open(os.path.join(path_to_dumps, update_f_name), "w") as update_f:
     pass
 
 # Intialyze Object:
