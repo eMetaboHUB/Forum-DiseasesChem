@@ -281,16 +281,26 @@ class Id_mapping:
         graph_metaNetX = None
         return ressource_version_MetaNetX.uri_version
     
-    def create_graph_from_pubchem_type(self, pubchem_graph, path_out, graph_uri):
+    def create_graph_from_pubchem_type(self, path_to_pubchem_dir, path_out, graph_uri):
         """
         This function is ised to create a mapping graph from information contains in type pubchem graphs which can contains links between PubChem CID and ChEBI
-        - pubchem_graph: a rdflib object graph associated to the PubChem type RDF graph
+        - path_to_pubchem_dir: path to PubChem type RDF graph
         - path_out: path to the output directory
         """
+
+        print("Ok\nRead pubchem type graph(s) ... ", end = '')
+        if len(glob.glob(os.path.join(path_to_pubchem_dir, "*_type*.ttl.gz"))) == 0:
+            print("Can't find *_type*.ttl.gz PubChem RDF file(s) in " + path_to_pubchem_dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
+            sys.exit(3)
+        pubchem_graph = rdflib.ConjunctiveGraph()
+        for path in glob.glob(os.path.join(path_to_pubchem_dir, "*_type*.ttl.gz")):
+            with gzip.open(path, "rb") as f:
+                pubchem_graph.parse(f, format="turtle")
+
         ressource_version_PubChem = Database_ressource_version(ressource = "Id_mapping/Inter/PubChem", version = self.version)
         n_triples = 0
         subjects = set()
-        path_out = path_out + ressource_version_PubChem.version + "/"
+        path_out = os.path.join(path_out, ressource_version_PubChem.version)
         if not os.path.exists(path_out):
             os.makedirs(path_out)
         selected_ressource = [r for r in self.uri_PubChem.keys() if len(self.uri_PubChem[r]) > 0 and r != "pubchem"]
@@ -313,10 +323,10 @@ class Id_mapping:
                 uri_1, uri_2 = rdflib.URIRef(self.ressource_uris["pubchem"][0] + PubChem_ids[id_index]), rdflib.URIRef(self.ressource_uris[ressource][0] + ressource_ids[id_index])
                 current_graph.add((uri_1, SKOS['closeMatch'], uri_2))
             print("Ok\nExport graph for resource " + ressource + " ... ", end = '')
-            current_graph.serialize(destination = path_out + g_name + ".ttl", format='turtle')
+            current_graph.serialize(destination = os.path.join(path_out, g_name + ".ttl"), format='turtle')
             try:
                 # Use of gzip -f to force overwritting if file already exist
-                subprocess.run("gzip -f " + path_out + g_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
                 ressource_version_PubChem.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
@@ -340,7 +350,7 @@ class Id_mapping:
         ressource_version_PubChem.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
         ressource_version_PubChem.add_version_attribute(VOID["triples"], rdflib.Literal(n_triples, datatype=XSD.long ))
         ressource_version_PubChem.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(len(subjects), datatype=XSD.long ))
-        ressource_version_PubChem.version_graph.serialize(destination=path_out + "void.ttl", format = 'turtle')
+        ressource_version_PubChem.version_graph.serialize(destination = os.path.join(path_out, "void.ttl"), format = 'turtle')
         print("Ok")
         return ressource_version_PubChem.uri_version
         
