@@ -38,10 +38,6 @@ path_to_g_MetaNetX = os.path.join(path_to_MetaNetX_dir, "metanetx.ttl.gz")
 
 uri_source_graph = get_uri_from_void(path_to_MetaNetX_dir)
 
-update_f_name = "Id_mapping_MetaNetX_upload_file.sh"
-with open(os.path.join(path_to_dumps, update_f_name), "w") as update_f:
-    pass
-
 # Intialyze Object:
 map_ids = Id_mapping(MetaNetX_v, ftp)
 print("Import configuration table ... ", end = '')
@@ -55,6 +51,10 @@ if (len(glob.glob(os.path.join(path_to_dumps, "Id_mapping", "Inter", "MetaNetX",
     print(" - [SKIPPING] " + os.path.join(path_to_dumps, "Id_mapping", "Intra", "MetaNetX", MetaNetX_v, "void.ttl") + " already exists")
     print(" - [SKIPPING] Skip Intra/Inter-mapping.")
     sys.exit(1)
+
+update_f_name = "Id_mapping_MetaNetX_upload_file.sh"
+with open(os.path.join(path_to_dumps, update_f_name), "w") as update_f:
+    pass
 
 # Create graphs :
 print("- MetaNetX Inter-mapping")
