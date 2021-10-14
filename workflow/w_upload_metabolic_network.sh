@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# bash workflow/w_upload_metabolic_network.sh -a data/OtherGEM/ecol/rdf/e_coli_core.ttl -b ecol/v2 -c app/SBML_upgrade/config/config_ecol.ini -d 4.1 -e 2020-12-03 -s docker-virtuoso/share -l logs
 
 BASEDIR=$(dirname $0)
 

@@ -152,3 +152,75 @@ limit 1000
 r = requests.post(url = url, headers = header, data = data)
 
 
+# UTILISER LES CHEBI ROLES: 
+
+Les classes ChEBI sont également annotées avec des rôles, tel que human metabolites ou autre. Pour les visualiser, on peut alors sur la Tree-view de l'arbre associé au rôles qui est assez exhaustive.
+Caque classes ChEBI est alors définie comme étant une sous classe d'une metaclasse rôles
+Ex: 
+
+<owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_146309">
+1553189-        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_23778"/>
+1553190-        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_33572"/>
+1553191-        <rdfs:subClassOf>
+1553192-            <owl:Restriction>
+1553193:                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/RO_0000087"/>
+1553194-                <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/CHEBI_33282"/>
+1553195-            </owl:Restriction>
+1553196-        </rdfs:subClassOf>
+
+
+C'est là où c'est un peu étrange dans la manière dont ils ont décrit la chose. En fait il n'a pas de classes "Human Metabolite" definie par une restriction, la classe est re-définie dans chaque classe qui lui appartient.
+Quelque chose de plus simple je pense aurait simplement été d'instancier la propriété à la classe ex: 
+<http://purl.obolibrary.org/obo/CHEBI_146309> <http://purl.obolibrary.org/obo/RO_0000087> <http://purl.obolibrary.org/obo/CHEBI_33282>
+
+**C'est notamment quelque chose qui serait intéressant à faire avec un CONSTRUCT! Pour faciliter l'exploration de ces triplets, on créerait un graph pour les instancier simplement avec une propriétée.**
+On récupère les couples à instancier avec un construct (sans inférer sur récupérer les potentiels enfant comme dans l'exemple ci-dessous car ça l'inférence classique pourra le faire ensuite) et on instancie les triplets.
+
+Il s'agirait donc de faire un construct entre les entités c et p tel que: 
+
+select distinct ?c ?p
+where
+{
+?c rdfs:subClassOf ?r . # La classe chimique ChEBI est une sous classe d'une classe (cela contient à la fois ces classes chimiques parentes et aussi les restrictions sur les rôles) 
+?r a owl:Restriction . # On filtre sur les rôles
+?r owl:onProperty <http://purl.obolibrary.org/obo/RO_0000087> . # On filtre la restriction sur la propriété has_role 
+?r owl:someValuesFrom ?p # On regarde la cible de ce has_role et on instancie
+}
+
+A vérifier qu'il n'y a pas d'autres choses que someValuesFrom
+
+
+Voici un petit exemple pour commencer. 
+Ici on récupère tout les composés PubChem associés à un certaine classe ChEBI, pour laquelle cette classe a explicitement annoté pour rôle définie human_metabolite, ou des classes enfantes
+
+DEFINE input:inference "schema-inference-rules"
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+PREFIX voc: <http://myorg.com/voc/doc#>
+PREFIX cito: <http://purl.org/spar/cito/>
+PREFIX fabio:	<http://purl.org/spar/fabio/> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+
+select distinct (strafter(STR(?s),"http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") as ?CID)
+where
+{
+
+?s skos:related mesh:D007246 .
+?s a ?c .
+?c a owl:Restriction .
+?c owl:onProperty <http://purl.obolibrary.org/obo/RO_0000087> .
+?c owl:someValuesFrom ?p .
+?p rdfs:subClassOf* <http://purl.obolibrary.org/obo/CHEBI_77746>
+
+}
