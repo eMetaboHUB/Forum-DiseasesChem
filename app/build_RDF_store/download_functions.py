@@ -107,7 +107,7 @@ def download_MeSH(out_dir, out_log):
     The function return the version and the uri of this new version.
     """
     # Intialyze .log files
-    with open(out_log + "dl_mesh.log", "wb") as f_log:
+    with open(os.path.join(out_log, "dl_mesh.log"), "wb") as f_log:
         pass
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -120,7 +120,7 @@ def download_MeSH(out_dir, out_log):
         ftp.quit()
     except ftplib.all_errors as ftplib_e:
         print("Errors while trying to connect to NCBI mesh FTP server at ftp.nlm.nih.gov, check dl_mesh.log")
-        with open(out_log + "dl_mesh.log", "a") as f_log:
+        with open(os.path.join(out_log, "dl_mesh.log"), "a") as f_log:
             f_log.write("\n" + str(ftplib_e) + "\n")
         sys.exit(3)
     # parse date to get last version
@@ -128,7 +128,7 @@ def download_MeSH(out_dir, out_log):
     mesh_last_v = mesh_last_v.strftime('%Y-%m-%d')
     print(" Ok\nLast MeSH RDF version found on ftp server is : " + mesh_last_v)
     print("Check if MeSH RDF version " + mesh_last_v + " was already download: ", end = '')
-    test_r_info = glob.glob(out_dir + mesh_last_v + "/" + "void.ttl")
+    test_r_info = glob.glob(os.path.join(out_dir, mesh_last_v, "void.ttl"))
     # From last version date, if associated void.ttl file already exists, exit and return mesh last version and associated uri
     if len(test_r_info) == 1:
         print("Yes\nMeSH RDF version " + mesh_last_v + " is already downloaded, end.\n\n")
@@ -138,7 +138,7 @@ def download_MeSH(out_dir, out_log):
     else:
         print("No\nTrying to dowload MeSH RDF version " + mesh_last_v + "\n\n")
     # Create version output directory
-    out_path = out_dir + mesh_last_v + "/"
+    out_path = os.path.join(out_dir, mesh_last_v)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     # Download MeSh data
@@ -152,7 +152,7 @@ def download_MeSH(out_dir, out_log):
         sys.exit(3)
     print("Trying to read MeSH void.ttl file ...", end = '')
     g_metadata = rdflib.Graph()
-    g_metadata.parse(out_path + "void_1.0.0.ttl", format = 'turtle')
+    g_metadata.parse(os.path.join(out_path, "void_1.0.0.ttl"), format = 'turtle')
     print(" Ok\nTrying to dowload MeSH RDF file ...", end = '')
     # Download MeSH RDF
     try:
@@ -160,7 +160,7 @@ def download_MeSH(out_dir, out_log):
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MeSH mesh.nt file, check dl_mesh.log")
         print(e)
-        with open(out_log + "dl_mesh.log", "ab") as f_log:
+        with open(os.path.join(out_log, "dl_mesh.log"), "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print(" Ok\nTrying to parse MeSH original metadata ...", end = '')
@@ -182,13 +182,13 @@ def download_MeSH(out_dir, out_log):
     # On crée le graph de données : 
     print(" Ok\nTrying to create MeSH new ressource version ...", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
-    mesh_graph.parse(out_path + "mesh.nt", format = "nt")
+    mesh_graph.parse(os.path.join(out_path, "mesh.nt"), format = "nt")
     ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
     ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
     # Clear graph
     mesh_graph = None
     # On écrit le graph de la ressource
-    ressource_version.version_graph.serialize(out_path + "void.ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(os.path.join(out_path, "void.ttl"), format = 'turtle')
     # On supprime le fichier void initial
     try:
         subprocess.run("rm " + out_path + "void_1.0.0.ttl ", shell = True, check=True, stderr = subprocess.PIPE)
