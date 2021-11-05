@@ -285,6 +285,22 @@ The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfB
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
   - s: path to the shared directory **from** the virtuoso directory (eg. *share* if you use the proposed settings)
+  - l: the loading parameter. A string describing the parts of the KG that need to be loaded, comma separated. Default value is: VOC,MINCORE. The options are:
+    - *VOC*: The vocabularies/ontologies files containing inference rules (eg. ChEBI, cito, ... )
+    - *SBML*: The metabolic network in a RDF format + the PubChem and MetaNetX Id-mapping graphs (Cf. SBML_upgrade and w_upload_metabolic_network.sh)
+    - *METANETX*: The MetaNetX KG.
+    - *MINCORE*: The minimal core data that have to be loaded in order to compute FORUM associations (use pre_upload.sh)
+    - *MAXCORE*: All the FORUM data, like they are available on the public KG.
+    - *CHEMONT*: The data derived from ClassyFire.
+
+For instance to intergrate FORUM minimal data with SBML and MetaNetX use: 
+```bash
+./workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s /path/to/share/dir/from/virtuoso/dir -l VOC,MINCORE,SBML,METANETX  start
+```
+
+
+
+
 
 Several checks can be used to ensure that the loading was done correctly:
 

@@ -46,8 +46,12 @@ mkdir -p $LOGSDIR
 echo "--  Create triple store !"
 echo "1) Get vocabulary and external data files from sftp ..."
 
-ARCHIVE_TAR_GZ=upload.tar.gz 
-URL_SFTP="ftp.semantic-metabolomics.org:/upload.tar.gz"
+# ARCHIVE_TAR_GZ=upload.tar.gz 
+# URL_SFTP="ftp.semantic-metabolomics.org:/upload.tar.gz"
+
+# TMP:
+ARCHIVE_TAR_GZ=upload_2021.tar.gz
+URL_SFTP="ftp.semantic-metabolomics.org:../tmp/upload_2021.tar.gz"
 USER="forum"
 PASSWORD="Forum2021Cov!"
 
