@@ -1,24 +1,6 @@
 prefix = """
     DEFINE input:inference \"schema-inference-rules\"
     DEFINE input:same-as \"yes\"
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    PREFIX owl: <http://www.w3.org/2002/07/owl#>
-    PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
-    PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
-    PREFIX voc: <http://myorg.com/voc/doc#>
-    PREFIX cito: <http://purl.org/spar/cito/>
-    PREFIX fabio:	<http://purl.org/spar/fabio/> 
-    PREFIX owl: <http://www.w3.org/2002/07/owl#> 
-    PREFIX void: <http://rdfs.org/ns/void#>
-    PREFIX cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-    PREFIX sio: <http://semanticscience.org/resource/>
-    PREFIX obo: <http://purl.obolibrary.org/obo/>
-    PREFIX model: <http:doi.org/10.1126/scisignal.aaz1482#>
-    PREFIX SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
-    PREFIX bqbiol: <http://biomodels.net/biology-qualifiers#>
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 """
 
 count_distinct_pmids_by_SPECIE = """
