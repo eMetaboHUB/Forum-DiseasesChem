@@ -220,7 +220,7 @@ def download_MetaNetX(out_dir, out_log, version):
         os.makedirs(version_path)
     # Download MeSH RDF
     try:
-        subprocess.run("wget -P " + version_path + " ftp://ftp.vital-it.ch/databases/metanetx/MNXref/" + version + "/metanetx.ttl.gz", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("wget -P " + version_path + " https://www.metanetx.org/ftp/" + version + "/metanetx.ttl.gz", shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
         print(e)
