@@ -202,8 +202,8 @@ This process should have created several sub-directories in the Virtuoso shared 
 
 The vocabulary directory contains files associated to the schema of used ontology, they can be download using the docker resource directory or at:
 
-- MeSH: ftp://ftp.nlm.nih.gov/online/mesh/rdf/vocabulary_1.0.0.ttl
-- ChEBI: ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl
+- MeSH: https://nlmpubs.nlm.nih.gov/projects/mesh/rdf/2021/vocabulary_1.0.0.ttl
+- ChEBI: https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl.gz
 - cito: http://purl.org/spar/cito.ttl
 - fabio: http://purl.org/spar/fabio.ttl
 - Dublin Core: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.nt
@@ -211,7 +211,9 @@ The vocabulary directory contains files associated to the schema of used ontolog
 - skos: https://www.w3.org/2009/08/skos-reference/skos.rdf
 - ChemOnt: http://classyfire.wishartlab.com/downloads
 
-The ChEBI ontology file is often updated and the actual version of the ChEBI ontology used in the triplestore is ChEBI 193 (Release of 01 Nov. 2020), as refer in the URI of the ChEBI Graph in FORUM.
+The MeSH vocabulary file has been downloaded from the 2021 release of MeSH.
+
+The ChEBI ontology file is often updated and the actual version of the ChEBI ontology used in the triplestore is: ChEBI Release version 205 (Release of 03 Nov. 2021), as refer in the URI of the ChEBI Graph in FORUM.
 
 *Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt ontology seems to be stable.
 
