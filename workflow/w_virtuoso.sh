@@ -6,21 +6,26 @@
 # USAGE (2) : ${0} stop                   # stop virtuoso                  
 # USAGE (3) : ${0} clean                  # remove docker directory
 
+# By default we use only load essential data: MeSH, PubChem_Reference, PubChem_Compound, PMID_CID, PMID_CID_endpoints
+LOADING="VOC,MINCORE"
 
-while getopts d:s: flag;
+while getopts d:s:l: flag;
 	do
 	    case "${flag}" in
-	    d) DOCKER_DIR=${OPTARG};;
+	        d) DOCKER_DIR=${OPTARG};;
             s) PATH_TO_SHARED_DIR_FROM_D=${OPTARG};;
+            l) LOADING=${OPTARG};;
 	    esac
 	done
 
-echo $DOCKER_DIR
-echo $PATH_TO_SHARED_DIR_FROM_D
+# echo $DOCKER_DIR
+# echo $PATH_TO_SHARED_DIR_FROM_D
+
+IFS=',' read -r -a LOADING_ARRAY <<< "$LOADING"
 
 CMD=${@:$OPTIND:1}
 
-echo $CMD
+# echo $CMD
 
 COMPOSE_PROJECT_NAME="forum-KG"
 LISTEN_PORT="9980"
@@ -46,7 +51,6 @@ function waitStarted() {
 
 function virtuosoControler() {
     echo " -- Virtuoso controler"
-    echo " --"
 
     echo " -- Generating docker-compose"
     COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
@@ -112,14 +116,21 @@ EOF
                 ${COMPOSE_CMD} up -d
                 waitStarted
                 echo " -- Container started."
-                echo " -- Load vocabulary."
-		            docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh
-                echo " -- Load SBML."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/SBML_upload_file.sh
+                echo "LOADING ARRAY: ${LOADING_ARRAY[*]}"
+                # Test if VOC has to be loaded
+                if [[ " ${LOADING_ARRAY[*]} " =~ "VOC" ]]; then
+                    echo " -- Load vocabulary."
+                        docker exec \
+                            ${CONTAINER_NAME} \
+                            isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh
+                fi
+
+                # Test if SBML has to be loaded
+                if [[ " ${LOADING_ARRAY[*]} " =~ "SBML" ]]; then
+                    echo " -- Load SBML."
+                        docker exec \
+                            ${CONTAINER_NAME} \
+                            isql-v 1111 dba "${PASSWORD}" ./dumps/SBML_upload_file.sh
                 echo " -- Load PubChem Mapping."
                     docker exec \
                         ${CONTAINER_NAME} \
@@ -128,18 +139,39 @@ EOF
                     docker exec \
                         ${CONTAINER_NAME} \
                         isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_MetaNetX_upload_file.sh
-                echo " -- Load MetaNetX."
+                fi
+
+                # Test if MetaNetX has to be loaded
+                if [[ " ${LOADING_ARRAY[*]} " =~ "METANETX" ]]; then
+                    echo " -- Load MetaNetX."
+                        docker exec \
+                            ${CONTAINER_NAME} \
+                            isql-v 1111 dba "${PASSWORD}" ./dumps/upload_MetaNetX.sh
+                fi
+
+                # Test if MINCORE (pre_upload -> minimal data to run FORVM) has to be loaded
+                if [[ " ${LOADING_ARRAY[*]} " =~ "MINCORE" ]]; then
+                    echo " -- Load data."
+                        docker exec \
+                            ${CONTAINER_NAME} \
+                            isql-v 1111 dba "${PASSWORD}" ./dumps/pre_upload.sh
+                fi
+
+                # Test if ALLCORE (upload -> all data) has to be loaded
+                if [[ " ${LOADING_ARRAY[*]} " =~ "MAXCORE" ]]; then
+                    echo " -- Load data."
+                        docker exec \
+                            ${CONTAINER_NAME} \
+                            isql-v 1111 dba "${PASSWORD}" ./dumps/upload_data.sh
+                fi
+
+                # Test if CHEMONT has to be loaded
+                if [[ " ${LOADING_ARRAY[*]} " =~ "CHEMONT" ]]; then
+                    echo " -- Load ClassyFire."
                     docker exec \
                         ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload_MetaNetX.sh
-                # echo " -- Load data."
-                #     docker exec \
-                #         ${CONTAINER_NAME} \
-                #         isql-v 1111 dba "${PASSWORD}" ./dumps/pre_upload.sh
-                # echo " -- Load ClassyFire."
-                #     docker exec \
-                #         ${CONTAINER_NAME} \
-                #         isql-v 1111 dba "${PASSWORD}" ./dumps/upload_ClassyFire.sh
+                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload_ClassyFire.sh
+                fi
             fi
         ;;
         stop)
