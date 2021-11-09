@@ -92,11 +92,13 @@ if config.has_section("PUBCHEM"):
         # Create resource:
         resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
         if resource_maxcore:
-            upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_maxcore + "', '" + resource_uri + "');\n")
-            upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
+            with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
+                upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_maxcore + "', '" + resource_uri + "');\n")
+                upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
         if resource_mincore:
-            pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_mincore + "', '" + resource_uri + "');\n")
-            pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
+            with open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
+                pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_mincore + "', '" + resource_uri + "');\n")
+                pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
 
 # Elink
 if config.has_section("ELINK"):

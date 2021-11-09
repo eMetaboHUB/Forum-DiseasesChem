@@ -28,23 +28,29 @@ docker exec -t $dockvirtuoso bash -c '/usr/local/virtuoso-opensource/bin/isql-v 
 
 #### Config file:
 
-- [METANETX]
-  - todo: a boolean (True/False) telling if the data need to be downloaded
+In the configuration file, precise the section title to create the associate resource.
+
+Each section has its own properties detailed below. For instance, to download the MetaNetX resource, you must provide this section in the configuration file with its required attribute: *version*. The MeSH section does not required any attribute.
+
+For PubChem subsets, attributes are ordered lists of properties dedicated to each resource to be included. The order of element is key as the i*th* entry in all the list attribute must correspond to the same resource. As all the PubChem resources are not required to compute the FORUM associations, thoses subset resources are organised into two sets: 
+
+  -- the minimal core (*MINCORE*) loading only the PubChem subset resources that are required to compute the associations, such as: *References*, *PMID_CID*, etc ...
+
+  -- the maximal (or full) core (*MAXCORE*) which load all the PubChem subsets to mount the global endpoint.
+
+The *mincore* and *maxcore* attributes of the PubChem section are used to specified which content of each resource needs to be loaded for the *MINCORE* and/or *MAXCORE*. For instance, in the PubChem compound graph, only the triples setting the ChEBI classes of the compounds are required to compute the FORUM associations. Therefore in the *mincore* attribute, the mask provided for the PubChem compound resource is "*_type*.ttl.gz", whereas it is "*.ttl.gz" in the *MAXCORE* when we load all the data. 
+
+#### Configuration file in detail:
+
+- [METANETX]:
   - version: the version of MetaNetX (See [MetaNetX ftp](ftp://ftp.vital-it.ch/databases/metanetx/MNXref/))
-- [MESH]
-  - todo: a boolean (True/False) telling if the data need to be downloaded
-- [COMPOUND]
-  - todo: a boolean (True/False) telling if the data need to be downloaded
-  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: compound/general)
-- [DESCRIPTOR]
-  - todo: a boolean (True/False) telling if the data need to be downloaded
-  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: descriptor/compound)
-- [REFERENCE]
-  - todo: a boolean (True/False) telling if the data need to be downloaded
-  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: reference)
-- [INCHIKEY]
-  - todo: a boolean (True/False) telling if the data need to be downloaded
-  - dir_on_ftp: path to associated directory from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* at PubChem ftp server (ex: inchikey)
+- [MESH]: set this section to download MeSH
+- [PUBCHEM]
+  - dir_ftp: a list of paths to the directory associated with the PubChem subset resources from *ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/* to be included. Eg. ["compound/general", "descriptor/compound", "reference", "inchikey", "synonym", "source", "concept"]
+  - name: a list of the names of the PubChem subset resources. Eg. ["compound", "descriptor", "reference", "inchikey", "synonym", "source", "concept"]
+  - out_dir: a list of output directories to store resources in the Virtuoso shared directory. Eg. ["PubChem_Compound", "PubChem_Descriptor", "PubChem_Reference", "PubChem_InchiKey", "PubChem_Synonym", "PubChem_Source", "PubChem_Concept"]
+  - mincore: a list of mask patterns to match against the files in the resource directory (See http://docs.openlinksw.com/virtuoso/fn_ld_dir_all/). If a mask is provided, the corresponding files will be integrated for the minimal dataset of FORUM (the *MINCORE* set) and therefore in the *pre_upload.sh* file. If 'false' is indicated, it will not be included. Eg. ["*_type*.ttl.gz", false, "*.ttl.gz", false, false, false, false]
+  - maxcore: a list of mask patterns to match against the files in the resource directory (See http://docs.openlinksw.com/virtuoso/fn_ld_dir_all/). If a mask is provided, the corresponding files will be integrated for the full dataset of FORUM (the *MAXCORE* set) and therefore in the *upload_data.sh* file. If 'false' is indicated, it will not be included. Eg. ["*.ttl.gz", "*.ttl.gz", "*.ttl.gz", "*.ttl.gz", "*.ttl.gz", "*.ttl.gz", "*.ttl.gz"]
 - [ELINK]
   - todo: a boolean (True/False) telling if the data need to be downloaded
   - run_as_test: a boolean (True/False) indicating if the Elink processes have to be run as test (only the first 30000 pmids) or full

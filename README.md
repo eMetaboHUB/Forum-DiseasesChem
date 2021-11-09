@@ -218,7 +218,13 @@ The ChEBI ontology file is often updated and the actual version of the ChEBI ont
 *Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt ontology seems to be stable.
 
 **Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
-pre_upload.sh is a light version of upload_data.sh, only loading data needed to compute associations. Thus, it does only load a small part of PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs, which are huge graphs. Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
+When building the FORUM KG, all the PubChem data gathered to build the complete KG are not required to compute the FORUM associations. In addition, some PubChem subset resources (compound, descriptors, synonym, ...) are very larges, and may contain several billion of triples. Therefore, two versions of the FORUM KG are prepared: 
+
+- the minimal core (MINCORE): loading only the PubChem subset resources that are required to compute the associations, such as: *References* or *PMID_CID*. This upload is prepared in *pre_upload.sh* which is a light version of upload_data.sh, only loading data needed to compute associations. For instance, it does only load a small part of the PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs. See *build_RDF_store* for details about this configuration.
+
+- the maximal (or full) core (*MAXCORE*) loading all the PubChem subset resources to build the complete KG. This complete upload is prepared in *upload_data.sh*
+
+ Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
 
 
 ##### 2.1.2 - Integration of metabolic networks.
@@ -284,6 +290,7 @@ The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfB
 
 *Warnings:* In the provided configuration, the port used by the docker-compose holding the Virtuoso triplestore is 9980. Thus, the url used to request the KG during the computation is http://localhost:9980/sparql/. So if you change the port in the docker-compose.yml, be sure to also changed it in the configuration file for requesting the endpoint.
 
+
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
   - s: path to the shared directory **from** the virtuoso directory (eg. *share* if you use the proposed settings)
@@ -292,7 +299,7 @@ The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfB
     - *SBML*: The metabolic network in a RDF format + the PubChem and MetaNetX Id-mapping graphs (Cf. SBML_upgrade and w_upload_metabolic_network.sh)
     - *METANETX*: The MetaNetX KG.
     - *MINCORE*: The minimal core data that have to be loaded in order to compute FORUM associations (use pre_upload.sh)
-    - *MAXCORE*: All the FORUM data, like they are available on the public KG.
+    - *MAXCORE*: All the FORUM data, like they are available on the public KG (upload_data.sh).
     - *CHEMONT*: The data derived from ClassyFire.
 
 For instance to intergrate FORUM minimal data with SBML and MetaNetX use: 
