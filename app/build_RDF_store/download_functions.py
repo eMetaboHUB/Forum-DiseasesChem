@@ -16,7 +16,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     The function return the version created and the uri of this new version. in case of errors during wget downloading, errors are printed in dl_pubchem_*.log
     """
     # Intialyze .log files
-    with open(out_log + "dl_pubchem_" + request_ressource + ".log", "wb") as f_log:
+    with open(os.path.join(out_log, "dl_pubchem_" + request_ressource + ".log"), "wb") as f_log:
         pass
     # On télécharge le fichier void et les données
     print("Trying to check last available version of PubChem RDF on ftp ...", end = '')
@@ -37,7 +37,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     print(" Ok\nLast PubChem " + request_ressource + "RDF version found on ftp server is : " + pubchem_last_v)
     print("Check if PubChem " + request_ressource + " RDF version " + pubchem_last_v + " was already download: ", end = '')
     # From last version date, if associated void.ttl file already exists, exit and return pubchem last version and associated uri
-    test_r_info = glob.glob(out_path + request_ressource + "/" + pubchem_last_v + "/" + "void.ttl")
+    test_r_info = glob.glob(os.path.join(out_path, request_ressource, pubchem_last_v, "void.ttl"))
     if len(test_r_info) == 1:
         print("Yes\nPubChem " + request_ressource + " RDF version " + pubchem_last_v + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_last_v)
@@ -48,7 +48,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     # Download PubChem data
     print("Trying to dowload PubChem void.ttl file ...", end = '')
     # Create output directory for requested ressource and last available version
-    version_path = out_path + request_ressource + "/" + pubchem_last_v + "/"
+    version_path = os.path.join(out_path, request_ressource, pubchem_last_v)
     if not os.path.exists(version_path):
         os.makedirs(version_path)
     try:
@@ -56,19 +56,19 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     except subprocess.CalledProcessError as e:
         print("Error during trying to download PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
         print(e)
-        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(os.path.join(out_log, "dl_pubchem_" + request_ressource + ".log"), "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print(" Ok\nTrying to read Pubchem void.ttl file ...", end = '')
     # On parse le fichier des metadatas
     g_metadata = rdflib.Graph()
-    g_metadata.parse(version_path + "void.ttl", format='turtle')
+    g_metadata.parse(os.path.join(version_path, "void.ttl"), format='turtle')
     try:
-        subprocess.run("rm " + version_path + "void.ttl", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("rm " + os.path.join(version_path, "void.ttl"), shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print("Error during trying to remove PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
         print(e)
-        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(os.path.join(out_log, "dl_pubchem_" + request_ressource + ".log"), "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print(" Ok\nTrying to dowload Pubchem " + dir + " directory ...", end = '')
@@ -78,7 +78,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     except subprocess.CalledProcessError as e:
         print("Error during trying to dowload PubChem " + dir + " directory, check dl_pubchem_" + request_ressource + ".log")
         print(e)
-        with open(out_log + "dl_pubchem_" + request_ressource + ".log", "ab") as f_log:
+        with open(os.path.join(out_log, "dl_pubchem_" + request_ressource + ".log"), "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print(" Ok\nTrying to build Pubchem " + request_ressource + " new ressource version ...", end = '')
@@ -91,7 +91,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
             continue
         ressource_version.add_version_attribute(predicate = p, object = o)
     # On écrit le graph le fichier
-    ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     g_metadata = None
     print(" Ok\nEnd !")
     print("=================================================================================\n")
@@ -191,7 +191,7 @@ def download_MeSH(out_dir, out_log):
     ressource_version.version_graph.serialize(os.path.join(out_path, "void.ttl"), format = 'turtle')
     # On supprime le fichier void initial
     try:
-        subprocess.run("rm " + out_path + "void_1.0.0.ttl ", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("rm " + os.path.join(out_path, "void_1.0.0.ttl"), shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print("Error during trying to remove file, check dl_mesh.log")
         print(e)
@@ -206,9 +206,9 @@ def download_MetaNetX(out_dir, out_log, version):
     # Intialyze logs
     with open(out_log + "dl_metanetx.log", "wb") as f_log:
         pass
-    version_path = out_dir + version + "/"
+    version_path = os.path.join(out_dir, version)
     print("Check if MetaNetX version " + version + " was already download: ", end = '')
-    test_r_info = glob.glob(version_path + "void.ttl")
+    test_r_info = glob.glob(os.path.join(version_path, "void.ttl"))
     if len(test_r_info) == 1:
         print("Yes\nMetaNetX RDF version " + version + " is already downloaded, end.\n\n")
         ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
@@ -224,14 +224,14 @@ def download_MetaNetX(out_dir, out_log, version):
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
         print(e)
-        with open(out_log + "dl_metanetx.log", "ab") as f_log:
+        with open(os.path.join(out_log, "dl_metanetx.log"), "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
     print("Ok\nCreate new MetaNetX resource: ")
     ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
     print("Try to parse MetaNetX graph to extract metadata ... ", end = '')
     g_MetaNetX = rdflib.Graph()
-    with gzip.open(version_path + "metanetx.ttl.gz", "rb") as f_MetaNetX:
+    with gzip.open(os.path.join(version_path, "metanetx.ttl.gz"), "rb") as f_MetaNetX:
         g_MetaNetX.parse(f_MetaNetX, format="turtle")
     print("Ok\nExtract metadata ... ", end = '')
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID["Dataset"])
@@ -240,7 +240,7 @@ def download_MetaNetX(out_dir, out_log, version):
     ressource_version.add_version_attribute(predicate = VOID["dataDump"], object = rdflib.URIRef("ftp://ftp.vital-it.ch/databases/metanetx/MNXref/" + version + "/metanetx.ttl.gz"))
     ressource_version.add_version_attribute(predicate = VOID["triples"], object = rdflib.Literal(len(g_MetaNetX), datatype=XSD.long ))
     ressource_version.add_version_attribute(predicate = VOID["distinctSubjects"], object = rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()]))))
-    ressource_version.version_graph.serialize(version_path + "void.ttl", format = 'turtle')
+    ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     # Clear memory
     g_MetaNetX = None
     print("Ok\nEnd")

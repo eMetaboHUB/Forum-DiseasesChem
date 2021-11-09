@@ -66,17 +66,17 @@ ClassyFire_direct_p = Database_ressource_version(ressource = "ClassyFire/direct-
 ClassyFire_alternative_p = Database_ressource_version(ressource = "ClassyFire/alternative-parents", version = version)
 
 # On initialise les path où exporter les graphs :
-path_direct_p = path_to_share + ClassyFire_direct_p.ressource + "/" + ClassyFire_direct_p.version + "/"
-path_alternative_p = path_to_share + ClassyFire_alternative_p.ressource + "/" + ClassyFire_alternative_p.version + "/"
+path_direct_p = os.path.join(args.out, ClassyFire_direct_p.ressource, ClassyFire_direct_p.version)
+path_alternative_p = os.path.join(args.out, ClassyFire_alternative_p.ressource, ClassyFire_alternative_p.version)
 
 # Check if a previous version already exists :
-if (len(glob.glob(path_direct_p + "void.ttl")) == 1) and (len(glob.glob(path_alternative_p + "void.ttl")) == 1):
+if (len(glob.glob(os.path.join(path_direct_p, "void.ttl"))) == 1) and (len(glob.glob(os.path.join(path_alternative_p, "void.ttl"))) == 1):
     print("This version already exist, skip computation.")
 else:
-    pmids_cids_graph_list = get_graph_list(path_to_share, "PMID_CID/", "*.ttl.gz")
-    inchikeys_graph_list = get_graph_list(path_to_share, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  
+    pmids_cids_graph_list = get_graph_list(args.out, "PMID_CID/", "*.ttl.gz")
+    inchikeys_graph_list = get_graph_list(args.out, "PubChem_InchiKey/inchikey/", "pc_inchikey2compound_*.ttl.gz")  
     # Create CID - InchiLKey:
-    path_inchiKey = path_out + "CID_InchiKeys.csv"
+    path_inchiKey = os.path.join(path_out, "CID_InchiKeys.csv")
     extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list, path_inchiKey)
     
     # Read input file
@@ -105,12 +105,12 @@ else:
 version = ClassyFire_direct_p.version
 
 # Write ouput file header :
-with open(path_to_share + "upload_ClassyFire.sh", "w") as upload_f:
+with open(os.path.join(path_to_share, "upload_ClassyFire.sh"), "w") as upload_f:
     upload_f.write("delete from DB.DBA.load_list ;\n")
-    upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', '*.ttl.gz', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/ClassyFire/direct-parent/" + version + "/', 'void.ttl', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/ClassyFire/alternative-parents/" + version + "/', '*.ttl.gz', '" + str(ClassyFire_alternative_p.uri_version) + "');\n")
-    upload_f.write("ld_dir_all ('./dumps/ClassyFire/alternative-parents/" + version + "/', 'void.ttl', '" + str(ClassyFire_alternative_p.uri_version) + "');\n")
+    upload_f.write("ld_dir_all ('" + os.path.join("./dumps/ClassyFire/direct-parent/", version, '') + "', '*.ttl.gz', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
+    upload_f.write("ld_dir_all ('" + os.path.join("./dumps/ClassyFire/direct-parent/", version, '') + "', 'void.ttl', '" + str(ClassyFire_direct_p.uri_version) + "');\n")
+    upload_f.write("ld_dir_all ('" + os.path.join("./dumps/ClassyFire/alternative-parents/", version, '') + "', '*.ttl.gz', '" + str(ClassyFire_alternative_p.uri_version) + "');\n")
+    upload_f.write("ld_dir_all ('" + os.path.join("./dumps/ClassyFire/alternative-parents/", version, '') + "', 'void.ttl', '" + str(ClassyFire_alternative_p.uri_version) + "');\n")
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")
     upload_f.write("checkpoint;\n")

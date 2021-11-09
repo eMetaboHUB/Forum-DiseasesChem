@@ -10,6 +10,7 @@ import glob
 import datetime
 import gzip
 import csv
+import os
 
 # Prepare TimeoutExceptions
 class TimeOutException(Exception):
@@ -33,8 +34,8 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
             continue
         add_triples(row['CID'], chemont_ids, g_direct_parent, g_alternative_parent)
     print("Serialyze graphs")
-    g_direct_parent.serialize(destination=path_direct_p + "classyfire_direct_parent_" + str(df_index + 1) + ".ttl", format='turtle')
-    g_alternative_parent.serialize(destination=path_alternative_p + "classyfire_alternative_parent_" + str(df_index + 1) + ".ttl", format='turtle')
+    g_direct_parent.serialize(destination = os.path.join(path_direct_p, "classyfire_direct_parent_" + str(df_index + 1) + ".ttl"), format='turtle')
+    g_alternative_parent.serialize(destination = os.path.join(path_alternative_p, "classyfire_alternative_parent_" + str(df_index + 1) + ".ttl"), format='turtle')
     # Compress files:
     try:
         subprocess.run("gzip " + path_direct_p + "classyfire_direct_parent_" + str(df_index + 1) + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
@@ -56,33 +57,31 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
     signal.alarm(60)
     time.sleep(1)
     try:
-        r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey),
-                     headers={
-                         "Content-Type": "application/json"})
+        r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey), headers = {"Content-Type": "application/json"})
         r.raise_for_status()
     # Check timeout: 
     except TimeOutException:
         print("Request timeout was reached (60s)!")
-        with open(path_out + "classyFire.log", "a") as f_log:
+        with open(os.path.join(path_out, "classyFire.log"), "a") as f_log:
             f_log.write("CID " + CID + " - Request Timeout")
-        with open(path_out + "classyFire_error_ids.log", "a") as id_log:
+        with open(os.path.join(path_out, "classyFire_error_ids.log"), "a") as id_log:
                 id_log.write(CID + "\n")
         signal.alarm(0)
         return False
     # Check if there was an error while sending request: 
     except requests.exceptions.RequestException as e:
         print("Error while trying to retrieve classication for CID: " + CID + ", Check logs.")
-        with open(path_out + "classyFire.log", "a") as f_log:
+        with open(os.path.join(path_out, "classyFire.log"), "a") as f_log:
                 f_log.write("CID " + CID + " - HTTP response status codes: ")
                 f_log.write(str(e) + "\n")
-        with open(path_out + "classyFire_error_ids.log", "a") as id_log:
+        with open(os.path.join(path_out, "classyFire_error_ids.log"), "a") as id_log:
                 id_log.write(CID + "\n")
         signal.alarm(0)
         return False
     # Test if the element is classified
     classif = json.loads(r.text)
     if len(classif) == 0:
-        with open(path_out + "ids_no_classify.log", "a") as no_classif_log:
+        with open(os.path.join(path_out, "ids_no_classify.log"), "a") as no_classif_log:
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
         signal.alarm(0)
         return False
@@ -99,11 +98,11 @@ def parse_entities(CID, classif, path_out):
         chemont_ids = [classif["direct_parent"]['chemont_id'].split(':')[1]] + [alt_p['chemont_id'].split(':')[1] for alt_p in classif["alternative_parents"]]
     except:
         print("Error while trying to parse response for CID: " + CID + ", Check logs.")
-        with open(path_out + "classyFire.log", "a") as f_log:
+        with open(os.path.join(path_out, "classyFire.log"), "a") as f_log:
             f_log.write("CID " + CID + " - Error while parsing response: ")
             e = sys.exc_info()[0]
             f_log.write(str(e) + "\n")
-        with open(path_out + "classyFire_error_ids.log", "a") as id_log:
+        with open(os.path.join(path_out, "classyFire_error_ids.log"), "a") as id_log:
             id_log.write(CID + "\n")
         return False
     return(chemont_ids)
@@ -130,9 +129,9 @@ def get_creation_date(path):
 
 
 def get_graph_list(path_to_share, path_from_share, regex):
-    all_versions_path = glob.glob(path_to_share + path_from_share + "*")
+    all_versions_path = glob.glob(os.path.join(path_to_share, path_from_share, "*"))
     if len(all_versions_path) == 0:
-        print("Can't find directories at " + path_to_share + path_from_share + "*. \n This step requires PMID_CID and PubChem InchiKey, you may check in config files to see if both are in todo and other logs.")
+        print("Can't find directories at " + os.path.join(path_to_share, path_from_share, "*") + ".\nThis step requires PMID_CID and PubChem InchiKey, you may check in config files to see if both are in todo and other logs.")
         sys.exit(3)
     all_creation_date = [get_creation_date(p) for p in all_versions_path]
     most_recent_date = sorted(all_creation_date)[-1]
@@ -238,6 +237,6 @@ def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, gra
     ClassyFire_direct_p.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(sum([g[1] for g in graph_sizes]), datatype=XSD.long ))
     ClassyFire_alternative_p.add_version_attribute(VOID["triples"], rdflib.Literal(sum([g[2] for g in graph_sizes]), datatype=XSD.long ))
     ClassyFire_alternative_p.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(sum([g[3] for g in graph_sizes]), datatype=XSD.long ))
-    ClassyFire_direct_p.version_graph.serialize(destination= path_direct_p + "void.ttl", format='turtle')
-    ClassyFire_alternative_p.version_graph.serialize(destination= path_alternative_p + "void.ttl", format='turtle')
+    ClassyFire_direct_p.version_graph.serialize(destination = os.path.join(path_direct_p, "void.ttl"), format='turtle')
+    ClassyFire_alternative_p.version_graph.serialize(destination = os.path.join(path_alternative_p, "void.ttl"), format='turtle')
     print("Ok")

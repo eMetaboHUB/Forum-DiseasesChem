@@ -85,21 +85,21 @@ class Elink_ressource_creator:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
         except TimeOutException:
             print("\nRequest timeout was reached !")
-            with open(add_f_out_path + "elink.log", "a") as f_log:
+            with open(os.path.join(add_f_out_path, "elink.log"), "a") as f_log:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write("Request Timeout\n")
                 signal.alarm(0)
                 return False
         except eutils.EutilsError as fail_request:
             print("\nRequest on Eutils for current compound pack has failed during process, with error name: %s \n" % (fail_request))
-            with open(add_f_out_path + "elink.log", "a") as f_log:
+            with open(os.path.join(add_f_out_path, "elink.log"), "a") as f_log:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write(str(fail_request) + "\n")
                 signal.alarm(0)
             return False
         except (ValueError, requests.exceptions.RequestException) as e:
             print("\nThere was an request error: %s \n-- Compound cids is added to request_failure list" %(e))
-            with open(add_f_out_path + "elink.log", "a") as f_log:
+            with open(os.path.join(add_f_out_path, "elink.log"), "a") as f_log:
                 f_log.write("from id " + str(index_list * pack_size + 1) + " to id " + str((index_list + 1) * pack_size) + " :\n")
                 f_log.write(str(e) + "\n")
                 signal.alarm(0)
@@ -143,7 +143,7 @@ class Elink_ressource_creator:
             self.g_linked_id.add((self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id], self.namespaces[self.primary_predicate[0]][self.primary_predicate[1]], self.namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
     
     def fill_ids_link_endpoint_graph(self, linking_id, linked_id_list, link_name_list):
-        """This function create a rdflib graph containing all the cid - pmid endpoints associations contains in the Ensemble_pccompound object.
+        """This function create a rdflib graph containing all the cid - pmid endpoints associations.
         - linking_id: The linking identifier
         - linked_id_list: the linked id list from the request result
         - link_name_list: the link_name list from the request result
@@ -188,8 +188,8 @@ class Elink_ressource_creator:
         - out_dir: a path to the out directory
         - uri_targeted_ressources: A list of uri targeted ressource. As the association graph provides links between two ressources, it can be defined as a LinkSet. The targeted ressources for which the graph is providing associations are displayed is the metadata graph.
         """
-        path_out_1 = out_dir + self.ressource_version.ressource + "/" + self.ressource_version.version + "/"
-        path_out_2 = out_dir + self.ressource_version_endpoint.ressource + "/" + self.ressource_version_endpoint.version + "/"
+        path_out_1 = os.path.join(out_dir, self.ressource_version.ressource, self.ressource_version.version)
+        path_out_2 = os.path.join(out_dir, self.ressource_version_endpoint.ressource, self.ressource_version_endpoint.version)
         # On ajoute les infos pour la première ressource:
         self.ressource_version.add_version_attribute(RDF["type"], VOID["Linkset"])
         for uri_targeted_ressource in uri_targeted_ressources:
@@ -205,8 +205,8 @@ class Elink_ressource_creator:
         self.ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id, datatype=XSD.long ))
         self.ressource_version_endpoint.add_version_attribute(VOID["triples"], rdflib.Literal(self.n_triples_g_linked_id_endpoint, datatype=XSD.long ))
         self.ressource_version_endpoint.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal(self.n_subjects_g_linked_id_endpoint, datatype=XSD.long ))
-        self.ressource_version.version_graph.serialize(destination= path_out_1 + "void.ttl", format='turtle')
-        self.ressource_version_endpoint.version_graph.serialize(destination= path_out_2 + "void.ttl", format='turtle')
+        self.ressource_version.version_graph.serialize(destination= os.path.join(path_out_1, "void.ttl"), format='turtle')
+        self.ressource_version_endpoint.version_graph.serialize(destination= os.path.join(path_out_2, "void.ttl"), format='turtle')
         print(" Ok")
     
     def create_ressource(self, out_dir, id_list, pack_size, query_builder, max_size, add_f_out_path):
@@ -219,15 +219,15 @@ class Elink_ressource_creator:
         - max_size : the maximal number of pmids by files
         """
         # Intialyze .log file :
-        with open(add_f_out_path + "elink.log", "w") as f_log:
+        with open(os.path.join(add_f_out_path, "elink.log"), "w") as f_log:
             pass
         # Création des fichiers de sorties :
-        add_files_path = add_f_out_path + "additional_files/" + self.ressource_version.version + "/"
+        add_files_path = os.path.join(add_f_out_path, "additional_files", self.ressource_version.version)
         if not os.path.exists(add_files_path):
             os.makedirs(add_files_path)
         # On prépare les répertoire : 
-        path_out_1 = out_dir + self.ressource_version.ressource + "/" + self.ressource_version.version + "/"
-        path_out_2 = out_dir + self.ressource_version_endpoint.ressource + "/" + self.ressource_version_endpoint.version + "/"
+        path_out_1 = os.path.join(out_dir, self.ressource_version.ressource, self.ressource_version.version)
+        path_out_2 = os.path.join(out_dir, self.ressource_version_endpoint.ressource, self.ressource_version_endpoint.version)
         if not os.path.exists(path_out_1):
             os.makedirs(path_out_1)
         if not os.path.exists(path_out_2):
@@ -235,7 +235,7 @@ class Elink_ressource_creator:
         id_packed_list = [id_list[i * pack_size:(i + 1) * pack_size] for i in range((len(id_list) + pack_size - 1) // pack_size )]
         print("There are %d packed lists" %(len(id_packed_list)))
         # On réinitialise le fichier request failure et l'attribut (après avoir init packed_list au cas où on est sur un run à partir de self.request_failure):
-        with open(add_files_path + "linking_ids_request_failed.txt", 'w') as f:
+        with open(os.path.join(add_files_path, "linking_ids_request_failed.txt"), 'w') as f:
             pass
         self.request_failure = list()
         # On initialize les deux premières instances des graphs g_linked_id & g_linked_id_endpoint : 
@@ -247,7 +247,7 @@ class Elink_ressource_creator:
             if not test_append:
                 print(" <!!!> Fail <!!!> \n There was an issue while querying NCBI server, check parameters. Try to continue to the next packed list. All ids are exported to request failure file.")
                 self.request_failure.extend(id_packed_list[index_list])
-                with open(add_files_path + "linking_ids_request_failed.txt", 'a') as f_request_failure:
+                with open(os.path.join(add_files_path, "linking_ids_request_failed.txt"), 'a') as f_request_failure:
                     for id_fail in id_packed_list[index_list]:
                         f_request_failure.write("%s\n" %(id_fail))
                 continue
@@ -260,22 +260,22 @@ class Elink_ressource_creator:
                 print("\tTry to write and compress graph as .ttl in %s and %s ..." %(path_out_1, path_out_2), end = '')
                 # On export les graphs :
                 try:
-                    self.g_linked_id.serialize(destination=path_out_1 + g_linked_id_name + ".ttl", format='turtle')
+                    self.g_linked_id.serialize(destination = os.path.join(path_out_1, g_linked_id_name + ".ttl"), format='turtle')
                 except Exception as e:
                     print("Error while trying to serialize linked id graph at " + path_out_1 + g_linked_id_name + " : " +str(e))
                     sys.exit(3)
                 try:
-                    self.g_linked_id_endpoint.serialize(destination=path_out_2 + g_linked_id_endpoint_name + ".ttl", format='turtle')
+                    self.g_linked_id_endpoint.serialize(destination = os.path.join(path_out_2, g_linked_id_endpoint_name + ".ttl"), format='turtle')
                 except Exception as e:
                     print("Error while trying to serialize linked id graph endpoint at " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)
                 # On zip et on ajoute le dataDump:
                 try:
-                    subprocess.run("gzip -f " + path_out_1 + g_linked_id_name + ".ttl" + " " + path_out_2 + g_linked_id_endpoint_name + ".ttl", shell = True, check=True, stderr = subprocess.PIPE)
+                    subprocess.run("gzip -f " + os.path.join(path_out_1, g_linked_id_name + ".ttl") + " " + os.path.join(path_out_2, g_linked_id_endpoint_name + ".ttl"), shell = True, check = True, stderr = subprocess.PIPE)
                     self.ressource_version.add_DataDump(g_linked_id_name + ".ttl.gz", self.ftp)
                     self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".ttl.gz", self.ftp)
                 except subprocess.CalledProcessError as e:
-                    print("Error while trying to compress files and add dataDump at " + path_out_1 + g_linked_id_name + " and " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
+                    print("Error while trying to compress files and add dataDump at " + os.path.join(path_out_1, g_linked_id_name) + " and " + os.path.join(path_out_2, g_linked_id_endpoint_name) + " : " + str(e))
                     sys.exit(3)
                 # On incrémente les nombres de sujets et de triples :
                 print(" Ok\n\tIncrement numbers of triples and subjects from added triples ...", end = '')
@@ -283,26 +283,26 @@ class Elink_ressource_creator:
                 self.n_triples_g_linked_id_endpoint += len(self.g_linked_id_endpoint)
                 self.n_subjects_g_linked_id += len(self.get_all_linking_ids())
                 self.n_subjects_g_linked_id_endpoint += len(self.get_all_linked_id_endpoints())
-                with open(add_files_path + "s_metdata.txt", "w") as s_metadata_f:
+                with open(os.path.join(add_files_path, "s_metdata.txt"), "w") as s_metadata_f:
                     s_metadata_f.write("%d\n" %(self.n_triples_g_linked_id))
                     s_metadata_f.write("%d\n" %(self.n_triples_g_linked_id_endpoint))
                     s_metadata_f.write("%d\n" %(self.n_subjects_g_linked_id))
                     s_metadata_f.write("%d\n" %(self.n_subjects_g_linked_id_endpoint))
                 # On export les cid successful :
                 print(" Ok\n\tTry tp export successful linking ids in " + add_files_path + "successful_linking_ids.txt ...", end = '')
-                with open(add_files_path + "successful_linking_ids.txt", 'a') as f_success:
+                with open(os.path.join(add_files_path, "successful_linking_ids.txt"), 'a') as f_success:
                     for success_id in self.get_all_linking_ids():
                         f_success.write("%s\n" %(success_id))
                 print(" Ok\n\tTry tp export linking ids without linked_ids in " + add_files_path + "/linking_ids_without_linked_ids.txt ...", end = '')
                 # On export les append failures :
-                with open(add_files_path + "linking_ids_without_linked_ids.txt", 'a') as f_append_failure:
+                with open(os.path.join(add_files_path, "linking_ids_without_linked_ids.txt"), 'a') as f_append_failure:
                     for append_failure_id in self.append_failure:
                         f_append_failure.write("%s\n" %(append_failure_id))
                 print(" Ok\n\tTry to append new linked ids to the global set ...", end = '')
                 self.all_linked_ids = self.all_linked_ids.union(self.get_all_linked_ids())
                 print(" Ok\n\tExport all linked ids ...", end = '')
                 # Use write instead of append ('a') to overwrite the file at each new call of the function because only union of linked_ids shouls be mapped, and with append it may have duplicates if there are supplementary trys for request failures
-                with open(add_files_path + "all_linked_ids.txt", 'w') as f_all_linked_ids:
+                with open(os.path.join(add_files_path, "all_linked_ids.txt"), 'w') as f_all_linked_ids:
                     for linked_id in self.all_linked_ids:
                         f_all_linked_ids.write("%s\n" %(linked_id))
                 print(" Ok\n\tTry to clear objects for next iteration ...", end = '')
