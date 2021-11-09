@@ -39,10 +39,6 @@ namespaces = {
     "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 }
 
-# Reading paths :
-# General
-out_path = args.out + "/"
-additional_files_out_path = args.log + "/"
 # Reading booleans :
 todo_MetaNetX = config['METANETX'].getboolean("todo")
 todo_MeSH = config['MESH'].getboolean("todo")
@@ -55,7 +51,7 @@ todo_Elink = config['ELINK'].getboolean("todo")
 ftp = config['FTP'].get('ftp')
 
 # Write ouput file header :
-with open(out_path + "upload_data.sh", "w") as upload_f, open(out_path + "pre_upload.sh", "w") as pre_upload:
+with open(os.path.join(args.out, "upload_data.sh"), "w") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "w") as pre_upload:
     upload_f.write("delete from DB.DBA.load_list ;\n")
     pre_upload.write("delete from DB.DBA.load_list ;\n")
 
@@ -63,47 +59,47 @@ with open(out_path + "upload_data.sh", "w") as upload_f, open(out_path + "pre_up
 if todo_MetaNetX:
     MetaNetX_out_dir = "MetaNetX"
     MetaNetX_version = config['METANETX'].get("version")
-    MetaNetX_uri = download_MetaNetX(out_path + MetaNetX_out_dir + "/", additional_files_out_path, MetaNetX_version)
-    with open(out_path + "upload_data.sh", "a") as upload_f:
-        upload_f.write("ld_dir_all ('./dumps/" + MetaNetX_out_dir + "/" + MetaNetX_version + "/', 'metanetx.ttl.gz', '" + MetaNetX_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + MetaNetX_out_dir + "/" + MetaNetX_version + "/', 'void.ttl', '" + MetaNetX_uri + "');\n")
+    MetaNetX_uri = download_MetaNetX(os.path.join(args.out, MetaNetX_out_dir), args.log, MetaNetX_version)
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'metanetx.ttl.gz', '" + MetaNetX_uri + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'void.ttl', '" + MetaNetX_uri + "');\n")
 
 # MeSH
 if todo_MeSH:
     mesh_out_dir = "MeSH"
-    mesh_version, mesh_uri = download_MeSH(out_path + mesh_out_dir + "/", additional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
-        upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'mesh.nt', '" + mesh_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
+    mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), args.log)
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir,  mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")
         # Also for pre-upload:
-        pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'mesh.nt', '" + mesh_uri + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/" + mesh_out_dir + "/" + mesh_version + "/', 'void.ttl', '" + mesh_uri + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")
         
 # References
 if todo_Reference:
     reference_out_dir = "PubChem_Reference"
     reference_r_name = "reference"
     reference_dir_on_ftp = config['REFERENCE'].get('dir_on_ftp')
-    reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, out_path + reference_out_dir + "/", additional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
-        upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
+    reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, os.path.join(args.out, reference_out_dir), args.log)
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', '*.ttl.gz', '" + reference_uri + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', 'void.ttl', '" + reference_uri + "');\n")
         # Also for pre-upload:
-        pre_upload.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', '*.ttl.gz', '" + reference_uri + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/" + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/', 'void.ttl', '" + reference_uri + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', '*.ttl.gz', '" + reference_uri + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', 'void.ttl', '" + reference_uri + "');\n")
 
 # Compounds
 if todo_Compound:
     compound_out_dir = "PubChem_Compound"
     compound_r_name = "compound"
     compound_dir_on_ftp = config['COMPOUND'].get('dir_on_ftp')
-    compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, out_path + compound_out_dir + "/", additional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
-        upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*.ttl.gz', '" + compound_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
+    compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, os.path.join(args.out, compound_out_dir), args.log)
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', '*.ttl.gz', '" + compound_uri + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', 'void.ttl', '" + compound_uri + "');\n")
         # For pre-upload, we need just type to compute with ChEBI:
-        pre_upload.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', '*_type*.ttl.gz', '" + compound_uri + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/" + compound_out_dir + "/" + compound_r_name + "/" + compound_version + "/', 'void.ttl', '" + compound_uri + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', '*_type*.ttl.gz', '" + compound_uri + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', 'void.ttl', '" + compound_uri + "');\n")
 
 
 # Descriptors
@@ -111,20 +107,20 @@ if todo_Descriptor:
     descriptor_out_dir = "PubChem_Descriptor"
     descriptor_r_name = "descriptor"
     descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
-    descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, out_path + descriptor_out_dir + "/", additional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f:
-        upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', '*.ttl.gz', '" + descriptor_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + descriptor_out_dir + "/" + descriptor_r_name + "/" + descriptor_version + "/', 'void.ttl', '" + descriptor_uri + "');\n")
+    descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, os.path.join(args.out, descriptor_out_dir), args.log)
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", descriptor_out_dir, descriptor_r_name, descriptor_version, '') + "', '*.ttl.gz', '" + descriptor_uri + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", descriptor_out_dir, descriptor_r_name, descriptor_version, '') + "', 'void.ttl', '" + descriptor_uri + "');\n")
 
 # InchiKey
 if todo_InchiKey:
     inchikey_out_dir = "PubChem_InchiKey"
     inchikey_r_name = "inchikey"
     inchikey_dir_on_ftp = config['INCHIKEY'].get('dir_on_ftp')
-    inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, out_path + inchikey_out_dir + "/", additional_files_out_path)
-    with open(out_path + "upload_data.sh", "a") as upload_f:
-        upload_f.write("ld_dir_all ('./dumps/" + inchikey_out_dir + "/" + inchikey_r_name + "/" + inchikey_version + "/', '*.ttl.gz', '" + inchikey_uri + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/" + inchikey_out_dir + "/" + inchikey_r_name + "/" + inchikey_version + "/', 'void.ttl', '" + inchikey_uri + "');\n")
+    inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, os.path.join(args.out, inchikey_out_dir), args.log)
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", inchikey_out_dir, inchikey_r_name, inchikey_version, '') + "', '*.ttl.gz', '" + inchikey_uri + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", inchikey_out_dir, inchikey_r_name, inchikey_version, '') + "', 'void.ttl', '" + inchikey_uri + "');\n")
 
 # Elink
 if todo_Elink:
@@ -155,36 +151,36 @@ if todo_Elink:
     # If version was set to None, it has been transform to date in the Elink_ressource_creator objects, if no None it was keeped
     pmid_cid_version = pmid_cid.ressource_version.version
     # Test if associations files from a previous attempt exists :
-    version_add_f_path = additional_files_out_path + "additional_files/" + pmid_cid_version + "/"
-    if (os.path.exists(version_add_f_path + "all_linking_ids.txt") and
-        os.path.exists(version_add_f_path + "successful_linking_ids.txt") and
-        os.path.exists(version_add_f_path + "linking_ids_without_linked_ids.txt") and
-        os.path.exists(version_add_f_path + "all_linked_ids.txt") and
-        os.path.exists(version_add_f_path + "s_metdata.txt")):
+    version_add_f_path = os.path.join(args.log, "additional_files", pmid_cid_version)
+    if (os.path.exists(os.path.join(version_add_f_path, "all_linking_ids.txt")) and
+        os.path.exists(os.path.join(version_add_f_path, "successful_linking_ids.txt")) and
+        os.path.exists(os.path.join(version_add_f_path, "linking_ids_without_linked_ids.txt")) and
+        os.path.exists(os.path.join(version_add_f_path, "all_linked_ids.txt")) and
+        os.path.exists(os.path.join(version_add_f_path, "s_metdata.txt"))):
         # If additional files from a previous attempt was found, try to parse them to restart from what has been already done
         # Initialyze pmid list as set to compute subtracting
         all_pmids_set = set()
         print("Cache files from a previous attempt was found.\n")
         print("Read and parse " + version_add_f_path + "all_linking_ids.txt ... ", end = '')
-        with open(version_add_f_path + "all_linking_ids.txt", "r") as all_linking_ids_f:
+        with open(os.path.join(version_add_f_path, "all_linking_ids.txt"), "r") as all_linking_ids_f:
             for id in all_linking_ids_f:
                 all_pmids_set.add(id.rstrip())
         
         print("Ok\nRead and parse " + version_add_f_path + "successful_linking_ids.txt ...", end = '')
         successful_linking_ids_set = set()
-        with open(version_add_f_path + "successful_linking_ids.txt", "r") as successful_linking_ids_f:
+        with open(os.path.join(version_add_f_path, "successful_linking_ids.txt"), "r") as successful_linking_ids_f:
             for id in successful_linking_ids_f:
                 successful_linking_ids_set.add(id.rstrip())
         
         print("Ok\nRead and parse " + version_add_f_path + "linking_ids_without_linked_ids.txt ...", end = '')
         linking_ids_without_linked_ids_set = set()
-        with open(version_add_f_path + "linking_ids_without_linked_ids.txt", "r") as  linking_ids_without_linked_ids_f:
+        with open(os.path.join(version_add_f_path, "linking_ids_without_linked_ids.txt"), "r") as  linking_ids_without_linked_ids_f:
             for id in linking_ids_without_linked_ids_f:
                 linking_ids_without_linked_ids_set.add(id.rstrip())
         
         print("Ok\nRead and parse " + version_add_f_path + "all_linked_ids.txt ... ", end = '')
         all_linked_ids_set = set()
-        with open(version_add_f_path + "all_linked_ids.txt", "r") as all_linked_ids_f:
+        with open(os.path.join(version_add_f_path, "all_linked_ids.txt"), "r") as all_linked_ids_f:
             for id in all_linked_ids_f:
                 all_linked_ids_set.add(id.rstrip())
         
@@ -196,7 +192,7 @@ if todo_Elink:
         pmid_cid.all_linked_ids = all_linked_ids_set
         
         print("Ok\nTry to parse previous metadata ... ", end = '')
-        with open(version_add_f_path + "s_metdata.txt", "r") as s_metadata_f:
+        with open(os.path.join(version_add_f_path, "s_metdata.txt"), "r") as s_metadata_f:
             pmid_cid.n_triples_g_linked_id = int(s_metadata_f.readline())
             pmid_cid.n_triples_g_linked_id_endpoint = int(s_metadata_f.readline())
             pmid_cid.n_subjects_g_linked_id = int(s_metadata_f.readline())
@@ -206,10 +202,10 @@ if todo_Elink:
         # Initialyze list to determine the last outputed file
         l1 = list()
         l2 = list()
-        for pmid_cid_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID/" + pmid_cid_version + "/*.ttl.gz")]:
+        for pmid_cid_path in [os.path.basename(path) for path in glob.glob(os.path.join(args.out, "PMID_CID", pmid_cid_version, "*.ttl.gz"))]:
             l1.append(int(pmid_cid_path.split("PMID_CID_")[1].split(".ttl.gz")[0]))
             pmid_cid.ressource_version.add_DataDump(pmid_cid_path, ftp)
-        for pmid_cid_endpoint_path in [os.path.basename(path) for path in glob.glob(out_path + "PMID_CID_endpoints/" + pmid_cid_version + "/*.ttl.gz")]:
+        for pmid_cid_endpoint_path in [os.path.basename(path) for path in glob.glob(os.path.join(args.out, "PMID_CID_endpoints", pmid_cid_version, "*.ttl.gz"))]:
             l2.append(int(pmid_cid_endpoint_path.split("PMID_CID_endpoints_")[1].split(".ttl.gz")[0]))
             pmid_cid.ressource_version_endpoint.add_DataDump(pmid_cid_endpoint_path, ftp)
         # The file index is set as the maximum of the last index or PMID_CID and PMIC_CID_endpoints to avoid missing wrong erasing, if they are different ! Or the next index if they are equals
@@ -225,9 +221,9 @@ if todo_Elink:
             print("Impossible to access to pmids from PubChem Reference RDF Store, unknown last version. Data will be download ONLY if needed (not the last version). Please, put REFERENCE todo attribute to True, exit.")
             sys.exit(3)
         print("Try to extract all pmids from Reference type graph(s) ...", end = '')
-        path_list = glob.glob(out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version + "/*_type*.ttl.gz")
+        path_list = glob.glob(os.path.join(args.out, reference_out_dir, reference_r_name, reference_version, "*_type*.ttl.gz"))
         if len(path_list) == 0:
-            print("No *_type*.ttl.gz files from PubChem ftp was found at " + out_path + reference_out_dir + "/" + reference_r_name + "/" + reference_version)
+            print("No *_type*.ttl.gz files from PubChem ftp was found at " + os.path.join(args.out, reference_out_dir, reference_r_name, reference_version))
             print("Impossible to determine pmids set, exit.")
             sys.exit(3)
         g = rdflib.ConjunctiveGraph()
@@ -243,38 +239,38 @@ if todo_Elink:
         # Export all_pmids list as linking ids list in addtional path
         if not os.path.exists(version_add_f_path):
             os.makedirs(version_add_f_path)
-        with open(version_add_f_path + "all_linking_ids.txt", "w") as all_linking_ids_f:
+        with open(os.path.join(version_add_f_path, "all_linking_ids.txt"), "w") as all_linking_ids_f:
             for id in all_pmids:
                 t = all_linking_ids_f.write("%s\n" %(id))
     
     # From a previous attempt or a first try, use all_pmids list to compute associations :
     print("Try to extract CID - PMID associations using Elink processes")
     # Run :
-    pmid_cid.create_ressource(out_path, all_pmids, pack_size, query_builder, max_triples_by_files, additional_files_out_path)
+    pmid_cid.create_ressource(args.out, all_pmids, pack_size, query_builder, max_triples_by_files, args.log)
     # Looking for failed at first try :
     while(len(pmid_cid.request_failure) != 0):
-        pmid_cid.create_ressource(out_path, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, additional_files_out_path)
+        pmid_cid.create_ressource(args.out, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, args.log)
     # Export ressource metadata
-    pmid_cid.export_ressource_metatdata(out_path, [rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/reference"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/compound")])
+    pmid_cid.export_ressource_metatdata(args.out, [rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/reference"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/compound")])
     # Export versions and uris versions
     pmid_cid_uri_version = pmid_cid.ressource_version.uri_version
     pmid_cid_endpoint_uri_version = pmid_cid.ressource_version_endpoint.uri_version
     # Write in upload file :
-    with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_uri_version) + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
-        upload_f.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
+    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID/", pmid_cid_version, '') + "', '*.ttl.gz', '" + str(pmid_cid_uri_version) + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID/", pmid_cid_version, '') + "', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID_endpoints/", pmid_cid_version, '') + "', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
+        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID_endpoints/", pmid_cid_version, '') + "', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
         # For pre-upload, we need just type to compute with ChEBI:
-        pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_uri_version) + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/PMID_CID/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
-        pre_upload.write("ld_dir_all ('./dumps/PMID_CID_endpoints/" + pmid_cid_version + "/', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID/", pmid_cid_version, '') + "', '*.ttl.gz', '" + str(pmid_cid_uri_version) + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID/", pmid_cid_version, '') + "', 'void.ttl', '" + str(pmid_cid_uri_version) + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID_endpoints/", pmid_cid_version, '') + "', '*.ttl.gz', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
+        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/PMID_CID_endpoints/", pmid_cid_version, '') + "', 'void.ttl', '" + str(pmid_cid_endpoint_uri_version) + "');\n")
 
 print("=================================================================================\n")
 # Write ouput file footer :
 print("Write uplaod file")
-with open(out_path + "upload_data.sh", "a") as upload_f, open(out_path + "pre_upload.sh", "a") as pre_upload:
+with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(args.out + "pre_upload.sh", "a") as pre_upload:
     upload_f.write("select * from DB.DBA.load_list;\n")
     upload_f.write("rdf_loader_run();\n")
     upload_f.write("checkpoint;\n")
