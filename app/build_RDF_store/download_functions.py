@@ -34,7 +34,7 @@ def download_pubChem(dir, request_ressource, out_path, out_log):
     # Parse data to create pubchem version
     pubchem_last_v = parser.parse(pubchem_mdtm)
     pubchem_last_v = pubchem_last_v.strftime('%Y-%m-%d')
-    print(" Ok\nLast PubChem " + request_ressource + "RDF version found on ftp server is : " + pubchem_last_v)
+    print(" Ok\nLast PubChem " + request_ressource + " RDF version found on ftp server is : " + pubchem_last_v)
     print("Check if PubChem " + request_ressource + " RDF version " + pubchem_last_v + " was already download: ", end = '')
     # From last version date, if associated void.ttl file already exists, exit and return pubchem last version and associated uri
     test_r_info = glob.glob(os.path.join(out_path, request_ressource, pubchem_last_v, "void.ttl"))

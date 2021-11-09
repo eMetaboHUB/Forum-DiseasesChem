@@ -1,5 +1,6 @@
 import rdflib, eutils, sys, gzip, glob
 import argparse, configparser, os
+import json
 sys.path.insert(1, 'app/')
 from Elink_ressource_creator import Elink_ressource_creator
 from Database_ressource_version import Database_ressource_version
@@ -41,14 +42,6 @@ namespaces = {
     "concept": rdflib.Namespace('http://rdf.ncbi.nlm.nih.gov/pubchem/concept/')
 }
 
-# Reading booleans :
-todo_MetaNetX = config['METANETX'].getboolean("todo")
-todo_MeSH = config['MESH'].getboolean("todo")
-todo_Reference = config['REFERENCE'].getboolean("todo")
-todo_Compound = config['COMPOUND'].getboolean("todo")
-todo_Descriptor = config['DESCRIPTOR'].getboolean("todo")
-todo_InchiKey = config['INCHIKEY'].getboolean("todo")
-todo_Elink = config['ELINK'].getboolean("todo")
 # FTP info
 ftp = config['FTP'].get('ftp')
 
@@ -58,7 +51,7 @@ with open(os.path.join(args.out, "upload_data.sh"), "w") as upload_f, open(os.pa
     pre_upload.write("delete from DB.DBA.load_list ;\n")
 
 # MetaNetX
-if todo_MetaNetX:
+if config.has_section("METANETX"):
     MetaNetX_out_dir = "MetaNetX"
     MetaNetX_version = config['METANETX'].get("version")
     MetaNetX_uri = download_MetaNetX(os.path.join(args.out, MetaNetX_out_dir), args.log, MetaNetX_version)
@@ -67,7 +60,7 @@ if todo_MetaNetX:
         upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'void.ttl', '" + MetaNetX_uri + "');\n")
 
 # MeSH
-if todo_MeSH:
+if config.has_section("MESH"):
     mesh_out_dir = "MeSH"
     mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), args.log)
     with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
@@ -76,56 +69,37 @@ if todo_MeSH:
         # Also for pre-upload:
         pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
         pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")
-        
-# References
-if todo_Reference:
-    reference_out_dir = "PubChem_Reference"
-    reference_r_name = "reference"
-    reference_dir_on_ftp = config['REFERENCE'].get('dir_on_ftp')
-    reference_version, reference_uri = download_pubChem(reference_dir_on_ftp, reference_r_name, os.path.join(args.out, reference_out_dir), args.log)
-    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', '*.ttl.gz', '" + reference_uri + "');\n")
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', 'void.ttl', '" + reference_uri + "');\n")
-        # Also for pre-upload:
-        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', '*.ttl.gz', '" + reference_uri + "');\n")
-        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", reference_out_dir, reference_r_name, reference_version, '') + "', 'void.ttl', '" + reference_uri + "');\n")
 
-# Compounds
-if todo_Compound:
-    compound_out_dir = "PubChem_Compound"
-    compound_r_name = "compound"
-    compound_dir_on_ftp = config['COMPOUND'].get('dir_on_ftp')
-    compound_version, compound_uri = download_pubChem(compound_dir_on_ftp, compound_r_name, os.path.join(args.out, compound_out_dir), args.log)
-    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', '*.ttl.gz', '" + compound_uri + "');\n")
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', 'void.ttl', '" + compound_uri + "');\n")
-        # For pre-upload, we need just type to compute with ChEBI:
-        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', '*_type*.ttl.gz', '" + compound_uri + "');\n")
-        pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", compound_out_dir, compound_r_name, compound_version, '') + "', 'void.ttl', '" + compound_uri + "');\n")
+# PUBCHEM
 
-
-# Descriptors
-if todo_Descriptor:
-    descriptor_out_dir = "PubChem_Descriptor"
-    descriptor_r_name = "descriptor"
-    descriptor_dir_on_ftp = config['DESCRIPTOR'].get('dir_on_ftp')
-    descriptor_version, descriptor_uri = download_pubChem(descriptor_dir_on_ftp, descriptor_r_name, os.path.join(args.out, descriptor_out_dir), args.log)
-    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", descriptor_out_dir, descriptor_r_name, descriptor_version, '') + "', '*.ttl.gz', '" + descriptor_uri + "');\n")
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", descriptor_out_dir, descriptor_r_name, descriptor_version, '') + "', 'void.ttl', '" + descriptor_uri + "');\n")
-
-# InchiKey
-if todo_InchiKey:
-    inchikey_out_dir = "PubChem_InchiKey"
-    inchikey_r_name = "inchikey"
-    inchikey_dir_on_ftp = config['INCHIKEY'].get('dir_on_ftp')
-    inchikey_version, inchikey_uri = download_pubChem(inchikey_dir_on_ftp, inchikey_r_name, os.path.join(args.out, inchikey_out_dir), args.log)
-    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", inchikey_out_dir, inchikey_r_name, inchikey_version, '') + "', '*.ttl.gz', '" + inchikey_uri + "');\n")
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", inchikey_out_dir, inchikey_r_name, inchikey_version, '') + "', 'void.ttl', '" + inchikey_uri + "');\n")
+if config.has_section("PUBCHEM"):
+    print("Download and prepare resources from PubChem: ")
+    dir_ftp = json.loads(config["PUBCHEM"].get("dir_ftp"))
+    name = json.loads(config["PUBCHEM"].get("name"))
+    out_dir = json.loads(config["PUBCHEM"].get("out_dir"))
+    mincore = json.loads(config["PUBCHEM"].get("mincore"))
+    maxcore = json.loads(config["PUBCHEM"].get("maxcore"))
+    if not len(dir_ftp) == len(mincore) == len(maxcore) == len(name) == len(out_dir):
+        print("PUBCHEM options dir_ftp, mincore, resource, out_dir and maxcore don't have the same length, check config file.")
+        sys.exit(3)
+    n = len(dir_ftp)
+    for i in range(n):
+        resource_out_dir = out_dir[i]
+        resource_name = name[i]
+        resource_dir_ftp = dir_ftp[i]
+        resource_mincore = mincore[i]
+        resource_maxcore = maxcore[i]
+        # Create resource:
+        resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
+        if resource_maxcore:
+            upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_maxcore + "', '" + resource_uri + "');\n")
+            upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
+        if resource_mincore:
+            pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_mincore + "', '" + resource_uri + "');\n")
+            pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
 
 # Elink
-if todo_Elink:
+if config.has_section("ELINK"):
     run_as_test = config['ELINK'].getboolean('run_as_test')
     apiKey = config['ELINK'].get('api_key')
     pmid_cid_version = args.version
