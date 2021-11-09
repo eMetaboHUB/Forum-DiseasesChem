@@ -55,9 +55,10 @@ if config.has_section("METANETX"):
     MetaNetX_out_dir = "MetaNetX"
     MetaNetX_version = config['METANETX'].get("version")
     MetaNetX_uri = download_MetaNetX(os.path.join(args.out, MetaNetX_out_dir), args.log, MetaNetX_version)
-    with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'metanetx.ttl.gz', '" + MetaNetX_uri + "');\n")
-        upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'void.ttl', '" + MetaNetX_uri + "');\n")
+    with open(os.path.join(args.out, "upload_MetaNetX.sh"), "w") as upload_MetaNetX:
+        upload_MetaNetX.write("delete from DB.DBA.load_list ;\n")
+        upload_MetaNetX.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'metanetx.ttl.gz', '" + MetaNetX_uri + "');\n")
+        upload_MetaNetX.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'void.ttl', '" + MetaNetX_uri + "');\n")
 
 # MeSH
 if config.has_section("MESH"):
@@ -80,7 +81,7 @@ if config.has_section("PUBCHEM"):
     mincore = json.loads(config["PUBCHEM"].get("mincore"))
     maxcore = json.loads(config["PUBCHEM"].get("maxcore"))
     if not len(dir_ftp) == len(mincore) == len(maxcore) == len(name) == len(out_dir):
-        print("PUBCHEM options dir_ftp, mincore, resource, out_dir and maxcore don't have the same length, check config file.")
+        print("Error: PUBCHEM options dir_ftp, mincore, resource, out_dir and maxcore don't have the same length, check config file.")
         sys.exit(3)
     n = len(dir_ftp)
     for i in range(n):
