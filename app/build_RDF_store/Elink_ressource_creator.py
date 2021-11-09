@@ -1,6 +1,6 @@
 import eutils
 import rdflib
-import numpy
+import numpy as np
 import sys
 import os
 import requests
@@ -56,7 +56,7 @@ class Elink_ressource_creator:
         self.primary_predicate = primary_predicate
         self.secondary_predicate = secondary_predicate
         self.g_linked_id = self.ressource_version.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.primary_predicate[0]], namespace_dict = self.namespaces)
-        self.g_linked_id_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.secondary_predicate[0], self.ns_endpoint[0], "obo", "dcterms"], namespace_dict = self.namespaces)
+        self.g_linked_id_endpoint = self.ressource_version_endpoint.create_data_graph(namespace_list = [self.ns_linking_id[0], self.ns_linked_id[0], self.secondary_predicate[0], self.ns_endpoint[0], "obo", "dcterms", "source", "concept"], namespace_dict = self.namespaces)
         self.append_failure = list()
         self.request_failure = list()
         self.available_linked_ids = 0
@@ -83,6 +83,8 @@ class Elink_ressource_creator:
         signal.alarm(self.r_timeout)
         try:
             response = query_builder.elink({"dbfrom": self.dbfrom, "db": self.db, "id": id_pack})
+            # Sending the request using args as a dict (such as : {'dbfrom': 'pubmed', 'db': 'pccompound', 'id': ['10026226', '10026226']}) with the id argument formated as a python list, allow to get an xml in which results are provided independently for each pmid, what can not be obtain using simply a post request with ids concatenated such as https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&db=pccompound&id=10026226,10026226"
+            # See query_builder.elink GitHub for more details
         except TimeOutException:
             print("\nRequest timeout was reached !")
             with open(os.path.join(add_f_out_path, "elink.log"), "a") as f_log:
@@ -124,8 +126,9 @@ class Elink_ressource_creator:
             link_name_list = [list() for i in range(len(linked_id_list))]
             # For each linked_id link_name in the union set, determine which are the orginals link_name of the association.
             for link_name in linked_id_by_link_name.keys():
-                a = numpy.array(numpy.isin(linked_id_list, linked_id_by_link_name[link_name])).nonzero()
-                [link_name_list[index].append((link_name)) for index in a[0].tolist()]
+                a = np.array(np.isin(linked_id_list, linked_id_by_link_name[link_name])).nonzero()
+                for index in a[0].tolist():
+                    link_name_list[index].append(link_name)
             # Add in graph :
             self.fill_ids_link_graph(linking_id, linked_id_list)
             self.fill_ids_link_endpoint_graph(linking_id, linked_id_list, link_name_list)
@@ -148,6 +151,11 @@ class Elink_ressource_creator:
         - linked_id_list: the linked id list from the request result
         - link_name_list: the link_name list from the request result
         """
+        contributors_dict = dict({
+            "pubmed_pccompound_publisher": self.namespaces["concept"]["Journal_Publishers"],
+            "pubmed_pccompound_mesh": self.namespaces["source"]["ID11939"],
+            "pubmed_pccompound": self.namespaces["concept"]["NIH_Substance_Repository"]
+        })
         for linked_id_index in range(0, len(linked_id_list)):
             linked_id = linked_id_list[linked_id_index]
             subject = self.ns_linking_id[1] + linking_id + "_" + self.ns_linked_id[1] + linked_id
@@ -155,7 +163,7 @@ class Elink_ressource_creator:
             self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["obo"]['IAO_0000136'], self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id]))
             self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces[self.secondary_predicate[0]][self.secondary_predicate[1]], self.namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
             for link_name in link_name_list[linked_id_index]:
-                self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["dcterms"]['contributor'], rdflib.Literal(link_name)))
+                self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["dcterms"]['contributor'], contributors_dict[link_name]))
     
     def get_all_linked_ids(self):
         """this function allows to extract the union of all linked_ids, the objects of the g_linked_id graph"""

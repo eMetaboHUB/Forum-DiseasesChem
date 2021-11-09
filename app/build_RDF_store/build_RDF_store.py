@@ -36,7 +36,9 @@ namespaces = {
     "fabio": rdflib.Namespace("http://purl.org/spar/fabio/"),
     "mesh": rdflib.Namespace("http://id.nlm.nih.gov/mesh/"),
     "void": rdflib.Namespace("http://rdfs.org/ns/void#"),
-    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
+    "skos": rdflib.Namespace("http://www.w3.org/2004/02/skos/core#"),
+    "source": rdflib.Namespace('http://rdf.ncbi.nlm.nih.gov/pubchem/source/'),
+    "concept": rdflib.Namespace('http://rdf.ncbi.nlm.nih.gov/pubchem/concept/')
 }
 
 # Reading booleans :
