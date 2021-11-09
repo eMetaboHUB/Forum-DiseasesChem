@@ -34,9 +34,9 @@ while getopts b:c:v:p:s:l: flag
 	    esac
 	done
 
-if [ -z "$CONFIG_BUILD_RDF_STORE" ] || [ -z "$CONFIG_CHEMONT" ] || [ -z "$RESOURCES_DIR" ] || [ -z "$LOGSDIR" ]
+if [ -z "$RESOURCES_DIR" ] || [ -z "$LOGSDIR" ]
 then
-	echo "One (or few) mandatory options seem missing. Mandatory options are: -b -c -p -s -l" ;
+	echo "One (or few) mandatory options seem missing. Mandatory options are: -s -l" ;
 	usage ;
 	exit 1 ;
 fi
@@ -69,6 +69,9 @@ sshpass -p ${PASSWORD} sftp ${USER}@${URL_SFTP} ${RESOURCES_DIR}/ 2>&1 | tee -a 
 tar xvf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ} -C ${RESOURCES_DIR} --overwrite 2>&1 | tee -a $LOG_VOC
 rm -rf ${RESOURCES_DIR}/${ARCHIVE_TAR_GZ} 2>&1 | tee -a $LOG_VOC
 
+if [ -n "$CONFIG_BUILD_RDF_STORE" ] 
+then
+
 echo "2) Build rdf store"
 
 # Init logs
@@ -77,6 +80,11 @@ echo "" > $LOG_RDF
 
 python3 -u app/build_RDF_store/build_RDF_store.py --config=$CONFIG_BUILD_RDF_STORE --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_RDF
 
+fi
+
+if [ -n "$CONFIG_CHEMONT" ]
+then
+
 echo "3) Create Chemont ressource"
 
 # Init logs
@@ -84,3 +92,5 @@ LOG_CHEMONT="${LOGSDIR}/chemont.log"
 echo "" > $LOG_CHEMONT
 
 python3 -u app/ChemOnt/fetch_ChemOnt.py --config=$CONFIG_CHEMONT --out=$RESOURCES_DIR --log=$LOGSDIR --version=$VERSION 2>&1 | tee -a $LOG_CHEMONT
+
+fi

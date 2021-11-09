@@ -180,6 +180,8 @@ There are two configuration files related to this step:
 - The first contains parameters about the creation of the triplestore. See README in the *build_RDF_store* sub-directory for option details.
 - The second contains parameters to integrate chemont classes in the triplestore. See README in the *Chemont* sub-directory for option details.
 
+If *-b* or *-c* is not provided, the corresponding triples are not created.
+
 Then, from the base directory execute: 
 
 ```bash
