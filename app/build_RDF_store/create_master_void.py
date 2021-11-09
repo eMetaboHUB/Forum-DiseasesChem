@@ -27,7 +27,8 @@ master_void_uri = rdflib.URIRef("https://forum.semantic-metabolomics.org/void")
 master_void.add((master_void_uri, RDF['type'], VOID["DatasetDescription"]))
 master_void.add((master_void_uri, DCTERMS['title'], rdflib.Literal("FORUM DiseaseChem RDF Dataset Description")))
 master_void.add((master_void_uri, DCTERMS['description'], rdflib.Literal("This is the VoID description for FORUM DiseaseChem RDF datasets.")))
-master_void.add((master_void_uri, DCTERMS["created"], rdflib.Literal(date.today().isoformat(), datatype=XSD.date)))
+master_void.add((master_void_uri, DCTERMS["created"], rdflib.Literal(date(2020,3,16), datatype=XSD.date)))
+master_void.add((master_void_uri, DCTERMS["modified"], rdflib.Literal(date.today().isoformat(), datatype=XSD.date)))
 
 # Parse files: 
 for f_void in all_void:
