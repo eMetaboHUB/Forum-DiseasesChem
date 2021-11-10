@@ -23,6 +23,8 @@ master_void.bind("dcterms", rdflib.Namespace("http://purl.org/dc/terms/"))
 master_void.bind("void", rdflib.Namespace("http://rdfs.org/ns/void#"))
 master_void_uri = rdflib.URIRef("https://forum.semantic-metabolomics.org/void")
 
+#TODO ADD DATADUMP
+
 # Add VoID metadata:
 master_void.add((master_void_uri, RDF['type'], VOID["DatasetDescription"]))
 master_void.add((master_void_uri, DCTERMS['title'], rdflib.Literal("FORUM DiseaseChem RDF Dataset Description")))
