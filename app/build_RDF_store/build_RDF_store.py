@@ -83,8 +83,9 @@ if config.has_section("PUBCHEM"):
     out_dir = json.loads(config["PUBCHEM"].get("out_dir"))
     mincore = json.loads(config["PUBCHEM"].get("mincore"))
     maxcore = json.loads(config["PUBCHEM"].get("maxcore"))
-    if not len(dir_ftp) == len(mincore) == len(maxcore) == len(name) == len(out_dir):
-        print("Error: PUBCHEM options dir_ftp, mincore, resource, out_dir and maxcore don't have the same length, check config file.")
+    version = json.loads(config["PUBCHEM"].get("version"))
+    if not len(dir_ftp) == len(mincore) == len(maxcore) == len(name) == len(out_dir) == len(version):
+        print("Error: PUBCHEM options dir_ftp, mincore, resource, out_dir, version and maxcore don't have the same length, check config file.")
         sys.exit(3)
     n = len(dir_ftp)
     for i in range(n):
@@ -93,8 +94,22 @@ if config.has_section("PUBCHEM"):
         resource_dir_ftp = dir_ftp[i]
         resource_mincore = mincore[i]
         resource_maxcore = maxcore[i]
-        # Create resource:
-        resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
+        resource_version = version[i]
+        # if a version was provided:
+        if resource_version:
+            print("Version '" + resource_version + "' was provided for PubChem subset " + resource_dir_ftp)
+            # Check if the version exist: 
+            if glob.glob(os.path.join(args.out, resource_out_dir, resource_name, resource_version, "void.ttl")):
+                print("PubChem Subset " + resource_dir_ftp + " version '" + resource_version  + "' was found.")
+                _ressource_version = Database_ressource_version(ressource = "PubChem/" + resource_name, version = resource_version)
+                resource_uri = str(_ressource_version.uri_version)
+            else:
+                print("PubChem Subset " + resource_dir_ftp + " version '" + resource_version  + "' was not found.")
+                print("Provide a valid version or download the latest")
+                sys.exit(3)
+        else:
+            # Download/Create resource:
+            resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
         # Add to PubChem Subset dict: 
         PubChem_subsets[resource_dir_ftp] = {"out_dir": resource_out_dir, "name": resource_name, "mincore": resource_mincore, "maxcore": resource_maxcore, "version": resource_version, "uri": resource_uri}
         if resource_maxcore:
