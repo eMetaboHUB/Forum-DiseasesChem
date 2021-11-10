@@ -73,6 +73,9 @@ if config.has_section("MESH"):
 
 # PUBCHEM
 
+# Init PubChem Subset: 
+PubChem_subsets = dict()
+
 if config.has_section("PUBCHEM"):
     print("Download and prepare resources from PubChem: ")
     dir_ftp = json.loads(config["PUBCHEM"].get("dir_ftp"))
@@ -92,6 +95,8 @@ if config.has_section("PUBCHEM"):
         resource_maxcore = maxcore[i]
         # Create resource:
         resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
+        # Add to PubChem Subset dict: 
+        PubChem_subsets[resource_dir_ftp] = {"out_dir": resource_out_dir, "name": resource_name, "mincore": resource_mincore, "maxcore": resource_maxcore, "version": resource_version, "uri": resource_uri}
         if resource_maxcore:
             with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
                 upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_maxcore + "', '" + resource_uri + "');\n")
@@ -178,6 +183,12 @@ if config.has_section("ELINK"):
             pmid_cid.n_subjects_g_linked_id_endpoint = int(s_metadata_f.readline())
         
         print("Ok\nTry to retrieve dataDumps files ... ")
+        
+        # Check if the PMID_CID and PMID_CID_endpoint exist
+        if not len(glob.glob(os.path.join(args.out, "PMID_CID", pmid_cid_version, "*.ttl.gz"))) or not len(glob.glob(os.path.join(args.out, "PMID_CID_endpoints", pmid_cid_version, "*.ttl.gz"))):
+            print("Cache files were found at : " + version_add_f_path + " but the PMID_CID and/or PMID_CID_endpoints are missing. If you want to rebuild the PMID_CID and PMID_CID_endpoints directories, please remove the cache files at :" + version_add_f_path)
+            sys.exit(3)
+        
         # Initialyze list to determine the last outputed file
         l1 = list()
         l2 = list()
@@ -196,10 +207,13 @@ if config.has_section("ELINK"):
     
     else:
         # The second option (in first try) is to get all the pmids to compute the associations. The easiest way to determine the total set of pmids is to load the lightest file from the Reference directory and determine all the subjects
-        if not todo_Reference:
-            print("Impossible to access to pmids from PubChem Reference RDF Store, unknown last version. Data will be download ONLY if needed (not the last version). Please, put REFERENCE todo attribute to True, exit.")
+        if not "reference" in PubChem_subsets:
+            print("Impossible to access to pmids from PubChem Reference RDF Store, unknown last version. The data will be download ONLY if needed ! Please, add the PubChem subset 'reference' to the list of required PubChem subsets in the config file, exit.")
             sys.exit(3)
         print("Try to extract all pmids from Reference type graph(s) ...", end = '')
+        reference_out_dir = PubChem_subsets["reference"]["out_dir"]
+        reference_r_name = PubChem_subsets["reference"]["name"]
+        reference_version = PubChem_subsets["reference"]["version"]
         path_list = glob.glob(os.path.join(args.out, reference_out_dir, reference_r_name, reference_version, "*_type*.ttl.gz"))
         if len(path_list) == 0:
             print("No *_type*.ttl.gz files from PubChem ftp was found at " + os.path.join(args.out, reference_out_dir, reference_r_name, reference_version))
