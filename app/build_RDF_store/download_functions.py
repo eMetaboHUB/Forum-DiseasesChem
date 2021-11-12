@@ -237,7 +237,7 @@ def download_MetaNetX(out_dir, out_log, version):
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID["Dataset"])
     ressource_version.add_version_attribute(predicate = DCTERMS["description"], object = rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments--namely MNXref--and proteins."))
     ressource_version.add_version_attribute(predicate = DCTERMS["title"], object = rdflib.Literal("MetaNetX v." + version))
-    ressource_version.add_version_attribute(predicate = VOID["dataDump"], object = rdflib.URIRef("ftp://ftp.vital-it.ch/databases/metanetx/MNXref/" + version + "/metanetx.ttl.gz"))
+    ressource_version.add_version_attribute(predicate = VOID["dataDump"], object = rdflib.URIRef("https://www.metanetx.org/ftp/" + version + "/metanetx.ttl.gz"))
     ressource_version.add_version_attribute(predicate = VOID["triples"], object = rdflib.Literal(len(g_MetaNetX), datatype=XSD.long ))
     ressource_version.add_version_attribute(predicate = VOID["distinctSubjects"], object = rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()]))))
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
