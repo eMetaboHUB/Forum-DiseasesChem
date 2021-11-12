@@ -22,22 +22,25 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
         os.makedirs(version_path)
     
     # Get PubChem void
+    print("Download PubChem void ... ", end = '')
     pubchem_original_void = os.path.join(dir_log, "PubChem_void.ttl")
     con = ftp_con(ftp)
     download_single_file(void_path, con, pubchem_original_void, log)
     con.quit()
+    print("Ok")
 
     # Parse void
-    print("Read Pubchem void.ttl file")
+    print("Read Pubchem void.ttl file ... ", end = '')
     g_metadata = rdflib.Graph()
     g_metadata.parse(pubchem_original_void, format='turtle')
+    print("Ok")
 
     # Download data
     con = ftp_con(ftp)
     download_dir(dir, con, version_path, log)
     con.quit()
 
-    print("Build Pubchem " + request_ressource + " new ressource version ...", end = '')
+    print("Build Pubchem " + request_ressource + " new ressource version ... ", end = '')
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
@@ -49,11 +52,11 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     g_metadata = None
-    print(" Ok\nEnd !")
+    print("Ok")
     print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)
 
-def download_MeSH(out_dir, mesh_latest, out_log):
+def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_log):
     """
     This function is used to download the last version of the MeSH RDF from NIH ftp server, the void.ttl file is also use to bring metadata information about the dowloaded version.
     But contrary to PubChem the modification date is not include in the void.ttl file. So, version is determine from the modification date of the file.
@@ -62,34 +65,36 @@ def download_MeSH(out_dir, mesh_latest, out_log):
     - namespace_list: a list of the namespaces that should be associated to the graph
     The function return the version and the uri of this new version.
     """
-    print("Dowload MeSH RDF version " + mesh_latest + "\n\n")
+
     # Create version output directory
     out_path = os.path.join(out_dir, mesh_latest)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    # Download MeSh data
-    try:
-        subprocess.run("wget -P " + out_path + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/void_1.0.0.ttl", shell = True, check=True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to download MeSH void.ttl file, check dl_mesh.log")
-        print(e)
-        with open(out_log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
-    print("Trying to read MeSH void.ttl file ...", end = '')
+    
+    # Download MeSH void:
+    print("Dowload MeSH void ... ", end = '')
+    mesh_original_void = os.path.join(dir_log, "MeSH_void.ttl")
+    con = ftp_con(ftp)
+    download_single_file(void_path, con, mesh_original_void, out_log)
+    con.quit()
+    print("Ok")
+
+    print("Read MeSH void.ttl file ... ", end = '')
     g_metadata = rdflib.Graph()
-    g_metadata.parse(os.path.join(out_path, "void_1.0.0.ttl"), format = 'turtle')
-    print(" Ok\nTrying to dowload MeSH RDF file ...", end = '')
+    g_metadata.parse(mesh_original_void, format = 'turtle')
+    print("Ok")
+
+
     # Download MeSH RDF
-    try:
-        subprocess.run("wget -P " + out_path + " ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt", shell = True, check=True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to download MeSH mesh.nt file, check dl_mesh.log")
-        print(e)
-        with open(out_log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
-    print(" Ok\nTrying to parse MeSH original metadata ...", end = '')
+    print("Download MeSH data ... ", end = '')
+    con = ftp_con(ftp)
+    mesh_f_name = os.path.basename(mesh_path)
+    mesh_out_path = os.path.join(out_path, mesh_f_name)
+    download_single_file(mesh_path, con, mesh_out_path, out_log)
+    con.quit()
+    print("Ok")
+
+    print("Parse MeSH original metadata ... ", end = '')
     # On crée la nouvelle ressource MeSH
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
@@ -105,26 +110,20 @@ def download_MeSH(out_dir, mesh_latest, out_log):
         else:
             continue
     g_metadata = None
-    # On crée le graph de données : 
-    print(" Ok\nTrying to create MeSH new ressource version ...", end = '')
+    # On crée le graph de données :
+    print("Ok")
+    print("Create MeSH new ressource version ... ", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
-    mesh_graph.parse(os.path.join(out_path, "mesh.nt"), format = "nt")
-    ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal( len(mesh_graph), datatype=XSD.long ))
-    ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype=XSD.long ))
+    mesh_graph.parse(mesh_out_path, format = "nt")
+    ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal( len(mesh_graph), datatype = XSD.long))
+    ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long))
+    print("Ok")
+
     # Clear graph
     mesh_graph = None
+    
     # On écrit le graph de la ressource
     ressource_version.version_graph.serialize(os.path.join(out_path, "void.ttl"), format = 'turtle')
-    # On supprime le fichier void initial
-    try:
-        subprocess.run("rm " + os.path.join(out_path, "void_1.0.0.ttl"), shell = True, check=True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to remove file, check dl_mesh.log")
-        print(e)
-        with open(out_log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
-    print(" Ok\nEnd")
     print("=================================================================================\n")
     return ressource_version.version, str(ressource_version.uri_version)
 
