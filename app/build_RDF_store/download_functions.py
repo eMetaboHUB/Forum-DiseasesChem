@@ -230,3 +230,39 @@ def check_void(path_to_void, s):
         print("void at " + path_to_void + "' was found.")
         resource_uri = get_URI_version_from_void(path_to_void, s)
     return resource_uri
+
+def ftp_con(ftp):
+    ftp = ftplib.FTP(ftp)
+    ftp.login()
+    return ftp
+
+def download_single_file(file, con, out, log):
+    r = None
+    f_out = open(out, "wb")
+    try:
+        r = con.retrbinary('RETR '+ file, f_out.write)
+    except ftplib.all_errors as ftplib_e:
+        print("Errors while trying to access file " + file + " from " + con.host)
+        print("Check logs at " + log)
+        with open(log, "a") as f_log:
+            f_log.write(str(ftplib_e) + "\n")
+    if r != "226 Transfer complete":
+        print("Error: Transfer incomplete of " + file + " from ftp server : " + r)
+        print("Check logs at " + log)
+        with open(log, "a") as f_log:
+            f_log.write("Error: Transfer incomplete of " + file + " on ftp server : " + r + "\n")
+    f_out.close()
+    with open(log, "a") as f_log:
+        f_log.write(file + " downloaded")
+
+def download_dir(dir, con, out_dir, log):
+    try:
+        con.cwd(dir)
+        filenames = con.nlst()
+    except ftplib.all_errors as ftplib_e:
+        print("Error while reaching " + dir + " at " + con.host)
+        with open(log, "a") as f_log:
+            f_log.write(str(ftplib_e) + "\n")
+    print("Download directory: " + dir)
+    for f in filenames:
+        download_single_file(f, con, os.path.join(out_dir, f), log)
