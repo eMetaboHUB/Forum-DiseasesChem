@@ -186,6 +186,7 @@ if config.has_section("ELINK"):
     pack_size = config['ELINK'].getint('pack_size')
     timeout = config['ELINK'].getint('timeout')
     max_triples_by_files = config['ELINK'].getint('max_triples_by_files')
+    ref_uri_prefix = config['ELINK']["reference_uri_prefix"]
     all_pmids = None
     # Building requests
     query_builder = eutils.QueryService(cache = False,
@@ -296,7 +297,7 @@ if config.has_section("ELINK"):
             with gzip.open(path, 'rb') as f_ref_type:
                 g.parse(f_ref_type, format = "turtle")
         
-        all_pmids = [str(pmid).split('http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID')[1] for pmid in g.subjects()]
+        all_pmids = [str(pmid).split(ref_uri_prefix)[1] for pmid in g.subjects()]
 
         print(" Ok\n" + str(len(all_pmids)) + " pmids were found !")
         if run_as_test:
@@ -316,7 +317,7 @@ if config.has_section("ELINK"):
     while(len(pmid_cid.request_failure) != 0):
         pmid_cid.create_ressource(args.out, pmid_cid.request_failure, pack_size, query_builder, max_triples_by_files, args.log)
     # Export ressource metadata
-    pmid_cid.export_ressource_metatdata(args.out, [rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/reference"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/compound")])
+    pmid_cid.export_ressource_metatdata(args.out, [rdflib.URIRef(PubChem_subsets["reference"]["uri"]), rdflib.URIRef(PubChem_subsets["compound"]["uri"])])
     # Export versions and uris versions
     pmid_cid_uri_version = pmid_cid.ressource_version.uri_version
     pmid_cid_endpoint_uri_version = pmid_cid.ressource_version_endpoint.uri_version
