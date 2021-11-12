@@ -147,7 +147,7 @@ if config.has_section("PUBCHEM"):
 
             # If no resource was found, download from ftp
             if not resource_uri:
-                resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, resource_version, os.path.join(args.out, resource_out_dir), log_path)
+                resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, resource_version, "ftp.ncbi.nlm.nih.gov", "/pubchem/RDF/void.ttl", os.path.join(args.out, resource_out_dir), log_path, args.log)
         
         # if a version was provided
         else: 
@@ -161,7 +161,7 @@ if config.has_section("PUBCHEM"):
                 sys.exit(3)
         
         # Add to PubChem Subset dict: 
-        PubChem_subsets[resource_dir_ftp] = {"out_dir": resource_out_dir, "name": resource_name, "mincore": resource_mincore, "maxcore": resource_maxcore, "version": resource_version, "uri": resource_uri}
+        PubChem_subsets[resource_name] = {"dir_ftp": resource_dir_ftp, "out_dir": resource_out_dir, "name": resource_name, "mincore": resource_mincore, "maxcore": resource_maxcore, "version": resource_version, "uri": resource_uri}
         if resource_maxcore:
             with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f:
                 upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_maxcore + "', '" + resource_uri + "');\n")

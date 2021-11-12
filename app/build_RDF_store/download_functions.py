@@ -7,51 +7,37 @@ import glob
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 
-def download_pubChem(dir, request_ressource, pubchem_latest, out_path, out_log):
+def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out_path, log, dir_log):
     """
     This function is used to download PubChem rdf files from the ftp server and create a new version of the associated ressource.
-    - dir: the path to the directory/file to fetch in the ftp server from ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/
+    - dir: the path to the directory/file to fetch in the ftp server 
     - request_ressource: the name of the ressource as indicated in the void.ttl file.
     - out_path: a path to a directory to write output files.
     - out_log: path to log file
     The function return the version created and the uri of this new version. in case of errors during wget downloading, errors are printed in dl_pubchem_*.log
     """
-    print("Dowload PubChem void.ttl file ...", end = '')
     # Create output directory for requested ressource and last available version
     version_path = os.path.join(out_path, request_ressource, pubchem_latest)
     if not os.path.exists(version_path):
         os.makedirs(version_path)
-    try:
-        subprocess.run("wget -P " + version_path + " ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl", shell = True, check=True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to download PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
-        print(e)
-        with open(out_log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
-    print(" Ok\nTrying to read Pubchem void.ttl file ...", end = '')
-    # On parse le fichier des metadatas
+    
+    # Get PubChem void
+    pubchem_original_void = os.path.join(dir_log, "PubChem_void.ttl")
+    con = ftp_con(ftp)
+    download_single_file(void_path, con, pubchem_original_void, log)
+    con.quit()
+
+    # Parse void
+    print("Read Pubchem void.ttl file")
     g_metadata = rdflib.Graph()
-    g_metadata.parse(os.path.join(version_path, "void.ttl"), format='turtle')
-    try:
-        subprocess.run("rm " + os.path.join(version_path, "void.ttl"), shell = True, check=True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to remove PubChem void.ttl file, check dl_pubchem_" + request_ressource + ".log")
-        print(e)
-        with open(out_log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
-    print(" Ok\nTrying to dowload Pubchem " + dir + " directory ...", end = '')
-    # On récupère les données que l'on enregistre dans le directory créée
-    try:
-        subprocess.run("wget -r -A ttl.gz -nH" + " -P " + version_path + " --cut-dirs=5 " + "ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir, shell = True, check=True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to dowload PubChem " + dir + " directory, check dl_pubchem_" + request_ressource + ".log")
-        print(e)
-        with open(out_log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
-    print(" Ok\nTrying to build Pubchem " + request_ressource + " new ressource version ...", end = '')
+    g_metadata.parse(pubchem_original_void, format='turtle')
+
+    # Download data
+    con = ftp_con(ftp)
+    download_dir(dir, con, version_path, log)
+    con.quit()
+
+    print("Build Pubchem " + request_ressource + " new ressource version ...", end = '')
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
@@ -253,7 +239,7 @@ def download_single_file(file, con, out, log):
             f_log.write("Error: Transfer incomplete of " + file + " on ftp server : " + r + "\n")
     f_out.close()
     with open(log, "a") as f_log:
-        f_log.write(file + " downloaded")
+        f_log.write(file + " downloaded\n")
 
 def download_dir(dir, con, out_dir, log):
     try:
