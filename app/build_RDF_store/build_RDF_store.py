@@ -63,19 +63,39 @@ if config.has_section("METANETX"):
 # MeSH
 if config.has_section("MESH"):
     mesh_out_dir = "MeSH"
-    _mesh_version = config["MESH"].get("version")
-    if _mesh_version == "latest":
-        mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), args.log)
+    mesh_version = config["MESH"].get("version")
+
+    # Intialyze .log files
+    log_path = os.path.join(args.log, "dl_mesh.log")
+    with open(log_path, "wb") as f_log:
+        pass
+
+    meta_resource = rdflib.URIRef("https://forum.semantic-metabolomics.org/MeSHRDF")
+    # if 'latest' was provided:
+    if mesh_version == "latest":
+        mesh_version = get_latest_from_MDTM("ftp.nlm.nih.gov", "/online/mesh/rdf/mesh.nt", log_path)
+        
+        # Check void
+        path_to_void = os.path.join(args.out, mesh_out_dir, mesh_version, "void.ttl")
+        mesh_uri = check_void(path_to_void, meta_resource)
+
+        # If no resource was found, download from ftp
+        if not mesh_uri:
+            mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), mesh_version, log_path)
+
+    # if a version was provided
     else:
-        print("Version '" + _mesh_version + "' was provided for MeSH")
-        path_to_void = os.path.join(args.out, mesh_out_dir, _mesh_version, "void.ttl")
-        if glob.glob(path_to_void):
-            print("MeSH version " + _mesh_version + "' was found.")
-            mesh_uri = get_URI_version_from_void(path_to_void, rdflib.URIRef("https://forum.semantic-metabolomics.org/MeSHRDF"))
-        else:
-            print("MeSH version " + _mesh_version + "' was not found.")
+        print("Version '" + mesh_version + "' was provided for MeSH")
+        path_to_void = os.path.join(args.out, mesh_out_dir, mesh_version, "void.ttl")
+        mesh_uri = check_void(path_to_void, meta_resource)
+
+        # Check if the version exists
+        if not mesh_uri:
+            print("MeSH version " + mesh_version + "' was not found.")
             print("Provide a valid version or download the latest")
             sys.exit(3)
+    
+    # Write upload files
     with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
         upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
         upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir,  mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")
@@ -108,21 +128,38 @@ if config.has_section("PUBCHEM"):
         resource_mincore = mincore[i]
         resource_maxcore = maxcore[i]
         resource_version = version[i]
-        # if a version was provided:
+        
+        # Intialyze .log files
+        log_path = os.path.join(args.log, "dl_pubchem_" + resource_name + ".log")
+        with open(log_path, "wb") as f_log:
+            pass
+        
+        # The URI of the resource that will be versioned
+        meta_resource = rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/" + resource_name)
+
+        # if 'latest' was provided:
         if resource_version == "latest":
-            # Download/Create resource:
-            resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
-        else:
-            print("Version '" + resource_version + "' was provided for PubChem subset " + resource_dir_ftp)
-            # Check if the version exist:
+            resource_version = get_latest_from_MDTM("ftp.ncbi.nlm.nih.gov", "/pubchem/RDF/void.ttl", log_path)
+
+            # Check void
             path_to_void = os.path.join(args.out, resource_out_dir, resource_name, resource_version, "void.ttl")
-            if glob.glob(path_to_void):
-                print("PubChem Subset " + resource_dir_ftp + " version '" + resource_version  + "' was found.")
-                resource_uri = get_URI_version_from_void(path_to_void, rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/" + resource_name))
-            else:
+            resource_uri = check_void(path_to_void, meta_resource)
+
+            # If no resource was found, download from ftp
+            if not resource_uri:
+                resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, resource_version, os.path.join(args.out, resource_out_dir), log_path)
+        
+        # if a version was provided
+        else: 
+            # Check if the version exist:
+            print("Check if " + resource_dir_ftp + " version " + resource_version + " exists")
+            path_to_void = os.path.join(args.out, resource_out_dir, resource_name, resource_version, "void.ttl")
+            resource_uri = check_void(path_to_void, meta_resource)
+            if not resource_uri:
                 print("PubChem Subset " + resource_dir_ftp + " version '" + resource_version  + "' was not found.")
                 print("Provide a valid version or download the latest")
                 sys.exit(3)
+        
         # Add to PubChem Subset dict: 
         PubChem_subsets[resource_dir_ftp] = {"out_dir": resource_out_dir, "name": resource_name, "mincore": resource_mincore, "maxcore": resource_maxcore, "version": resource_version, "uri": resource_uri}
         if resource_maxcore:
