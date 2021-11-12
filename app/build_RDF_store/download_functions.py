@@ -7,7 +7,7 @@ import glob
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 
-def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out_path, log, dir_log):
+def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out_path, log):
     """
     This function is used to download PubChem rdf files from the ftp server and create a new version of the associated ressource.
     - dir: the path to the directory/file to fetch in the ftp server 
@@ -20,19 +20,11 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
     version_path = os.path.join(out_path, request_ressource, pubchem_latest)
     if not os.path.exists(version_path):
         os.makedirs(version_path)
-    
-    # Get PubChem void
-    print("Download PubChem void ... ", end = '')
-    pubchem_original_void = os.path.join(dir_log, "PubChem_void.ttl")
-    con = ftp_con(ftp)
-    download_single_file(void_path, con, pubchem_original_void, log)
-    con.quit()
-    print("Ok")
 
     # Parse void
     print("Read Pubchem void.ttl file ... ", end = '')
     g_metadata = rdflib.Graph()
-    g_metadata.parse(pubchem_original_void, format='turtle')
+    g_metadata.parse(void_path, format='turtle')
     print("Ok")
 
     # Download data
@@ -200,7 +192,7 @@ def get_latest_from_MDTM(ftp, path, log):
         ftp.quit()
     except ftplib.all_errors as ftplib_e:
         print("Errors while trying to connect to ftp server at " + ftp + ", check logs at " + log)
-        with open(log, "ab") as f_log:
+        with open(log, "a") as f_log:
             f_log.write("\n" + str(ftplib_e) + "\n")
         sys.exit(3)
     # Parse data to create pubchem version
@@ -208,6 +200,12 @@ def get_latest_from_MDTM(ftp, path, log):
     latest = latest.strftime('%Y-%m-%d')
     print("Latest version is " + latest)
     return latest
+
+def get_latest_from_void(path_to_void):
+    g_void = rdflib.Graph()
+    g_void.parse(path_to_void, format = 'turtle')
+    modif_date = g_void.value(predicate = DCTERMS['modified'], subject = rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#PubChemRDF"), any = False)
+    return str(modif_date)
 
 def check_void(path_to_void, s):
     resource_uri = None

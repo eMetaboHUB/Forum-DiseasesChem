@@ -70,7 +70,7 @@ if config.has_section("MESH"):
 
     # Intialyze .log files
     log_path = os.path.join(args.log, "dl_mesh.log")
-    with open(log_path, "wb") as f_log:
+    with open(log_path, "w") as f_log:
         pass
 
     meta_resource = rdflib.URIRef("https://forum.semantic-metabolomics.org/MeSHRDF")
@@ -84,6 +84,7 @@ if config.has_section("MESH"):
 
         # If no resource was found, download from ftp
         if not mesh_uri:
+            print("MeSH version " + mesh_version + " was not found, download.")
             mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), mesh_version, ftp, ftp_path_void, ftp_path_mesh, log_path, args.log)
 
     # if a version was provided
@@ -124,6 +125,15 @@ if config.has_section("PUBCHEM"):
     ftp = config["PUBCHEM"].get("ftp")
     ftp_path_void = config["PUBCHEM"].get("ftp_path_void")
 
+    # Download void
+    dl_pubchem_void_log = os.path.join(args.log, "dl_pubchem_void.log")
+    with open(dl_pubchem_void_log, "w") as f_log:
+        pass
+    pubchem_original_void = os.path.join(args.log, "PubChem_void.ttl")
+    con = ftp_con(ftp)
+    download_single_file(ftp_path_void, con, pubchem_original_void, dl_pubchem_void_log)
+    con.quit()
+
     if not len(dir_ftp) == len(mincore) == len(maxcore) == len(name) == len(out_dir) == len(version):
         print("Error: PUBCHEM options dir_ftp, mincore, resource, out_dir, version and maxcore don't have the same length, check config file.")
         sys.exit(3)
@@ -138,7 +148,7 @@ if config.has_section("PUBCHEM"):
         
         # Intialyze .log files
         log_path = os.path.join(args.log, "dl_pubchem_" + resource_name + ".log")
-        with open(log_path, "wb") as f_log:
+        with open(log_path, "w") as f_log:
             pass
         
         # The URI of the resource that will be versioned
@@ -146,7 +156,8 @@ if config.has_section("PUBCHEM"):
 
         # if 'latest' was provided:
         if resource_version == "latest":
-            resource_version = get_latest_from_MDTM(ftp, ftp_path_void, log_path)
+
+            resource_version = get_latest_from_void(pubchem_original_void)
 
             # Check void
             path_to_void = os.path.join(args.out, resource_out_dir, resource_name, resource_version, "void.ttl")
@@ -154,7 +165,8 @@ if config.has_section("PUBCHEM"):
 
             # If no resource was found, download from ftp
             if not resource_uri:
-                resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, resource_version, ftp, ftp_path_void, os.path.join(args.out, resource_out_dir), log_path, args.log)
+                print("PubChem " + resource_name + " version " + resource_version + " was not found, download.")
+                resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, resource_version, ftp, pubchem_original_void, os.path.join(args.out, resource_out_dir), log_path)
         
         # if a version was provided
         else: 
