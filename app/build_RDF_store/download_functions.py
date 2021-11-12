@@ -36,11 +36,16 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
     # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
-    # On annote la nouvelle version avec les informations du fichier void
+    
+    # Add source:
+    ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
+    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource))
+
+    # Add source info
     for s,p,o in g_metadata.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource), None, None)):
-        if p == VOID['dataDump'] and not str(o).startswith("ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/" + dir):
-            continue
-        ressource_version.add_version_attribute(predicate = p, object = o)
+        if p != VOID['dataDump']:
+            ressource_version.add((s, p, o))
+        
     # On écrit le graph le fichier
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     g_metadata = None
@@ -90,25 +95,24 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     # On crée la nouvelle ressource MeSH
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
+
+    # Add source:
+    ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
+    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"))
+
     for s,p,o in g_metadata.triples((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), None, None)):
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
-        if (p == VOID['dataDump']):
-            if str(o) == "ftp://ftp.nlm.nih.gov/online/mesh/rdf/mesh.nt":
-                ressource_version.add_version_attribute(predicate = p, object = o)
-            else:
-                continue
-        elif (p != DCTERMS["created"]):
-            ressource_version.add_version_attribute(predicate = p, object = o)
-        else:
-            continue
+        if p != VOID['dataDump']:
+            ressource_version.add((s, p, o))
+    
     g_metadata = None
     # On crée le graph de données :
     print("Ok")
     print("Create MeSH new ressource version ... ", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
     mesh_graph.parse(mesh_out_path, format = "nt")
-    ressource_version.add_version_attribute(VOID["triples"], rdflib.Literal( len(mesh_graph), datatype = XSD.long))
-    ressource_version.add_version_attribute(VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long))
+    ressource_version.add((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
+    ressource_version.add((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
     print("Ok")
 
     # Clear graph
@@ -146,17 +150,23 @@ def download_MetaNetX(out_dir, out_log, version):
         sys.exit(3)
     print("Ok\nCreate new MetaNetX resource: ")
     ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
+
+    # Add source:
+    uri_metanetx = rdflib.URIRef("https://www.metanetx.org")
+    ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
+    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = uri_metanetx)
+
     print("Try to parse MetaNetX graph to extract metadata ... ", end = '')
     g_MetaNetX = rdflib.Graph()
     with gzip.open(os.path.join(version_path, "metanetx.ttl.gz"), "rb") as f_MetaNetX:
         g_MetaNetX.parse(f_MetaNetX, format="turtle")
     print("Ok\nExtract metadata ... ", end = '')
-    ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID["Dataset"])
-    ressource_version.add_version_attribute(predicate = DCTERMS["description"], object = rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments--namely MNXref--and proteins."))
-    ressource_version.add_version_attribute(predicate = DCTERMS["title"], object = rdflib.Literal("MetaNetX v." + version))
-    ressource_version.add_version_attribute(predicate = VOID["dataDump"], object = rdflib.URIRef("https://www.metanetx.org/ftp/" + version + "/metanetx.ttl.gz"))
-    ressource_version.add_version_attribute(predicate = VOID["triples"], object = rdflib.Literal(len(g_MetaNetX), datatype=XSD.long ))
-    ressource_version.add_version_attribute(predicate = VOID["distinctSubjects"], object = rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()]))))
+    ressource_version.add((uri_metanetx, RDF["type"],  VOID["Dataset"]))
+    ressource_version.add((uri_metanetx, DCTERMS["description"], rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments (namely MNXref) and proteins.")))
+    ressource_version.add((uri_metanetx, DCTERMS["title"], rdflib.Literal("MetaNetX v." + version)))
+    ressource_version.add((uri_metanetx, VOID["dataDump"], rdflib.URIRef("https://www.metanetx.org/ftp/" + version + "/metanetx.ttl.gz")))
+    ressource_version.add((uri_metanetx, VOID["triples"], rdflib.Literal(len(g_MetaNetX), datatype=XSD.long )))
+    ressource_version.add((uri_metanetx, VOID["distinctSubjects"], rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()])))))
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     # Clear memory
     g_MetaNetX = None
