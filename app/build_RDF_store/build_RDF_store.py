@@ -4,7 +4,7 @@ import json
 sys.path.insert(1, 'app/')
 from Elink_ressource_creator import Elink_ressource_creator
 from Database_ressource_version import Database_ressource_version
-from download_functions import download_MeSH, download_pubChem, download_MetaNetX
+from download_functions import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
@@ -63,13 +63,26 @@ if config.has_section("METANETX"):
 # MeSH
 if config.has_section("MESH"):
     mesh_out_dir = "MeSH"
-    mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), args.log)
+    _mesh_version = config["MESH"].get("version")
+    if _mesh_version == "latest":
+        mesh_version, mesh_uri = download_MeSH(os.path.join(args.out, mesh_out_dir), args.log)
+    else:
+        print("Version '" + _mesh_version + "' was provided for MeSH")
+        path_to_void = os.path.join(args.out, mesh_out_dir, _mesh_version, "void.ttl")
+        if glob.glob(path_to_void):
+            print("MeSH version " + _mesh_version + "' was found.")
+            mesh_uri = get_URI_version_from_void(path_to_void, rdflib.URIRef("https://forum.semantic-metabolomics.org/MeSHRDF"))
+        else:
+            print("MeSH version " + _mesh_version + "' was not found.")
+            print("Provide a valid version or download the latest")
+            sys.exit(3)
     with open(os.path.join(args.out, "upload_data.sh"), "a") as upload_f, open(os.path.join(args.out, "pre_upload.sh"), "a") as pre_upload:
         upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
         upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir,  mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")
         # Also for pre-upload:
         pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
         pre_upload.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")
+
 
 # PUBCHEM
 
@@ -96,20 +109,20 @@ if config.has_section("PUBCHEM"):
         resource_maxcore = maxcore[i]
         resource_version = version[i]
         # if a version was provided:
-        if resource_version:
+        if resource_version == "latest":
+            # Download/Create resource:
+            resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
+        else:
             print("Version '" + resource_version + "' was provided for PubChem subset " + resource_dir_ftp)
-            # Check if the version exist: 
-            if glob.glob(os.path.join(args.out, resource_out_dir, resource_name, resource_version, "void.ttl")):
+            # Check if the version exist:
+            path_to_void = os.path.join(args.out, resource_out_dir, resource_name, resource_version, "void.ttl")
+            if glob.glob(path_to_void):
                 print("PubChem Subset " + resource_dir_ftp + " version '" + resource_version  + "' was found.")
-                _ressource_version = Database_ressource_version(ressource = "PubChem/" + resource_name, version = resource_version)
-                resource_uri = str(_ressource_version.uri_version)
+                resource_uri = get_URI_version_from_void(path_to_void, rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/" + resource_name))
             else:
                 print("PubChem Subset " + resource_dir_ftp + " version '" + resource_version  + "' was not found.")
                 print("Provide a valid version or download the latest")
                 sys.exit(3)
-        else:
-            # Download/Create resource:
-            resource_version, resource_uri = download_pubChem(resource_dir_ftp, resource_name, os.path.join(args.out, resource_out_dir), args.log)
         # Add to PubChem Subset dict: 
         PubChem_subsets[resource_dir_ftp] = {"out_dir": resource_out_dir, "name": resource_name, "mincore": resource_mincore, "maxcore": resource_maxcore, "version": resource_version, "uri": resource_uri}
         if resource_maxcore:

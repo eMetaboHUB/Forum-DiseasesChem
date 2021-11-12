@@ -247,4 +247,20 @@ def download_MetaNetX(out_dir, out_log, version):
     print("=================================================================================\n")
     return str(ressource_version.uri_version)
     
-    
+def get_URI_version_from_void(path, meta_resource, strCast = True):
+    """This function is used to extract the URI of the versioned resource from the void.
+
+    Args:
+        path (str): path to the void.ttl file
+        meta_resource (rdflib.term.URIRef): The meta resource for which the versioned URI is the object of the property dcterms:hasVersion
+        strCast (bool): The URI has to be casted in string before returning
+
+    Returns:
+        [rdflib.term.URIRef]: the URI of the versioned resource
+    """
+    g_void = rdflib.Graph()
+    g_void.parse(path, format = 'turtle')
+    URI_version = g_void.value(predicate = DCTERMS['hasVersion'], subject = meta_resource, any = False)
+    if strCast:
+        URI_version = str(URI_version)
+    return URI_version
