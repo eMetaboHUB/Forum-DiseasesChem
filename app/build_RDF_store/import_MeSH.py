@@ -64,6 +64,7 @@ else:
         sys.exit(3)
 
 # Write upload files
-with open(os.path.join(args.out, mesh_upload_file), "a") as upload_f:
+with open(os.path.join(args.out, mesh_upload_file), "w") as upload_f:
+    upload_f.write("delete from DB.DBA.load_list ;\n")
     upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir, mesh_version, '') + "', 'mesh.nt', '" + mesh_uri + "');\n")
     upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", mesh_out_dir,  mesh_version, '') + "', 'void.ttl', '" + mesh_uri + "');\n")

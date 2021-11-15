@@ -24,7 +24,7 @@ except configparser.Error as e:
 meta_resource = rdflib.URIRef("https://forum.semantic-metabolomics.org/MetaNetX")
 MetaNetX_out_dir = "MetaNetX"
 MetaNetX_upload_file = config['DEFAULT'].get("upload_file")
-MetaNetX_log_file = config['DEFAULT'].get("upload_file")
+MetaNetX_log_file = config['DEFAULT'].get("log_file")
 MetaNetX_version = config['METANETX'].get("version")
 MetaNetX_url = config['METANETX'].get("url")
 MetaNetX_url = MetaNetX_url.format(version = MetaNetX_version)
