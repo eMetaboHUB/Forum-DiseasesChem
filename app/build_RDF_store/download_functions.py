@@ -64,6 +64,8 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     The function return the version and the uri of this new version.
     """
 
+    void_MeSH_uri = rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF")
+
     # Create version output directory
     out_path = os.path.join(out_dir, mesh_latest)
     if not os.path.exists(out_path):
@@ -99,21 +101,27 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
 
     # Add source:
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
-    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"))
+    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = void_MeSH_uri)
 
-    for s,p,o in g_metadata.triples((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), None, None)):
+    # Add source triples (except for dataDumps) from the void
+    for s,p,o in g_metadata.triples((void_MeSH_uri, None, None)):
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
         if p != VOID['dataDump']:
             ressource_version.version_graph.add((s, p, o))
     
+    # Complete source triples with number of subjects, triples and date of modification
+    ressource_version.version_graph.add((void_MeSH_uri, VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
+    ressource_version.version_graph.add((void_MeSH_uri, VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
+    ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
+
+    # Clear metadata graph
     g_metadata = None
+
     # On crée le graph de données :
     print("Ok")
     print("Create MeSH new ressource version ... ", end = '')
     mesh_graph = ressource_version.create_data_graph([], None)
     mesh_graph.parse(mesh_out_path, format = "nt")
-    ressource_version.version_graph.add((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
-    ressource_version.version_graph.add((rdflib.URIRef("http://id.nlm.nih.gov/mesh/void#MeSHRDF"), VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
     print("Ok")
 
     # Clear graph
