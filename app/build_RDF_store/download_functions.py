@@ -16,6 +16,12 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
     - out_log: path to log file
     The function return the version created and the uri of this new version. in case of errors during wget downloading, errors are printed in dl_pubchem_*.log
     """
+
+    # Init
+    pubchem_void_ns = "http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#"
+    void_PubChem = rdflib.URIRef(pubchem_void_ns + "PubChemRDF")
+    void_PubChem_resource = rdflib.URIRef(pubchem_void_ns + request_ressource)
+
     # Create output directory for requested ressource and last available version
     version_path = os.path.join(out_path, request_ressource, pubchem_latest)
     if not os.path.exists(version_path):
@@ -32,26 +38,29 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
     download_dir(dir, con, version_path, log)
     con.quit()
 
+    # Create PubChem resource version
     print("Build Pubchem " + request_ressource + " new ressource version ... ", end = '')
-    # On récupère la description en metadata du répertoire téléchargé  pour créer le graph qui sera associé à la ressource
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
     
-    # Add source:
+    # Add source
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
-    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource))
+    ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = void_PubChem_resource)
 
     # Add source info
-    for s,p,o in g_metadata.triples((rdflib.URIRef("http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#" + request_ressource), None, None)):
+    for s,p,o in g_metadata.triples((void_PubChem_resource, None, None)):
         if p != VOID['dataDump']:
             ressource_version.version_graph.add((s, p, o))
-    #TODO g_metadata.value((None, None, None))
+    
+    # Compte source with info about the main PubChem Dataset
+    ressource_version.version_graph.add((void_PubChem, VOID["subset"], void_PubChem_resource))
+    ressource_version.version_graph += g_metadata.triples((void_PubChem, None, None))
 
-    # On écrit le graph le fichier
+    # Write void.ttl
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     g_metadata = None
-    print("Ok")
-    print("=================================================================================\n")
+    print("\n\n")
+
     return ressource_version.version, str(ressource_version.uri_version)
 
 def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_log):
@@ -79,6 +88,7 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     con.quit()
     print("Ok")
 
+    # Read MeSH void
     print("Read MeSH void.ttl file ... ", end = '')
     g_metadata = rdflib.Graph()
     g_metadata.parse(mesh_original_void, format = 'turtle')
@@ -95,11 +105,11 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     print("Ok")
 
     print("Parse MeSH original metadata ... ", end = '')
-    # On crée la nouvelle ressource MeSH
+    # Create MeSH version
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
 
-    # Add source:
+    # Add source info
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
     ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = void_MeSH_uri)
 
@@ -109,6 +119,11 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
         if p != VOID['dataDump']:
             ressource_version.version_graph.add((s, p, o))
     
+    # Read MeSH graph to complete metadata
+    mesh_graph = rdflib.Graph()
+    mesh_graph.parse(mesh_out_path, format = "nt")
+    print("Ok")
+    
     # Complete source triples with number of subjects, triples and date of modification
     ressource_version.version_graph.add((void_MeSH_uri, VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
     ressource_version.version_graph.add((void_MeSH_uri, VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
@@ -116,20 +131,12 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
 
     # Clear metadata graph
     g_metadata = None
-
-    # On crée le graph de données :
-    print("Ok")
-    print("Create MeSH new ressource version ... ", end = '')
-    mesh_graph = ressource_version.create_data_graph([], None)
-    mesh_graph.parse(mesh_out_path, format = "nt")
-    print("Ok")
-
-    # Clear graph
     mesh_graph = None
     
     # On écrit le graph de la ressource
     ressource_version.version_graph.serialize(os.path.join(out_path, "void.ttl"), format = 'turtle')
-    print("=================================================================================\n")
+    print("\n\n")
+    
     return ressource_version.version, str(ressource_version.uri_version)
 
 def download_MetaNetX(out_dir, out_log, version):
