@@ -138,32 +138,24 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     
     return ressource_version.version, str(ressource_version.uri_version)
 
-def download_MetaNetX(out_dir, out_log, version, url):
-    # Intialyze logs
-    with open(out_log + "dl_metanetx.log", "wb") as f_log:
-        pass
-    version_path = os.path.join(out_dir, version)
-    print("Check if MetaNetX version " + version + " was already download: ", end = '')
-    test_r_info = glob.glob(os.path.join(version_path, "void.ttl"))
-    if len(test_r_info) == 1:
-        print("Yes\nMetaNetX RDF version " + version + " is already downloaded, end.\n\n")
-        ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
-        print("=================================================================================\n")
-        return str(ressource_version.uri_version)
-    # Else, download:
-    print("No\nTrying to dowload MetaNetX RDF file ... ", end = '')
+def download_MetaNetX(version_path, log, version, url):
+
     if not os.path.exists(version_path):
         os.makedirs(version_path)
+    
     # Download MeSH RDF
+    print("Download MetaNetX version " + version + " ... ", end = '')
     try:
-        subprocess.run("wget -P " + version_path + " " + url, shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("wget -P " + version_path + " " + url, shell = True, check = True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
         print(e)
-        with open(os.path.join(out_log, "dl_metanetx.log"), "ab") as f_log:
+        with open(log, "ab") as f_log:
             f_log.write(e.stderr)
         sys.exit(3)
-    print("Ok\nCreate new MetaNetX resource: ")
+    print("Ok")
+    
+    print("Create new MetaNetX resource: ")
     ressource_version = Database_ressource_version(ressource = "MetaNetX", version = version)
 
     # Add source:
@@ -171,11 +163,15 @@ def download_MetaNetX(out_dir, out_log, version, url):
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
     ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = uri_metanetx)
 
-    print("Try to parse MetaNetX graph to extract metadata ... ", end = '')
+    # Read MetaNetX graph
+    print("Parse MetaNetX graph to extract metadata ... ", end = '')
     g_MetaNetX = rdflib.Graph()
     with gzip.open(os.path.join(version_path, "metanetx.ttl.gz"), "rb") as f_MetaNetX:
         g_MetaNetX.parse(f_MetaNetX, format="turtle")
-    print("Ok\nExtract metadata ... ", end = '')
+    print("Ok")
+
+    # Extract metadata from MetaNetX graph
+    print("Extract metadata ... ", end = '')
     ressource_version.version_graph.add((uri_metanetx, RDF["type"],  VOID["Dataset"]))
     ressource_version.version_graph.add((uri_metanetx, DCTERMS["description"], rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments (namely MNXref) and proteins.")))
     ressource_version.version_graph.add((uri_metanetx, DCTERMS["title"], rdflib.Literal("MetaNetX v." + version)))
@@ -183,10 +179,10 @@ def download_MetaNetX(out_dir, out_log, version, url):
     ressource_version.version_graph.add((uri_metanetx, VOID["triples"], rdflib.Literal(len(g_MetaNetX), datatype=XSD.long )))
     ressource_version.version_graph.add((uri_metanetx, VOID["distinctSubjects"], rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()])))))
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
+    print("Ok")
     # Clear memory
     g_MetaNetX = None
-    print("Ok\nEnd")
-    print("=================================================================================\n")
+
     return str(ressource_version.uri_version)
     
 def get_URI_version_from_void(path, meta_resource, strCast = True):
