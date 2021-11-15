@@ -53,7 +53,6 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
             ressource_version.version_graph.add((s, p, o))
     
     # Compte source with info about the main PubChem Dataset
-    ressource_version.version_graph.add((void_PubChem, VOID["subset"], void_PubChem_resource))
     ressource_version.version_graph += g_metadata.triples((void_PubChem, None, None))
 
     # Write void.ttl
@@ -139,7 +138,7 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     
     return ressource_version.version, str(ressource_version.uri_version)
 
-def download_MetaNetX(out_dir, out_log, version):
+def download_MetaNetX(out_dir, out_log, version, url):
     # Intialyze logs
     with open(out_log + "dl_metanetx.log", "wb") as f_log:
         pass
@@ -157,7 +156,7 @@ def download_MetaNetX(out_dir, out_log, version):
         os.makedirs(version_path)
     # Download MeSH RDF
     try:
-        subprocess.run("wget -P " + version_path + " https://www.metanetx.org/ftp/" + version + "/metanetx.ttl.gz", shell = True, check=True, stderr = subprocess.PIPE)
+        subprocess.run("wget -P " + version_path + " " + url, shell = True, check=True, stderr = subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
         print(e)
@@ -180,7 +179,7 @@ def download_MetaNetX(out_dir, out_log, version):
     ressource_version.version_graph.add((uri_metanetx, RDF["type"],  VOID["Dataset"]))
     ressource_version.version_graph.add((uri_metanetx, DCTERMS["description"], rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments (namely MNXref) and proteins.")))
     ressource_version.version_graph.add((uri_metanetx, DCTERMS["title"], rdflib.Literal("MetaNetX v." + version)))
-    ressource_version.version_graph.add((uri_metanetx, VOID["dataDump"], rdflib.URIRef("https://www.metanetx.org/ftp/" + version + "/metanetx.ttl.gz")))
+    ressource_version.version_graph.add((uri_metanetx, VOID["dataDump"], rdflib.URIRef(url)))
     ressource_version.version_graph.add((uri_metanetx, VOID["triples"], rdflib.Literal(len(g_MetaNetX), datatype=XSD.long )))
     ressource_version.version_graph.add((uri_metanetx, VOID["distinctSubjects"], rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()])))))
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')

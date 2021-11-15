@@ -54,7 +54,9 @@ with open(os.path.join(args.out, "upload_data.sh"), "w") as upload_f, open(os.pa
 if config.has_section("METANETX"):
     MetaNetX_out_dir = "MetaNetX"
     MetaNetX_version = config['METANETX'].get("version")
-    MetaNetX_uri = download_MetaNetX(os.path.join(args.out, MetaNetX_out_dir), args.log, MetaNetX_version)
+    MetaNetX_url = config['METANETX'].get("url")
+    MetaNetX_url.format(version = MetaNetX_version)
+    MetaNetX_uri = download_MetaNetX(os.path.join(args.out, MetaNetX_out_dir), args.log, MetaNetX_version, MetaNetX_url)
     with open(os.path.join(args.out, "upload_MetaNetX.sh"), "w") as upload_MetaNetX:
         upload_MetaNetX.write("delete from DB.DBA.load_list ;\n")
         upload_MetaNetX.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'metanetx.ttl.gz', '" + MetaNetX_uri + "');\n")
