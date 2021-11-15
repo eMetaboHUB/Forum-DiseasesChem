@@ -40,10 +40,9 @@ class Elink_ressource_creator:
     - n_subjects_g_linked_id: the number of subjects in the g_linked_id graph
     - n_triples_g_linked_id: the total number of triples in the g_linked_id graph
     - n_subjects_g_linked_id_endpoint: the number of subjects in the g_linked_id_endpoint graph
-    - n_triples_g_linked_id_endpoint: the total number of triples in the g_linked_id_endpoint graph
-    - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.  
+    - n_triples_g_linked_id_endpoint: the total number of triples in the g_linked_id_endpoint graph 
     """
-    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout, ftp):       
+    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout):       
         self.dbfrom = dbfrom
         self.db = db
         self.file_index = 1
@@ -66,7 +65,6 @@ class Elink_ressource_creator:
         self.n_subjects_g_linked_id_endpoint = 0
         self.n_triples_g_linked_id_endpoint = 0
         self.r_timeout = timeout
-        self.ftp = ftp
         
     def append_linked_ids(self, id_packed_list, index_list, query_builder, pack_size, add_f_out_path):
         """This function append a new Pccompound to the pccompound_list attribute. Using the cid, this function send a request to NCBI server via Eutils to get PMID association
@@ -277,13 +275,11 @@ class Elink_ressource_creator:
                 except Exception as e:
                     print("Error while trying to serialize linked id graph endpoint at " + path_out_2 + g_linked_id_endpoint_name + " : " + str(e))
                     sys.exit(3)
-                # On zip et on ajoute le dataDump:
+                # On zip
                 try:
                     subprocess.run("gzip -f " + os.path.join(path_out_1, g_linked_id_name + ".ttl") + " " + os.path.join(path_out_2, g_linked_id_endpoint_name + ".ttl"), shell = True, check = True, stderr = subprocess.PIPE)
-                    self.ressource_version.add_DataDump(g_linked_id_name + ".ttl.gz", self.ftp)
-                    self.ressource_version_endpoint.add_DataDump(g_linked_id_endpoint_name + ".ttl.gz", self.ftp)
                 except subprocess.CalledProcessError as e:
-                    print("Error while trying to compress files and add dataDump at " + os.path.join(path_out_1, g_linked_id_name) + " and " + os.path.join(path_out_2, g_linked_id_endpoint_name) + " : " + str(e))
+                    print("Error while trying to compress files at " + os.path.join(path_out_1, g_linked_id_name) + " and " + os.path.join(path_out_2, g_linked_id_endpoint_name) + " : " + str(e))
                     sys.exit(3)
                 # On incrémente les nombres de sujets et de triples :
                 print(" Ok\n\tIncrement numbers of triples and subjects from added triples ...", end = '')

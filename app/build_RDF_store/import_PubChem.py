@@ -94,3 +94,10 @@ for i in range(n):
         with open(os.path.join(args.out, PubChem_upload_file), "a") as upload_f:
             upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', '" + resource_mask + "', '" + resource_uri + "');\n")
             upload_f.write("ld_dir_all ('" + os.path.join("./dumps/", resource_out_dir, resource_name, resource_version, '') + "', 'void.ttl', '" + resource_uri + "');\n")
+
+# Write footer
+with open(os.path.join(args.out, PubChem_upload_file), "a") as upload_f:
+    upload_f.write("select * from DB.DBA.load_list;\n")
+    upload_f.write("rdf_loader_run();\n")
+    upload_f.write("checkpoint;\n")
+    upload_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")

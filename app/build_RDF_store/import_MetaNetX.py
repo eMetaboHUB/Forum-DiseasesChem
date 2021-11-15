@@ -48,3 +48,7 @@ with open(os.path.join(args.out, MetaNetX_upload_file), "w") as upload_MetaNetX:
     upload_MetaNetX.write("delete from DB.DBA.load_list ;\n")
     upload_MetaNetX.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'metanetx.ttl.gz', '" + MetaNetX_uri + "');\n")
     upload_MetaNetX.write("ld_dir_all ('" + os.path.join("./dumps/", MetaNetX_out_dir, MetaNetX_version, '') + "', 'void.ttl', '" + MetaNetX_uri + "');\n")
+    upload_MetaNetX.write("select * from DB.DBA.load_list;\n")
+    upload_MetaNetX.write("rdf_loader_run();\n")
+    upload_MetaNetX.write("checkpoint;\n")
+    upload_MetaNetX.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
