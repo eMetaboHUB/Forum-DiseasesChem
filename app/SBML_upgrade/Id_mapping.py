@@ -15,7 +15,7 @@ from Database_ressource_version import Database_ressource_version
 
 
 class Id_mapping:
-    def __init__(self, version, ftp):
+    def __init__(self, version):
         """
         - ressource_uris: a dict with key as ressource name and values representing different URIs that may be associated to the ressource and that will be consider as synonyms uris
         - graph_original_uri_prefix: a dict with key as ressource name and values as the URI used in the SBML graph
@@ -24,7 +24,6 @@ class Id_mapping:
         - uri_PubChem: a dict with key as ressource name and values representing the URI of the ressource present in the PubChem type RDF graph
         - sources:  a list of uris representing RDF graph which were used a sources in the process. All the list is exported in metadat when creating Intra-ressources equivalences. For specific Inter-ressource equivalences (Ex: MetaNetX or PubChem), only the associated source graph is exported
         - version: the version of the ressource, if None date is used
-        - ftp: ftp server adress on which data will be uploaded. A valid adress is not mandatory as data will not be automatically upload to the ftp server, an empty string can thus be used.
         """
         self.ressource_uris = dict()
         self.graph_original_uri_prefix = dict()
@@ -33,7 +32,6 @@ class Id_mapping:
         self.uri_PubChem = dict()
         self.sources = list()
         self.version = version
-        self.ftp = ftp
     
     def get_graph_ids_set(self, path_to_graph, graph_uri, format):
         """
@@ -96,7 +94,6 @@ class Id_mapping:
             try:
                 # Use of gzip -f to force overwritting if file already exist
                 subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
-                ressource_version_intra.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
                 print(e)
@@ -218,7 +215,6 @@ class Id_mapping:
             try:
                 # Use of gzip -f to force overwritting if file already exist
                 subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
-                ressource_version_MetaNetX.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
                 print(e)
@@ -260,7 +256,6 @@ class Id_mapping:
             try:
                 # Use of gzip -f to force overwritting if file already exist
                 subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
-                ressource_version_MetaNetX.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
                 print(e)
@@ -327,7 +322,6 @@ class Id_mapping:
             try:
                 # Use of gzip -f to force overwritting if file already exist
                 subprocess.run("gzip -f " + os.path.join(path_out, g_name + ".ttl"), shell = True, check=True, stderr = subprocess.PIPE)
-                ressource_version_PubChem.add_DataDump(g_name + ".ttl.gz", self.ftp)
             except subprocess.CalledProcessError as e:
                 print("Error while trying to compress files")
                 print(e)

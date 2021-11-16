@@ -27,8 +27,9 @@ RUN apt update && \
     wget curl vim htop sshpass \
     libxml2 libxml2-dev libxslt1-dev gcc \
     python3 python3-dev python3-setuptools python3-pip &&\
+    pip3 install pyparsing==2.* &&\
     pip3 install eutils==0.6.0 &&\
-    pip3 install rdflib==5.0.0 &&\
+    pip3 install rdflib==6.0.0 &&\
     pip3 install numpy==1.18.2 &&\
     pip3 install elementpath==1.4.3 &&\
     pip3 install requests==2.23.0 &&\
