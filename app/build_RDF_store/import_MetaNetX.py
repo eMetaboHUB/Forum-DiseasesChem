@@ -41,6 +41,7 @@ path_to_void = os.path.join(version_path, "void.ttl")
 MetaNetX_uri = check_void(path_to_void, meta_resource)
 
 if not MetaNetX_uri:
+    print("MetaNetX version " + MetaNetX_version + " was not found.")
     MetaNetX_uri = download_MetaNetX(version_path, log_path, MetaNetX_version, MetaNetX_url)
 
 # Create MetanetX resource
