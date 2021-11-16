@@ -38,7 +38,6 @@ path_to_MetaNetX_dir = os.path.join(path_to_dumps, MetaNetX_out_dir, MetaNetX_v)
 path_to_g_MetaNetX = os.path.join(path_to_MetaNetX_dir, f_name)
 
 # Create upload file
-
 with open(os.path.join(path_to_dumps, update_f_name), "w") as update_f:
     pass
 
