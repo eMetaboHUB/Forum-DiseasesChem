@@ -165,9 +165,9 @@ def download_MetaNetX(version_path, log, version, url):
 
     # Read MetaNetX graph
     print("Parse MetaNetX graph to extract metadata ... ", end = '')
-    #TODO use os.path.basename to get the file name instead on putting directly 'metanetx.ttl.gz'
+    f = os.path.basename(url)
     g_MetaNetX = rdflib.Graph()
-    with gzip.open(os.path.join(version_path, "metanetx.ttl.gz"), "rb") as f_MetaNetX:
+    with gzip.open(os.path.join(version_path, f), "rb") as f_MetaNetX:
         g_MetaNetX.parse(f_MetaNetX, format="turtle")
     print("Ok")
 
