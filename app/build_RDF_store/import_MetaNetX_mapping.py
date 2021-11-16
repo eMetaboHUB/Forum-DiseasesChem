@@ -6,7 +6,7 @@ import subprocess
 import gzip
 
 from Id_mapping import Id_mapping
-from processing_functions import *
+from sbml_processing_functions import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")

@@ -2,8 +2,9 @@ import argparse, sys, os
 import configparser
 import subprocess
 import rdflib
-from processing_functions import *
+from sbml_processing_functions import *
 from Id_mapping import Id_mapping
+from download_functions import check_void
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="path to the configuration file")
@@ -50,7 +51,8 @@ if not glob.glob(os.path.join(path_to_dumps, path_to_g_SBML)):
     sys.exit(3)
 
 # Check if this version already exist by checkink the Intra-mapping void
-if glob.glob(os.path.join(path_to_dumps, "Id_mapping", "Intra", "SBML", sbml_version, "void.ttl")):
+intra_eq_uri = check_void(os.path.join(path_to_dumps, "Id_mapping", "Intra", "SBML", sbml_version, "void.ttl"), rdflib.URIRef("https://forum.semantic-metabolomics.org/Id_mapping/Intra/SBML"))
+if intra_eq_uri:
     print("void found at " + os.path.join(path_to_dumps, "Id_mapping", "Intra", "SBML", sbml_version, "void.ttl"))
     print("Skip computation, the resource already exists.")
 

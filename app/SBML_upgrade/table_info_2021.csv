@@ -1,8 +1,0 @@
-chebi	https://identifiers.org/chebi/CHEBI:,http://purl.obolibrary.org/obo/CHEBI_,https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:	https://identifiers.org/chebi/CHEBI:	http://purl.obolibrary.org/obo/CHEBI_	http://purl.obolibrary.org/obo/CHEBI_
-pubchem	https://identifiers.org/pubchem.compound/,http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID	https://identifiers.org/pubchem.compound/		http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID
-kegg	https://identifiers.org/kegg.compound/,https://www.kegg.jp/entry/,https://identifiers.org/kegg.compound:	https://identifiers.org/kegg.compound/	https://identifiers.org/kegg.compound:	
-hmdb	https://identifiers.org/hmdb/,https://identifiers.org/hmdb:	https://identifiers.org/hmdb/	https://identifiers.org/hmdb:	
-lipidmaps	https://identifiers.org/lipidmaps/,https://identifiers.org/lipidmaps:	https://identifiers.org/lipidmaps/	https://identifiers.org/lipidmaps:	
-chembl	https://identifiers.org/chembl.compound/,http://rdf.ebi.ac.uk/resource/chembl/molecule/			
-metanetx	https://identifiers.org/metanetx.chemical/,https://rdf.metanetx.org/chem/	https://identifiers.org/metanetx.chemical/	https://rdf.metanetx.org/chem/	
-bigg	https://identifiers.org/bigg.metabolite/,https://identifiers.org/bigg.metabolite:	https://identifiers.org/bigg.metabolite/	https://identifiers.org/bigg.metabolite:	
