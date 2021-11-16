@@ -276,19 +276,19 @@ class Id_mapping:
         graph_metaNetX = None
         return ressource_version_MetaNetX.uri_version
     
-    def create_graph_from_pubchem_type(self, path_to_pubchem_dir, path_out, graph_uri):
+    def create_graph_from_pubchem_type(self, path_to_pubchem_dir, path_out, graph_uri, mask):
         """
         This function is ised to create a mapping graph from information contains in type pubchem graphs which can contains links between PubChem CID and ChEBI
         - path_to_pubchem_dir: path to PubChem type RDF graph
         - path_out: path to the output directory
         """
 
-        print("Ok\nRead pubchem type graph(s) ... ", end = '')
-        if len(glob.glob(os.path.join(path_to_pubchem_dir, "*_type*.ttl.gz"))) == 0:
+        print("Read pubchem type graph(s) ... ", end = '')
+        if len(glob.glob(os.path.join(path_to_pubchem_dir, mask))) == 0:
             print("Can't find *_type*.ttl.gz PubChem RDF file(s) in " + path_to_pubchem_dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
             sys.exit(3)
         pubchem_graph = rdflib.ConjunctiveGraph()
-        for path in glob.glob(os.path.join(path_to_pubchem_dir, "*_type*.ttl.gz")):
+        for path in glob.glob(os.path.join(path_to_pubchem_dir, mask)):
             with gzip.open(path, "rb") as f:
                 pubchem_graph.parse(f, format="turtle")
 

@@ -125,25 +125,6 @@ def ask_for_graph(url, graph_uri):
         return True
     return False
 
-def get_uri_from_void(dir):
-    """
-    This function is used to extract the uri assocaited to a version of a resource from the void.ttl file
-    - dir: the path to the resource version directory
-    """
-    if not os.path.exists(os.path.join(dir, "void.ttl")):
-        print("Can't find void.ttl file in " + dir + ". Please, check version.\nIf needed, the resource can be created using build_RDF_store.py")
-        sys.exit(3)
-    g = rdflib.Graph()
-    g.parse(os.path.join(dir, "void.ttl"), format = "turtle")
-    uri = g.query(
-        """
-        SELECT (STR(?o) as ?URI)
-        WHERE {
-            ?s <http://purl.org/dc/terms/hasVersion> ?o .
-        }
-        """)
-    return(str(list(uri)[0][0]))
-
 def create_annotation_graph_ressource_version(path_to_annot_graphs_dir, version, ressource_name, desc, title, sources):
     """
     This function is used to create the ressource_info file associated to the version of the created annotation_graph.

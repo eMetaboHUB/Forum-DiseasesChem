@@ -42,13 +42,6 @@ path_to_g_MetaNetX = os.path.join(path_to_MetaNetX_dir, f_name)
 with open(os.path.join(path_to_dumps, update_f_name), "w") as update_f:
     pass
 
-# Check if this MetaNetX version exists:
-uri_source_graph = check_void(os.path.join(path_to_dumps, MetaNetX_out_dir, MetaNetX_v, "void.ttl"), meta_resource)
-if not uri_source_graph:
-    print("Can't find a valid version " + MetaNetX_v + " of MetaNetX at " + os.path.join(path_to_dumps, MetaNetX_out_dir, MetaNetX_v))
-    print("See import_MetanetX.py")
-    sys.exit(3)
-
 
 # Check if this Id-mapping resource for MetaNetX already exists :
 uri_MetaNetX_inter_eq = check_void(os.path.join(path_to_dumps, "Id_mapping", "Inter", MetaNetX_out_dir, MetaNetX_v, "void.ttl"), rdflib.URIRef("https://forum.semantic-metabolomics.org/Id_mapping/Inter/MetaNetX"))
@@ -59,6 +52,13 @@ if uri_MetaNetX_inter_eq and uri_MetaNetX_intra_eq:
 
 # If not, compute:
 else:
+    # Check if this MetaNetX version exists:
+    uri_source_graph = check_void(os.path.join(path_to_dumps, MetaNetX_out_dir, MetaNetX_v, "void.ttl"), meta_resource)
+    if not uri_source_graph:
+        print("Can't find a valid version " + MetaNetX_v + " of MetaNetX at " + os.path.join(path_to_dumps, MetaNetX_out_dir, MetaNetX_v))
+        print("See import_MetanetX.py")
+        sys.exit(3)
+
     # Intialyze Object:
     map_ids = Id_mapping(MetaNetX_v)
     print("Import configuration table ... ", end = '')
