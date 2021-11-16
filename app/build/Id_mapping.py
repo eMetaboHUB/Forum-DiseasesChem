@@ -104,6 +104,7 @@ class Id_mapping:
             print("Ok")
         print("Write metadata graph ... ", end = '')
         ressource_version_intra.version_graph.bind("void", VOID)
+        ressource_version_intra.add_version_attribute(RDF["type"], VOID["Dataset"])
         ressource_version_intra.add_version_attribute(DCTERMS["description"], rdflib.Literal("URIs equivalence inside a ressource"))
         ressource_version_intra.add_version_attribute(DCTERMS["title"], rdflib.Literal("URIs equivalence inside a ressource"))
         for source_uris in self.sources:
@@ -266,6 +267,7 @@ class Id_mapping:
             # Pas besoin de savoir s'il faut les ajouter dans l'intra-dict, car ils y ont nécéssairement été ajouté par le run MetaNetX .vs. ressource  
         print("Write metadata graph ...", end = '')
         ressource_version_MetaNetX.version_graph.bind("void", VOID)
+        ressource_version_MetaNetX.add_version_attribute(RDF["type"], VOID["Dataset"])
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from MetaNetX"))
         ressource_version_MetaNetX.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
@@ -339,6 +341,7 @@ class Id_mapping:
         self.sources.append(graph_uri)
         print("Write metadata graph ... ", end = '')
         ressource_version_PubChem.version_graph.bind("void", VOID)
+        ressource_version_PubChem.add_version_attribute(RDF["type"], VOID["Dataset"])
         ressource_version_PubChem.add_version_attribute(DCTERMS["description"], rdflib.Literal("Ids correspondances between differents ressources from PubChem"))
         ressource_version_PubChem.add_version_attribute(DCTERMS["title"], rdflib.Literal("Ids correspondances from PubChem"))
         ressource_version_PubChem.add_version_attribute(DCTERMS["source"], rdflib.URIRef(graph_uri))
