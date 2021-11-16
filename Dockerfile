@@ -55,6 +55,7 @@ RUN apt update && \
 RUN mkdir /workdir \
     /workdir/share-virtuoso/ \
     /workdir/out/ \
+    /workdir/config/ \
     /workdir/app \
     /workdir/workflow \
     /workdir/logs-app
