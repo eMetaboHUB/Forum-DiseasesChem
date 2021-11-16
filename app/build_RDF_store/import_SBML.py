@@ -72,5 +72,5 @@ else:
 
 print("Export upload file")
 create_upload_file_from_resource(path_to_dumps, os.path.dirname(path_to_g_SBML), gem_file, uri, update_f_name)
-create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version), "*.ttl.gz", str(intra_eq_uri), update_f_name)
-create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version), "void.ttl", str(intra_eq_uri), update_f_name)
+create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version, ''), "*.ttl.gz", str(intra_eq_uri), update_f_name)
+create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "SBML", sbml_version, ''), "void.ttl", str(intra_eq_uri), update_f_name)
