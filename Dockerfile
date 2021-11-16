@@ -44,12 +44,12 @@ RUN apt update && \
 RUN apt update && \
     apt-get install -y r-base
 
-RUN R -e "install.packages('optparse', repos = 'http://cran.us.r-project.org')"
-RUN R -e "install.packages('bigstatsr', repos = 'http://cran.us.r-project.org')"
-RUN R -e "install.packages('parallel', repos = 'http://cran.us.r-project.org')"
-RUN R -e "install.packages('foreach', repos = 'http://cran.us.r-project.org')"
-RUN R -e "install.packages('R.utils', repos = 'http://cran.us.r-project.org')"
-RUN R -e "install.packages('readr', repos = 'http://cran.us.r-project.org')"
+# RUN R -e "install.packages('optparse', repos = 'http://cran.us.r-project.org')"
+# RUN R -e "install.packages('bigstatsr', repos = 'http://cran.us.r-project.org')"
+# RUN R -e "install.packages('parallel', repos = 'http://cran.us.r-project.org')"
+# RUN R -e "install.packages('foreach', repos = 'http://cran.us.r-project.org')"
+# RUN R -e "install.packages('R.utils', repos = 'http://cran.us.r-project.org')"
+# RUN R -e "install.packages('readr', repos = 'http://cran.us.r-project.org')"
 
 # SET WORK DIRECTORY
 RUN mkdir /workdir \
