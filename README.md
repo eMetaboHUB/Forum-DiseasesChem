@@ -175,11 +175,27 @@ We deployed the FORUM KG using Virtuoso on a server with 16 cpus and 128 GB of m
 
 Also, all metadata related to the FORUM KG are provided in a VoID file accessible at https://forum.semantic-metabolomics.fr/.well-known/void and directly queryable on the SPARQL endpoint.
 
-To build the initial triplestore, you can use the scripts provided in the build directory or directly download RDF files from the FTP server.
+To build the initial triplestore, you can use the scripts provided in the build directory or directly download the compressed *share* directory of the current release on the ftp server
 
 #### 2.1 - Build the triplestore
 
 ##### 2.1.1 - The core triplestore
+
+To build the triplestore, several scripts are available, each dedicated to a specific FORUM resource. Workflow scripts describing all steps of the current release construction are also availables in the *workflow directory*.
+
+All the scripts use to create/import resources create at least:
+
+- one or more data graphs containing triples in a format accepted by the Virtuoso's loading functions (see http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader). This data **must** be written to the *share* directory (*/workdir/share-virtuoso* in the docker)
+
+- a void.ttl file, written in the same directory as the data graphs, describing the metadata.
+
+- an upload file containing all the iSQL commands to load the graph in Virtuoso (See http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader). The upload files are **always** written at the root of the *share* directory.
+
+In the following sections, all example commands are provided as like they are use in the *forum_scripts* Docker.
+
+Configuration files for all scripts used in the current release are provided in the *config* directory.
+
+##### The vocabularies:
 
 The vocabulary directory contains files associated to the schema of used ontology, they can be download using the docker resource directory or at:
 
@@ -198,20 +214,166 @@ The ChEBI ontology file is often updated and the actual version of the ChEBI ont
 
 *Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt ontology seems to be stable.
 
+To download the vocabulary files along with their upload file, use import_vocabulary.sh
+
+The upload file also loads the namespaces in Virtuoso.
+
+```bash
+bash app/build/import_vocabulary.sh -s /workdir/share-virtuoso -f ftp.semantic-metabolomics.org:upload_2021.tar.gz -u forum -p Forum2021Cov!
+```
+
+##### MetaNetX
+
+To import the MetaNetX resource in FORUM, use: import_MetaNetX.py
+
+```bash
+python3 -u app/build/import_MetaNetX.py --config="/workdir/config/release-2021/import_MetaNetX.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
+```
+###### Config
+
+- [DEFAULT]
+  - upload_file = the name of the upload file
+  - log_file = the name of the log file
+- [METANETX]
+  - version = The MetaNetX version (See https://www.metanetx.org/ftp/)
+  - url = The download url. The version attribute complete the url (eg. https://www.metanetx.org/ftp/{version}/metanetx.ttl.gz)
+
+
+##### MeSH
+
+To import the MeSH resource in FORUM, use: import_MeSH.py
+
+```bash
+python3 -u app/build/import_MeSH.py --config="/workdir/config/release-2021/import_MeSH.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
+```
+
+###### Config
+
+- [DEFAULT]
+  - upload_file = the name of the upload file
+  - log_file = the name of the log file
+- [MESH]
+  - version = the version that should be loaded in Virtuoso. Indicate "latest", to download and load the latest available version of MeSH, or, provide an MeSH version already available in the share directory.
+  - ftp = the ftp adress of MeSH
+  - ftp_path_void = path to the void file from the ftp
+  - ftp_path_mesh = path to the mesh data file from the ftp
+
+##### PubChem
+
+See https://pubchemdocs.ncbi.nlm.nih.gov/rdf
+
+PubChem data are divided into subsets: compounds, descriptors, reference ...
+
+Each subset is relevant but, depending on the requests, not all subsets (and all data files in a subset) need to be loaded at the same time. The script import_PubChem.py allow to download several PubChem subsets, but only load some of them, by specifying the file mask.
+
+This script is therefore use two times:
+- A first time to download all the PubChem subsets and create an uplod file containing only PubChem Compounds types and reference data (import_PubChem_min.ini)
+- A Second time to create a new upload file to load all the PubChem data in Virtuoso (import_PubChem_full.ini).
+
+```bash
+python3 -u app/build/import_PubChem.py --config="/workdir/config/release-2021/import_PubChem_min.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
+```
+###### Config
+
+- [DEFAULT]
+  - upload_file = the name of the upload file
+  - log_file = the name of the log file
+- [PUBCHEM]
+  - dir_ftp = a list of the PubChem's subdomain directories to download from the ftp (eg. compound/general)
+  - name = a list of the PubChem's subdomain name
+  - out_dir = a list of the PubChem's subdomain directories to write data in the *share* dir
+  - mask = a list of the masks of the files to be loaded. If false, the associated subdomain will not be loaded
+  - version = a list of the version of the PubChem's subdomain. Indicate "latest", to download the latest available version, or, provide a version already available in the share directory.
+  - ftp = path to the void file from the ftp
+  - ftp_path_void = path to the void file from the ftp
+
+
+##### PMID-CID
+
+To integrate the linkSet PMID-CID providing triples that an article (pmid) *discusses* a PubChem Compound (CID), use: import_PMID_CID.py
+
+Being a LinkSet, a valid path to the directories of the targeted PubChem compound and reference graph must also be provided.
+
+This script produced two subset:
+
+- PMID_CID: contains triples:
+> PMIDX cito:discusses CIDY
+
+- PMID_CID_endpoint contains information about the providers of these relations: 
+> endpoint:PMIDX_CIDY obo:IAO_0000136 PMIDX ;
+> dcterms:contributor C ;
+> cito:isCitedAsDataSourceBy CIDY .
+
+There are 3 types of contributors (source https://doi.org/10.1186/s13321-016-0142-6): 
+- concept:Journal_Publishers: Links are provided to PubMed by publishers.
+- source:ID11939: Computationally generated links to PubMed articles that have a common MeSH annotation.
+- concept: NIH_Substance_Repository: Links generated from cross-references provided to PubChem by data contributors.
+
+```bash
+python3 -u app/build/import_PMID_CID.py --config="/workdir/config/release-2021/import_PMID_CID.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
+```
+
+###### Config
+
+- [DEFAULT]
+  - upload_file = the name of the upload file
+  - log_file = the name of the log file
+[ELINK]
+  - version = the version. If this version already exists (a valid void.ttl file found at *share/PMID_CID/{version}/void.ttl), the computation will be skiped and only the upload file will be produced.
+  - run_as_test = (True/False) indicating if the Elink processes have to be run as test (only the first 5000 pmids) or full
+  - pack_size = the number of identifiers that will be send in the Elink request. For CID - PMID, 5000 is recommended. (please refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html)
+  - api_key = an apiKey provided by a NCBI account
+  - timeout =  the period (in seconds) after which a request will be canceled if too long. For CID - PMID, 600 is recommended.
+  - max_triples_by_files = the maximum number of associations exported in a file. For CID - PMID, 5000000 is recommended.
+  - reference_uri_prefix = the prefix of the reference subdomain URIs for PMIDs
+  - compound_path = path in the *share* directory to the targeted compound graph directory. This path will be used to access the void.ttl file containing information about the version of this PubChem compound graph.
+  - reference_path = path in the *share* directory to the targeted reference graph directory. This path will also be used to search for "*_type*.ttl.gz" reference files. 
+
+
+##### Chemont
+
+In order to provide a MeSH enrichment from ChemOnt classes, the goal of this procedure is to retrieve ChemOnt classes associated to PubChem compounds, using only those for which a literature is available. The literature information is extracted from PMID - CID graphs, while the InchiKey annotation from PubChem InchiKey graphs.
+
+A valid path to the directories of the targeted PubChem compound and PubChem InchiKey for annotations must be provided.
+
+ChemOnt classes associated to a PubChem compound are accessible through their InchiKey at the URL http://classyfire.wishartlab.com/entities/INCHIKEY.json
+
+For a molecule, ChemOnt classes are organised in 2 main categories: 
+- A *Direct-parent* class: representing the most dominant structural feature of the chemical compounds
+
+- Some *Alternative parents* classes: Chemical features that also describe the molecule but do not have an ancestor–descendant relationship with each other or with the *Direct Parent* class. 
+
+These both types of classes are stored separately in two different graphs.
+
+
+*Djoumbou Feunang, Y., Eisner, Wishart, D.S., 2016. ClassyFire: automated chemical classification with a comprehensive, computable taxonomy. J Cheminform 8, 61. https://doi.org/10.1186/s13321-016-0174-y*
+
+How to run:
+```python
+python3 -u app/build/import_Chemont.py --config="config/release-2021/import_Chemont.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
+```
+
+### Config file
+
+- [DEFAULT]
+  - upload_file = the name of the upload file
+  - log_dir = the name of the log file
+-[CHEMONT]
+  - version = the version. If this version already exists (a valid void.ttl file found at *share/PMID_CID/{version}/void.ttl), the computation will be skiped and only the upload file will be produced.
+  - n_processes = number of simultaneoulsly sent requests to ClassyFire
+- [PMID_CID]
+  - mask = the mask of the PMID_CID files to extract
+  - path = path to the PMID_CID directory to extract the list of CID with available literature
+- [INCHIKEY]
+  - mask = the mask of the inchikey files to extract
+  - path = path to the inchikey directory to extract the inchikey annotation of PubChem compounds
+
 ##### 2.1.2 - Integration of metabolic networks.
 
-Metabolic networks could also be integrated into the triplestore using the workflow script: w_upload_metabolic_network.
-During this process Id-mapping graphs from the metabolic network itself but also from PubChem and MetaNetX are also integrated. See the directory *SBML_upgrade* for more details.
+**See docs/sbml.md**
 
-```bash
-workflow/w_upload_metabolic_network.sh -a /path/to/metablic/network -b SBLM_version -c path/to/config/file -d MetaNetX_version -e PubChem_version -s /path/to/virtuoso/share/directory -l /path/to/log/dir
-```
+An workflow example file from the current release to import a SBML file with all the needed annotation graphs in Virtuoso is provided in the *workflow directory*
 
-eg.
-
-```bash
-workflow/w_upload_metabolic_network.sh -a out/HumanGEM/rdf/v1.6/HumanGEM.ttl -b Human1/1.6 -c app/SBML_upgrade/config/config_SBML.ini -d 4.1 -e 2020-12-03 -s /workdir/share-virtuoso -l /workdir/logs-app
-```
 
 #### 2.2 - Or ... Download RDF files from FTP
 
