@@ -9,7 +9,7 @@ import glob
 import subprocess
 import itertools
 import csv
-from rdflib.namespace import XSD, DCTERMS, OWL, SKOS, VOID
+from rdflib.namespace import XSD, DCTERMS, OWL, SKOS, VOID, RDF, RDFS
 sys.path.insert(1, 'app/')
 from Database_ressource_version import Database_ressource_version
 
