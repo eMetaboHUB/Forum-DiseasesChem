@@ -86,22 +86,24 @@ If not
 ``` 
 Documentation at [tenforce/virtuoso](https://hub.docker.com/r/tenforce/virtuoso)
 
-Before building the triplestore, you need to create 4 directories:
+Before building the triplestore, you should create 5 directories:
 - the **data** directory: it will contain all analysis result files, such as *Compound - MeSH* associations
 - the **docker-virtuoso** directory: it will contain the Virtuoso session files and data
-- the **docker-virtuoso/share** sub-directory: It will contain all data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dump* directory of the Virtuoso docker image.
-- the **logs** directory: to store logs.
+- the **docker-virtuoso/share** sub-directory: **The most important directory**. It will contain all the data that need to be loaded in the Virtuoso triplestore. This sub-directory will be bind to the *dumps* directory in the Virtuoso docker image.
+- the **logs** directory: to store log files
+- the **config** directory: to store config files
 
 So, for instance, you can execute:
 ```
 mkdir data
-mkdir logs
 mkdir -p docker-virtuoso/share
+mkdir logs
+mkdir config
 ```
 
 Two possibility to build the triplestore:
 - You can use the provided docker-image which contains all needed packages and libraries.
-- Or, you can execute them on your own environment, but check that all needed packages are installed.
+- Or, you can execute them on your own environment, but check that all needed packages are installed (See Dockerfile).
 
 If you want to use the docker image, first build it :
 
@@ -116,6 +118,7 @@ In this container, three directories are intented to be bind with the host:
 - out: to export results in data (**data** on host)
 - share-virtuoso: to create new RDF files in the Virtuoso shared directory (**docker-virtuoso/share** on host)
 - logs-app: to export logs (**logs** on host)
+- config: for custom config files
 
 Then, you can launch it using:
 
@@ -124,6 +127,7 @@ docker run --name forum_scripts --rm -it --network="host" \
 -v /path/docker-virtuoso/share:/workdir/share-virtuoso \
 -v /path/to/data/dir:/workdir/out \
 -v /path/to/log/dir:/workdir/logs-app \
+-v /path/to/config/dir:/workdir/config \
 forum/processes bash
 ```
 
@@ -134,6 +138,7 @@ docker run --detach --name forum_scripts --rm -t --network="host" \
 -v /path/docker-virtuoso/share:/workdir/share-virtuoso \
 -v /path/to/data/dir:/workdir/out \
 -v /path/to/log/dir:/workdir/logs-app \
+-v /path/to/config/dir:/workdir/config \
 forum/processes bash
 ```
 When using detach mode, the container is running in the background, which can be really convinient to avoid *Broken pipe*, for instance if your are working on a server.
@@ -166,41 +171,15 @@ Also, if you use the docker forum/processes, you should use in your commands, di
 
 The building of the KG from scratch can take several days, including the download of the raw data, and the computation of relations between chemical compounds/classes and MeSH descriptors. The building of the KG was achieved on a server using 189GB of memory and 12 cpus.
 
-We deployed the FORUM KG using Virtuoso on a server with 16 cpus and 128 GB of memory. We strongly recommend to deploy it on a SSD-type storage as it can take more than 20 days on a classic storage. 
+We deployed the FORUM KG using Virtuoso on a server with 16 cpus and 128 GB of memory. We strongly recommend to deploy it on a SSD-type storage as it can take more than 20 days on a classic storage (that's not a joke). 
 
 Also, all metadata related to the FORUM KG are provided in a VoID file accessible at https://forum.semantic-metabolomics.fr/.well-known/void and directly queryable on the SPARQL endpoint.
 
-To build the initial triplestore, you can use the script w_buildTripleStore.sh or directly download RDF files from the FTP server.
+To build the initial triplestore, you can use the scripts provided in the build directory or directly download RDF files from the FTP server.
 
 #### 2.1 - Build the triplestore
 
 ##### 2.1.1 - The core triplestore
-
-There are two configuration files related to this step:
-- The first contains parameters about the creation of the triplestore. See README in the *build_RDF_store* sub-directory for option details.
-- The second contains parameters to integrate chemont classes in the triplestore. See README in the *Chemont* sub-directory for option details.
-
-If *-b* or *-c* is not provided, the corresponding triples are not created.
-
-Then, from the base directory execute: 
-
-```bash
-./workflow/w_buildTripleStore.sh -b path/to/build_RDF_store/config -c path/to/Chemont/config -v version -s path/to/virtuoso/shared/directory -l /path/to/log/dir
-```
-eg.:
-
-```bash
-./workflow/w_buildTripleStore.sh -b app/build_RDF_store/config/config.ini -c app/ChemOnt/config/2020-08-14/config.ini -v test -s ./docker-virtuoso/share -l ./logs-app
-```
-
-- *Option details:*
-  - b: path to the config file of build_rdf_store (eg. app/build_RDF_store/config/config.ini)
-  - c: path to the config file of Chemont processes (eg.  app/ChemOnt/config/version/config.ini)
-  - v: The version of the analysis. This is optional, if nothing is set, the date will be used
-  - s: path to the Virtuoso shared directory (eg ./docker-virtuoso/share)
-  - l: path to log dir (eg ./logs)
-
-This process should have created several sub-directories in the Virtuoso shared directory: ClassyFire, MeSH, MetaNetX, PMID_CID, PMID_CID_endpoints, PubChem_Compound, PubChem_Descriptor, PubChem_InchiKey, PubChem_References, vocabulary
 
 The vocabulary directory contains files associated to the schema of used ontology, they can be download using the docker resource directory or at:
 
@@ -218,16 +197,6 @@ The MeSH vocabulary file has been downloaded from the 2021 release of MeSH.
 The ChEBI ontology file is often updated and the actual version of the ChEBI ontology used in the triplestore is: ChEBI Release version 205 (Release of 03 Nov. 2021), as refer in the URI of the ChEBI Graph in FORUM.
 
 *Warnings:* For ChemOnt, ontology file was downloaded at http://classyfire.wishartlab.com/downloads, but to be loaded in Virtuoso, the file need to be converter in an other format than *.obo*. Using Protege (https://protege.stanford.edu/) ChemOnt_2_1.obo was converted in a turtle format and ChemOnt_2_1.ttl. The ChemOnt ontology seems to be stable.
-
-**Warnings:** This procedure creates two upload files: pre_upload.sh and upload_data.sh.
-When building the FORUM KG, all the PubChem data gathered to build the complete KG are not required to compute the FORUM associations. In addition, some PubChem subset resources (compound, descriptors, synonym, ...) are very larges, and may contain several billion of triples. Therefore, two versions of the FORUM KG are prepared: 
-
-- the minimal core (MINCORE): loading only the PubChem subset resources that are required to compute the associations, such as: *References* or *PMID_CID*. This upload is prepared in *pre_upload.sh* which is a light version of upload_data.sh, only loading data needed to compute associations. For instance, it does only load a small part of the PubChem Compound graph, setting compound types, and does not load PubChem Descriptor graphs. See *build_RDF_store* for details about this configuration.
-
-- the maximal (or full) core (*MAXCORE*) loading all the PubChem subset resources to build the complete KG. This complete upload is prepared in *upload_data.sh*
-
- Also, these both upload files contains duplicate information and **must not** be loaded on the same Virtuoso session ! 
-
 
 ##### 2.1.2 - Integration of metabolic networks.
 
