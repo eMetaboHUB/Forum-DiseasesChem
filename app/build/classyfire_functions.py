@@ -2,7 +2,7 @@ import requests
 import json
 import time
 import rdflib
-from rdflib.namespace import RDF, VOID, DCTERMS, XSD
+from rdflib.namespace import RDF, VOID, DCTERMS, XSD, RDFS
 import sys
 import subprocess
 import signal
@@ -191,7 +191,13 @@ def export_ressource_metadata(ClassyFire_direct_p, ClassyFire_alternative_p, gra
     This function is used export metadata for builted graphs
     """
     ClassyFire_direct_p.add_version_attribute(RDF["type"], VOID["Linkset"])
+    ClassyFire_direct_p.add_version_attribute(DCTERMS["source"], rdflib.URIRef("http://classyfire.wishartlab.com"))
+    ClassyFire_direct_p.add_version_attribute(RDFS["seeAlso"], rdflib.URIRef("https://doi.org/10.1186/s13321-016-0174-y"))
+    
     ClassyFire_alternative_p.add_version_attribute(RDF["type"], VOID["Linkset"])
+    ClassyFire_alternative_p.add_version_attribute(DCTERMS["source"], rdflib.URIRef("http://classyfire.wishartlab.com"))
+    ClassyFire_alternative_p.add_version_attribute(RDFS["seeAlso"], rdflib.URIRef("https://doi.org/10.1186/s13321-016-0174-y"))
+    
     for uri_targeted_ressource in uri_targeted_ressources:
         ClassyFire_direct_p.add_version_attribute(VOID["target"], uri_targeted_ressource)
         ClassyFire_alternative_p.add_version_attribute(VOID["target"], uri_targeted_ressource)

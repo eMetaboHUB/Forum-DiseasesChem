@@ -47,8 +47,8 @@ version = config["CHEMONT"].get("version")
 chemont_upload_file = config["DEFAULT"].get("upload_file")
 chemont_log_dir = config["DEFAULT"].get("log_dir")
 n_processes = config["CHEMONT"].getint("n_processes")
-path_to_PMID_CID = config["CHEMONT"].get("path_to_PMID_CID")
-path_to_inchikey = config["CHEMONT"].get("path_to_inchikey")
+path_to_PMID_CID = config["PMID_CID"].get("path")
+path_to_inchikey = config["INCHIKEY"].get("path")
 
 log_dir = os.path.join(args.log, chemont_log_dir)
 if not os.path.exists(log_dir):
@@ -87,12 +87,20 @@ else:
     PubChem_inchikey_uri = check_void(os.path.join(args.out, path_to_inchikey, "void.ttl"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/inchikey"))
     
     if (not PMID_CID_uri) or (not PubChem_inchikey_uri):
-        print("PMID_CID resource at " + path_to_PMID_CID + " and/or PubChem inchikey resource at " + path_to_inchikey + "is invalid. Please, provide valid resources, see import_PMID_CID.py and import_PubChem.py.")
+        print("PMID_CID resource at " + path_to_PMID_CID + " and/or PubChem inchikey resource at " + path_to_inchikey + " is invalid. Please, provide valid resources, see import_PMID_CID.py and import_PubChem.py.")
         sys.exit(3)
     
     # Get PMID_CID and inchikey graphs
-    pmids_cids_graph_list = glob.glob(os.path.join(args.out, path_to_PMID_CID, "*.ttl.gz"))
-    inchikeys_graph_list = glob.glob(os.path.join(args.out, path_to_inchikey, "pc_inchikey2compound_*.ttl.gz"))
+    pmids_cids_graph_list = glob.glob(os.path.join(args.out, path_to_PMID_CID, config["PMID_CID"].get("mask")))
+    inchikeys_graph_list = glob.glob(os.path.join(args.out, path_to_inchikey, config["INCHIKEY"].get("mask")))
+    
+    # Test files
+    if (not len(pmids_cids_graph_list)):
+        print("No PMID_CID files found at " + path_to_PMID_CID + " with mask " + config["PMID_CID"].get("mask"))
+        sys.exit(3)
+    if (not len(inchikeys_graph_list)):
+        print("No inchikey files found at " + path_to_inchikey + " with mask " + config["INCHIKEY"].get("mask"))
+        sys.exit(3)
 
     # Create CID - Inchikey:
     path_inchiKey = os.path.join(log_dir, "CID_InchiKeys.csv")
