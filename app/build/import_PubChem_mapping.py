@@ -70,7 +70,12 @@ else:
 
 # Write upload files
 print("Create upload files")
-create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Inter", "PubChem", Pubchem_v, ''), "*.ttl.gz", str(uri_pubchem_inter_eq), update_f_name)
-create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Inter", "PubChem", Pubchem_v, ''), "void.ttl", str(uri_pubchem_inter_eq), update_f_name)
-create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "PubChem", Pubchem_v, ''), "*.ttl.gz", str(uri_pubchem_intra_eq), update_f_name)
-create_upload_file_from_resource(path_to_dumps, os.path.join("Id_mapping", "Intra", "PubChem", Pubchem_v, ''), "void.ttl", str(uri_pubchem_intra_eq), update_f_name)
+with open(os.path.join(path_to_dumps, update_f_name), "a") as update_f:
+    update_f.write("delete from DB.DBA.load_list ;\n")
+    update_f.write("ld_dir_all ('./dumps/" + os.path.join("Id_mapping", "Inter", "PubChem", Pubchem_v, '') + "', '" + "*.ttl.gz" + "', '" + str(uri_pubchem_inter_eq) + "');\n")
+    update_f.write("ld_dir_all ('./dumps/" + os.path.join("Id_mapping", "Inter", "PubChem", Pubchem_v, '') + "', '" + "void.ttl" + "', '" + str(uri_pubchem_inter_eq) + "');\n")
+    update_f.write("ld_dir_all ('./dumps/" + os.path.join("Id_mapping", "Intra", "PubChem", Pubchem_v, '') + "', '" + "*.ttl.gz" + "', '" + str(uri_pubchem_intra_eq) + "');\n")
+    update_f.write("ld_dir_all ('./dumps/" + os.path.join("Id_mapping", "Intra", "PubChem", Pubchem_v, '') + "', '" + "void.ttl" + "', '" + str(uri_pubchem_intra_eq) + "');\n")
+    update_f.write("rdf_loader_run();\n")
+    update_f.write("checkpoint;\n")
+    update_f.write("select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;\n")
