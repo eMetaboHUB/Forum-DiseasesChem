@@ -368,6 +368,9 @@ python3 -u app/build/import_Chemont.py --config="config/release-2021/import_Chem
   - mask = the mask of the inchikey files to extract
   - path = path to the inchikey directory to extract the inchikey annotation of PubChem compounds
 
+
+
+
 ##### 2.1.2 - Integration of metabolic networks.
 
 **See docs/sbml.md**
@@ -380,17 +383,17 @@ An workflow example file from the current release to import a SBML file with all
 - *user:* forum
 - *password*: Forum2021Cov!
 
+
+
 example :
 ```bash
-sftp forum@ftp.semantic-metabolomics.org:/share.tar.gz
+sftp forum@ftp.semantic-metabolomics.org:/dumps/2021/share.tar.gz
 ```
 
 All data and results can be downloaded from the sftp server.    
 
 - A copy of the whole KG is store in the share.tar.gz archive.
 - Raw results of associations between PubChem, Chemont, ChEBI and MeSH are accessible in directories: CID_MESH, CHEMONT_MESH, CHEBI_MESH, MESH_MESH
-- RDF triples associated with significant relations are available in the EnrichmentAnalysis directory (included in share.tar.gz)
-- Created triples to instantiate relations between PubChem compounds, PubMed articles or Chemont classes are stored respectively in directories: PMID_CID, PMID_CID_endpoints and ClassyFire (included in share.tar.gz)
 - Labels of PubChem compounds, chemical classes, MeSH and their respective tree-Numbers are available in the label directory
 
 **We plan to update the FORUM Knowledge graph every year.**
@@ -410,14 +413,11 @@ You may need to disable "Strict checking of void variables" in the SPARQL query 
 **Warning:** The management script of the triplestore Virtuoso, *w_virtuoso.sh*, must be run directly **on the host**, without using the forum docker (forum/processes). Indeed, while starting the forum/processes container, the option *--network="host"* will allows that the container will use the host’s networking.
 
 To start the virtuoso session, use: 
-```bash
-./workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s /path/to/share/dir/from/virtuoso/dir start
-```
 
-eg.
 ```bash
-workflow/w_virtuoso.sh -d ./docker-virtuoso -s share start
+bash workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s share -c start upload1.sh upload2.sh ...
 ```
+e.g
 
 The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfBuffers* and *MaxDirtyBuffers*), also dedicating 8 GB per SPARQL query for computation processes (see *MaxQueryMem*). This configuration can be modify in the w_virtuoso.sh script.
 
@@ -426,31 +426,23 @@ The current configuration deploy a Virtuoso triplestore on 64 GB (see *NumberOfB
 
 - *Option details:*
   - d: path to the virtuoso directory. Here, it is advised to set the absolute path.
-  - s: path to the shared directory **from** the virtuoso directory (eg. *share* if you use the proposed settings)
-  - l: the loading parameter. A string describing the parts of the KG that need to be loaded, comma separated. Default value is: VOC,MINCORE. The options are:
-    - *VOC*: The vocabularies/ontologies files containing inference rules (eg. ChEBI, cito, ... )
-    - *SBML*: The metabolic network in a RDF format + the PubChem and MetaNetX Id-mapping graphs (Cf. SBML_upgrade and w_upload_metabolic_network.sh)
-    - *METANETX*: The MetaNetX KG.
-    - *MINCORE*: The minimal core data that have to be loaded in order to compute FORUM associations (use pre_upload.sh)
-    - *MAXCORE*: All the FORUM data, like they are available on the public KG (upload_data.sh).
-    - *CHEMONT*: The data derived from ClassyFire.
+  - s: path to the shared directory **from** the virtuoso directory (usually *share* if you use the proposed settings)
+  - c: the command *start* create a Virtuoso rdf store; *stop* end the virtuoso session; *clean* delete the Virtuoso session, to clean up before building a new one
+  
+When use *start* to create a new triplestore, pass to the command the list of the upload files for the data you want to load.
 
-For instance to intergrate FORUM minimal data with SBML and MetaNetX use: 
+For instance, to load the vocabulary, MeSH, PubChem and PMID_CID, from the current release configuration files and compute associations, use: 
+
 ```bash
-./workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s /path/to/share/dir/from/virtuoso/dir -l VOC,MINCORE,SBML,METANETX  start
+bash workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s share -c start upload.sh upload_PMID_CID.sh upload_MeSH.sh upload_PubChem_minimal.sh
 ```
-
-
-
 
 
 Several checks can be used to ensure that the loading was done correctly:
 
 1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Globally, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
 
-2) Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. A good start could be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, be sure to add the content of the prefix variable at the beginning of your request and use only the first 100 elements by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for tests.
-
-3) TODO: Implement tests
+Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. In the *test* directory, we prepare a list of SPARQL queries that test the main properties and paths use during the process. Be sure that each of these queries return results. A good start could also be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, use only the first 100 elements by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for the tests.
 
 #### 3.2 - Set configuration files: 
 

@@ -87,7 +87,7 @@ The Id-mapping graph for Inter and Intra URIs equivalences will be stored in the
 To facilitate graph loading, the script return an update file (*update_file*) in the Virtuoso shared directory, containing all ISQL commands needed to properly load graphs, that have to be executed by Virtuoso.
 
 ```bash
-python3 app/build/import_MetaNetX_mapping.py --config="/workdir/config/release-2021/import_MetaNetX_mapping.ini" --out="/workdir/share-virtuoso"
+python3 -u app/build/import_MetaNetX_mapping.py --config="/workdir/config/release-2021/import_MetaNetX_mapping.ini" --out="/workdir/share-virtuoso"
 ```
 
 ##### Config
