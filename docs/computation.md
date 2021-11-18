@@ -27,7 +27,7 @@ Then, each request is sent in parallel with a specific sub-set. For exeample if 
 
 But in order to prepare the list of all offsets with a size of *limit_pack_ids*, that must be sent, the total number of modalities of the variable must be determined. So, for each variable a request counting the total number of modalities must be provided. Like the others request, it must be set in a variable in the *sparql_queries.py* file. The name of this variable is then specified in th configuration file at the *Size_Request_name* parameter.
 
-For the co-occurences query, one of the both variable should be used as a grouping variable, from which coocurences will be computed for each pack of modalities. For example, if X is used as the grouping variable, the nested SELECT in the associated SPARQL query must sort X modalities and used *LIMIT* and *OFFSET* clauses to divided to total number of modalities of X in smaller groups. So, the counting request used for this request should be the same as the one provided in [X] section
+For the co-occurences query, one of the both variable should be used as a grouping variable, from which coocurences will be computed for each pack of modalities. For example, if X is used as the grouping variable, the nested SELECT in the associated SPARQL query must sort X's modalities and used *LIMIT* and *OFFSET* clauses to divided to total number of modalities of X in smaller groups. So, the counting request used for this request should be the same as the one provided in [X] section
 
 A more detailed description of the configuration file is provided below.
 

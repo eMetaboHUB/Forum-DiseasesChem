@@ -27,15 +27,17 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
     - n_processes: the maximal number of processes, determining the number of queries send in parallel
     - graph_from: a list of uris associated to the sources grpahs containing needed data for the query
     """
+    
     # Initialyze the pool
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
+    
     # Initialyze .log file
-    with open(out_path + "requests.log", "w") as f_log:
+    with open(os.path.join(out_path, "requests.log"), "w") as f_log:
         pass
-    # First step is to get the total number of cid: 
-    # Getting the number of CID, we can prepare the pack of cids respecting limit_size
+    
+    # First step is to get the total number of cid and prepare the pack of cids respecting limit_size
     if limit_pack_ids > count_id:
         print("limit_pack_ids is bigger than the total number of individuals (" + str(count_id) + "), query will not be send in parallel !")
         n_offset = 1
@@ -45,9 +47,11 @@ def parallelize_query_by_offset(count_id, query, prefix, header, data, url, limi
             n_offset += 1
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     print(str(len(offset_list)) + " offset(s) will be computed using " + str(n_processes) + " processes")
+
     # Apply send_query_by_offset in parallel respecting the number of processes fixed
     results = [pool.apply_async(send_query_by_offset, args=(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, 0, graph_from, out_path)) for offset_pack_ids in offset_list]
     output = [p.get() for p in results]
+    
     # Ended
     pool.close()
     pool.join()
@@ -101,56 +105,77 @@ def send_query_by_offset(url, query, prefix, header, data, limit_pack_ids, offse
     - offset_selected_ids: same as offset_pack_ids but to deal with pagination of results. For example, offset_pack_ids = 1000000 and limit_pack_ids = 1000000 implies that Virtuoso will return results from the 1000001th lines to at most the 2000000th lines
     - graph_from: a list of uris associated to the sources grpahs containing needed data for the query
     """
+
+    # Init
     n_f = 1
-    out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
+    out_name = os.path.join(out_path, ("res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)))
+    
     # Send the query at defined pack_id offset, and with intial selected_id offset, 0.
     r = send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from)
+    
     # Test if request successed
     if r.status_code != 200:
         print("Error in request at offset pack %d and offset pagination %d, request status code = %d.\nOffsets added to list_fail.log\nCheck requests.log\n" %(offset_pack_ids, offset_selected_ids, r.status_code))
-        with open(out_path + "requests.log", "a") as log_fail:
+        
+        with open(os.path.join(out_path, "requests.log"), "a") as log_fail:
             log_fail.write("for offset pack %d at offset pagination %d :\n" % (offset_pack_ids, offset_selected_ids))
             log_fail.write(r.text + "\n")
-        with open(out_path + "list_fail.log", "a") as list_fail:
+        
+        with open(os.path.join(out_path, "list_fail.log"), "a") as list_fail:
             list_fail.write("%d\t%d\n" % (offset_pack_ids, offset_selected_ids))
         test = False
     else:
         print("Request succed !")
+
         # Parse and write lines
         lines = r.text.splitlines()
+        
         # After parsing, r is clean
         r = None
         write_request(lines, out_name)
+        
         # When writing, the header is remove so the number of lines to check is exactly limit_selected_ids
         test = (len(lines) == limit_selected_ids)
+        
         # After testing, lines are clean:
         lines = None
+    
     while test:
+        
         # If the number of lines equals the setted limit, it may reveals that there are remaining lines, increase offset by limit to get them.
         print("Limit reach, trying next offset ... ")
         offset_selected_ids += limit_selected_ids
         n_f += 1
-        out_name = out_path + "res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)
+        out_name = os.path.join(out_path, ("res_offset_%d_f_%d.csv" %(offset_pack_ids, n_f)))
+        
         # Send request
         r = send_query(url, query, prefix, header, data, limit_pack_ids, offset_pack_ids, limit_selected_ids, offset_selected_ids, graph_from)
         if r.status_code != 200:
             print("Error in request at offset pack %d and offset pagination %d, request status code = %d.\nOffsets added to list_fail.log\nCheck requests.log\n" %(offset_pack_ids, offset_selected_ids, r.status_code))
-            with open(out_path + "requests.log", "a") as log_fail:
+            
+            with open(os.path.join(out_path, "requests.log"), "a") as log_fail:
                 log_fail.write("for offset pack %d at offset pagination %d :\n" % (offset_pack_ids, offset_selected_ids))
                 log_fail.write(r.text + "\n")
-            with open(out_path + "list_fail.log", "a") as list_fail:
+            
+            with open(os.path.join(out_path, "list_fail.log"), "a") as list_fail:
                 list_fail.write("%d\t%d\n" % (offset_pack_ids, offset_selected_ids))
             test = False
             continue
+        
         lines = r.text.splitlines()
+        
         # After testing, lines are clean:
         r = None
+        
         # Export files
         write_request(lines, out_name)
+        
         # Test if it was the last
         test = (len(lines) == limit_selected_ids)
+        
         # After testing, lines are clean:
         lines = None
+    
     return True
 
 def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
@@ -161,6 +186,7 @@ def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
     - out_path: path to the output directory
     - n_processes: the maximal number of processes, determining the number of queries send in parallel
     """
+
     # get all offset
     if limit_pack_ids > count_id:
         n_offset = 1
@@ -168,10 +194,12 @@ def build_PMID_list_by_CID_MeSH(count_id, limit_pack_ids, path_in, n_processes):
         n_offset = count_id // limit_pack_ids
         if (count_id % limit_pack_ids) > 0:
             n_offset += 1
+    
     offset_list = [i * limit_pack_ids for i in range(0, n_offset)]
     pool = mp.Pool(processes = n_processes, maxtasksperchild = 20)
-    results = [pool.apply_async(aggregate_pmids_by_id, args=(path_in, str(offset))) for offset in offset_list]
+    results = [pool.apply_async(aggregate_pmids_by_id, args = (path_in, str(offset))) for offset in offset_list]
     output = [p.get() for p in results]
+    
     # Close Pool
     pool.close()
     pool.join()
@@ -182,13 +210,15 @@ def aggregate_pmids_by_id(path_in, offset):
     - path_in: path to the directory containing the res_offset_* files for the CID_MESH_PMID_LIST query
     - offset: the treated offset
     """
+    
     # In the first step, all files associated to the same offset are read, and then data.frame are concatenate
     print("Working on offset " + offset + " ...")
-    df_list = [pd.read_csv(path, sep = ",", names=["ID", "PMID"], dtype="string") for path in glob.glob(path_in + "res_offset_" + offset + "_f_*.csv")]
+    df_list = [pd.read_csv(path, sep = ",", names=["ID", "PMID"], dtype="string") for path in glob.glob(os.path.join(path_in, "res_offset_" + offset + "_f_*.csv"))]
     df_global = pd.concat(df_list)
+
     # Aggregate by ID
     agg = df_global.groupby('ID')['PMID'].agg(';'.join).reset_index(name='list_pmids')
-    agg.to_csv(path_in + "res_offset_aggregate_" + offset + ".csv", index = False, header = False)
+    agg.to_csv(os.path.join(path_in, "res_offset_aggregate_" + offset + ".csv"), index = False, header = False)
 
 def send_counting_request(prefix, header, data, url, config, key, module):
     """
@@ -204,22 +234,28 @@ def send_counting_request(prefix, header, data, url, config, key, module):
     """
     r_data = data
     name = config[key].get('name')
+
     try:
         query = getattr(module, config[key].get('Size_Request_name'))
     except NameError as e:
         print("Specified request name \"" + config[key].get('Size_Request_name') + "\" seems not to exists in the sparql query file, exit.")
         print("Error : " + str(e))
         sys.exit(3)
+    
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     r_data["query"] = prefix + query %(graph_from)
+    
     print("Counting total number of distinct subjects for " + name + " ...")
     count_res = requests.post(url = url, headers = header, data = r_data)
+    
     if count_res.status_code != 200:
         print("Error in request " + config[key].get('Size_Request_name') + ", request status code = " + str(count_res.status_code) + "\nImpossible to continue without total counts, exit.\n")
         print(count_res.text)
         sys.exit(3)
+    
     count = int(count_res.text.splitlines().pop(1))
     print("There are " + str(count) + " distinct subjects for  " + name)
+    
     return count
 
 def launch_from_config(prefix, header, data, url, config, key, out_path, module):
@@ -234,16 +270,20 @@ def launch_from_config(prefix, header, data, url, config, key, out_path, module)
     - out_path: path to the output directory
     - module: a module from import_request_file corresponding to a sparql queries file
     """
+
     # Get count:
     count = send_counting_request(prefix, header, data, url, config, key, module)
-    out_path_dir = out_path + config[key].get('out_dir') + "/"
+    out_path_dir = os.path.join(out_path, config[key].get('out_dir'))
+    
     print("Exporting in " + out_path_dir + " ...")
+    
     try:
         request = getattr(module, config[key].get('Request_name')) 
     except NameError as e:
         print("Specified request name \"" + config[key].get('Request_name') + "\" seems not to exists in the sparql query file, exit.")
         print("Error : " + str(e))
         sys.exit(3)
+    
     graph_from = "\n".join(["FROM <" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
     parallelize_query_by_offset(count, request, prefix, header, data, url, config[key].getint('limit_pack_ids'), config[key].getint('limit_selected_ids'), out_path_dir, config[key].getint('n_processes'), graph_from)
 
@@ -259,45 +299,56 @@ def prepare_data_frame(config, path_to_COOC, path_to_X, path_to_Y, path_to_U, ou
     - out_path: path to the output directory
     - split: bool (True/False) if the result file must be splited in smaller files. File size is set with the file_size config attribute.
     """
+
     X_name = config['X'].get('name')
     Y_name = config['Y'].get('name')
     Individual_name = config['U'].get('name')
+    
     if not os.path.exists(out_path):
         os.makedirs(out_path)
+    
     print("Import dataframes")
-    df_cid_mesh_list = [pd.read_csv(path, sep = ",", names=[X_name, Y_name, "COOC"]) for path in glob.glob(path_to_COOC + "*.csv")]
+    df_cid_mesh_list = [pd.read_csv(path, sep = ",", names=[X_name, Y_name, "COOC"]) for path in glob.glob(os.path.join(path_to_COOC, "*.csv"))]
     cid_mesh = pd.concat(df_cid_mesh_list)
-    df_cid_pmid_list = [pd.read_csv(path, sep = ",", names=[X_name, "TOTAL" + "_" + Individual_name + "_" + X_name]) for path in glob.glob(path_to_X + "*.csv")]
+    df_cid_pmid_list = [pd.read_csv(path, sep = ",", names=[X_name, "TOTAL" + "_" + Individual_name + "_" + X_name]) for path in glob.glob(os.path.join(path_to_X, "*.csv"))]
     cid_pmid = pd.concat(df_cid_pmid_list)
-    df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(path_to_Y + "*.csv")]
+    df_mesh_pmid_list = [pd.read_csv(path, sep = ",", names=[Y_name, "TOTAL" + "_" + Individual_name + "_" + Y_name]) for path in glob.glob(os.path.join(path_to_Y, "*.csv"))]
     mesh_pmid = pd.concat(df_mesh_pmid_list)
-    df_univers_list = [pd.read_csv(path, sep = ",", names=["COUNT"]) for path in glob.glob(path_to_U + "*.csv")]
+    df_univers_list = [pd.read_csv(path, sep = ",", names=["COUNT"]) for path in glob.glob(os.path.join(path_to_U, "*.csv"))]
     df_univers = pd.concat(df_univers_list)
     U_size = df_univers["COUNT"].sum()
+    
     print("Merge columns")
+    
     # Step 1: merging total CID counts :
     data = cid_mesh.merge(cid_pmid, on = X_name, how = "left")
+    
     # Step 2: merging total MESH counts :
     data = data.merge(mesh_pmid, on = Y_name, how = "left")
+    
     # Step 3: Add total number of PMID
     data["TOTAL_" + Individual_name] = U_size
     df_size=len(data)
+    
     # Write the metadata file :
-    with open(out_path + "metadata.txt", "w") as metadata_f:
+    with open(os.path.join(out_path, "metadata.txt"), "w") as metadata_f:
         metadata_f.write("Number of %s: %d\n" %(X_name, len(cid_pmid)))
         metadata_f.write("Number of %s: %d\n" %(Y_name, len(mesh_pmid)))
         metadata_f.write("Number of individuals %s: %d\n" %(Individual_name, U_size))
         metadata_f.write("Number of available coocurences between %s and %s: %d\n" %(X_name, Y_name, len(cid_mesh)))
         graph_from = ", ".join(["<" + uri + ">" for uri in config['VIRTUOSO'].get("graph_from").split('\n')])
         metadata_f.write("List of sources graph :%s\n" %(graph_from))
+    
     # If split = True, the result file in split in n several files with a size of file_size
     if split:
         file_size = config['DEFAULT'].getint('file_size')
         for i, start in enumerate(range(0, df_size, file_size)):
-            data[start:start+file_size].to_csv(out_path + 'associations_{}.csv'.format(i), index = False)
+            data[start:start+file_size].to_csv(os.path.join(out_path, ('associations_{}.csv'.format(i))), index = False)
+    
     # The result is fully writen on one file
     else:
-        data.to_csv(out_path + 'associations.csv', index = False)
+        data.to_csv(os.path.join(out_path, 'associations.csv'), index = False)
+    
     return data
 
 def ask_for_graph(url, graph_uri):

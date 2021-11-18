@@ -485,14 +485,17 @@ At the end of this procedure all significant associations, according to the thre
 
 Some example of commands that can be used to compute each analysis are shown below, using default values options c,p,o,i :
 
+For more details on the computation processes see *computation.md* in docs.
+
 ##### 3.3.1 - Compute PubChem compounds - MeSH associations
 
 ```bash
 ./workflow/w_computation.sh -v version -m /path/to/config/Compound2MeSH -t path/to/config/triplesConverter/Compound2MeSH -u CID_MESH -d /path/to/data/dir -s /path/to/virtuoso/share/dir -l /path/to/log/dir
 ```
+
 eg.
 ```bash
-./workflow/w_computation.sh -v 2020 -m app/computation/config/CID_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CID_MESH/release-2020/config.ini -u CID_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2021 -m config/release-2021/computation/CID_MESH/config.ini -t config/release-2021/enrichment_analysis/config_CID_MESH.ini -u CID_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
 ```
 
 
@@ -504,7 +507,7 @@ eg.
 
 eg.
 ```bash
-./workflow/w_computation.sh -v 2020 -m app/computation/config/CHEBI_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEBI_MESH/release-2020/config.ini -u CHEBI_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2021 -m config/release-2021/computation/CHEBI_MESH/config.ini -t config/release-2021/enrichment_analysis/config_CHEBI_MESH.ini -u CHEBI_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
 ```
 
 ##### 3.3.3 - Compute Chemont - MeSH associations
@@ -515,7 +518,7 @@ eg.
 
 eg.
 ```bash
-./workflow/w_computation.sh -v 2020 -m app/computation/config/CHEMONT_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2021 -m config/release-2021/computation/CHEMONT_MESH/config.ini -t config/release-2021/enrichment_analysis/config_CHEMONT_MESH.ini -u CHEMONT_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
 ```
 
 ##### 3.3.4 - Compute MeSH - MeSH associations
@@ -526,7 +529,7 @@ eg.
 
 eg.
 ```bash
-./workflow/w_computation.sh -v 2020 -m app/computation/config/MESH_MESH/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/CHEMONT_MESH/release-2020/config.ini -u CHEMONT_MESH -d ./data -s ./docker-virtuoso/share -l ./logs-app
+./workflow/w_computation.sh -v 2021 -m app/computation/config/MESH_MESH/release-2020/config.ini -t config/release-2021/computation/MESH_MESH/config.ini -u MESH_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
 ```
 
 Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redundant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
@@ -542,7 +545,7 @@ workflow/w_computation.sh -v version -m path/to/Specie2MeSH/config/file -t path/
  
 eg.
 ```bash
-workflow/w_computation.sh -v 2020 -m app/computation/config/SPECIE_MESH_Thesaurus/release-2020/config.ini -t app/Analyzes/Enrichment_to_graph/config/SPECIE_MESH/release-2020/config.ini -u SPECIE_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
+workflow/w_computation.sh -v 2021 -m config/release-2021/computation/SPECIE_MESH_Thesaurus/config.ini -t config/release-2021/enrichment_analysis/config_SPECIE_MESH.ini -u SPECIE_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
 ```
 
 #### 3.4 - Shutdown Virtoso session
@@ -570,110 +573,3 @@ In the data directory, you can also retrieved all processed results, such as the
 Identifiers are not always convenient to explore results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
 To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
 Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify, but those can be retrieved using the [pubchem identifier exchange](https://pubchemdocs.ncbi.nlm.nih.gov/identifier-exchange-service). Label files are also provided on the sftp server (See on web-portal).
-
-
-### 4 - Build a custom triplestore
-
-To build a custom triplestore, you need to start a new virtuoso session. You can use the docker-compose file created in the docker-virtuoso directory by w_buildTripleStore.sh or build your own with different parameters. An example is presented:
-
-For the configuration see details at *https://hub.docker.com/r/tenforce/virtuoso/* and *http://docs.openlinksw.com/virtuoso/*
-
-```yml
-version: '3.3'
-services:
-    virtuoso:
-        image: tenforce/virtuoso
-        container_name: container_name
-        environment:
-            VIRT_Parameters_NumberOfBuffers: 2720000   # See http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
-            VIRT_Parameters_MaxDirtyBuffers: 2000000    # See http://vos.openlinksw.com/owiki/wiki/VOS/VirtTipsAndTricksGuideRDFPerformanceTuning
-            VIRT_Parameters_MaxCheckpointRemap: 680000
-            VIRT_Parameters_TN_MAX_memory: 2000000000
-            VIRT_SPARQL_ResultSetMaxRows: 10000000000
-            VIRT_SPARQL_MaxDataSourceSize: 10000000000
-            VIRT_Flags_TN_MAX_memory: 2000000000
-            VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
-            VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
-            VIRT_SPARQL_MaxQueryExecutionTime: 50000          # 5 min
-            VIRT_Parameters_MaxMemPoolSize: 200000000
-            VIRT_HTTPServer_EnableRequestTrap: 0
-            VIRT_Parameters_ThreadCleanupInterval: 1
-            VIRT_Parameters_ResourcesCleanupInterval: 1
-            VIRT_Parameters_AsyncQueueMaxThreads: 1
-            VIRT_Parameters_ThreadsPerQuery: 1
-            VIRT_Parameters_AdjustVectorSize: 1
-            VIRT_Parameters_MaxQueryMem: 2G
-            DBA_PASSWORD: "DB_password"  # The password of the created triplestore
-            SPARQL_UPDATE: "false"
-            DEFAULT_GRAPH: "http://default#" # The default graph
-        volumes:
-           - /path/to/virtuoso/share/dir:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps # path to the docker-virtuoso share directory containing all triple files
-           - /path/to/docker-virtuoso/data/virtuoso:/data # path to the Virtuoso data directory
-        ports:
-           - Listen_port:8890 # Set the port to be listen
-        networks:
-           - network_name # Set the network name
-
-networks:
-    network_name: # network name
-```
-**Warning:** the *data* directory which is bind in the docker-virtuoso is **not** the *data* directory of the results! Inside the directory *docker-virtuoso*, containing the docker-compose file, Virtuoso will create several directories to prepare to session. Among them, it will create a *data/virtuoso* sub-directory, which need to be mapped to data in the docker container.
-
-Start Virtuoso:
-
-```bash
-docker-compose -f path/to/docker-compose.yml up -d 
-```
-
-A Virtuoso session should be available at your localhost:Listen_port
-
-To load data in the triplestore, you can use upload files generated by the different previous steps as follows: 
-
-```bash
-dockvirtuoso=$(docker ps | grep virtuoso | awk '{print $1}')
-docker exec $dockvirtuoso isql-v 1111 dba "FORUM-Met-Disease-DB" ./dumps/*upload_file*.sh
-```
-The dumps directory of the Virtuoso container should be mapped on your docker-virtuoso/share.
-
-The created upload files contains different information:
-- *upload.sh*: contains ontologies, thesaurus and vocabularies
-- *upload_data.sh*: contains triples from PubChem, MeSH, MetaNetX and those extracted using Elink
-- *pre_upload.sh*: is a light version of *upload_data.sh* using only PubChem Compounds triples indicating compound types and without loading PubChem Descriptor.
-- *upload_ClassyFire.sh*: contains triples indicating the chemont classes of PubChem compounds with annotated literature
-- *upload_Enrichment_ANALYSIS.sh*: contains triples instanciating relations between chemical entities and MeSH descriptors, there are *upload_Enrichment_CID_MESH.sh*, *upload_Enrichment_CHEBI_MESH.sh*, *upload_Enrichment_CHEMONT_MESH.sh* for the different chemical entities
-
-
-### 5 - Share directory export:
-
-Be sure to remove the *pre_upload.sh* before compressing the share directory
-
-
-### 6 - Versioning:
-
-Created graphs are *named graphs* for which the associated uri identify the graph and triples it contains in the triplestore. By this specific uri, each graph represent a version of a specific resource. There are several main resources such as: *MeSH*, *PubChem references*, *PubChem Descriptor*, *PubChem compounds*, *PMID_CID*, etc ... 
-
-When a new graph is created, a new version of the associated resource is created. For example, if a new version of PubChem compounds is build using the *build_RDF_store* script, a new graph with the uri *https://forum.semantic-metabolomics.org/PubChem/compound/version_X* is created as a version of the resource *https://forum.semantic-metabolomics.org/PubChem/compound*.
-
-Several other types of metadata are associated to the created graph. All this metadata information is indicated in a metadata-graph, named *void.ttl*, which is automatically created with the graph in the same directory. An example of a *void.ttl* associated to a PubChem reference resource is described bellow:
-
-```sql
-<https://forum.semantic-metabolomics.org/PubChem/reference> dcterms:hasVersion <https://forum.semantic-metabolomics.org/PubChem/reference/2020-11-04> .
-
-<https://forum.semantic-metabolomics.org/PubChem/reference/2020-11-04> a void:Dataset ;
-    dcterms:created "2020-12-01"^^xsd:date ;
-    dcterms:description "The reference subset contains RDF triples for the type and basic metadata of a given PMID."@en ;
-    dcterms:subject <http://dbpedia.org/page/Reference> ;
-    dcterms:title "PubChemRDF reference subset"@en ;
-    void:dataDump <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000001.ttl.gz>,
-        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000002.ttl.gz>,
-        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000003.ttl.gz>,
-        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2chemical_disease_000004.ttl.gz>,
-        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference2meshheading_000001.ttl.gz>,
-        ...
-        <ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/reference/pc_reference_type.ttl.gz> ;
-    void:distinctSubjects "13783773"^^xsd:long ;
-    void:exampleResource <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID10395478> ;
-    void:triples "313705646"^^xsd:long ;
-    void:uriLookupEndpoint <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/> ;
-    void:uriSpace "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"^^xsd:string 
-```

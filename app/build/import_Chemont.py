@@ -77,7 +77,7 @@ uri_direct_p = check_void(os.path.join(path_direct_p, "void.ttl"), rdflib.URIRef
 uri_alternative_p = check_void(os.path.join(path_alternative_p, "void.ttl"), rdflib.URIRef("https://forum.semantic-metabolomics.org/ClassyFire/alternative-parents"))
 
 if uri_direct_p and uri_alternative_p:
-    print("Resource Chemont version " + version + "already exists")
+    print("Resource Chemont version " + version + " already exists")
 
 # If not, create resource
 else:
