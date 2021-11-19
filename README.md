@@ -487,15 +487,15 @@ Some example of commands that can be used to compute each analysis are shown bel
 
 For more details on the computation processes see *computation.md* in docs.
 
-The checkpointing of Virtuoso can disturb the requesting processas during the checkpoint, the database will be inaccessible.
+The checkpointing of Virtuoso can disturb the requesting processes, because during the checkpoint the database will be inaccessible.
 
-To avoid checkpointing while requesting the endpoint to compute association, you should disable it.
+To avoid checkpointing when computing associations, you should disable the checkpointing.
 
 A recommended plan is to :
 
-- 1) Run the triples insertion with w_virtuoso.sh (see **3.1**). A checkpoint will be made after the insertion of each dataset.
+- 1) Run the triples insertion with w_virtuoso.sh (see **3.1**). A checkpoint will be made after the insertion of each datasets.
 
-- 2) Before sending queries during the computation **disable checkpointing**, with
+- 2) Before sending queries and compute associations, **disable checkpointing** with
 
 ```bash
 docker exec -it $CONTAINER_NAME bash
@@ -513,9 +513,9 @@ checkpoint;
 exit;
 ```
 
-- 4) You can now shutdown the triplestore with `w_virtuoso.sh -c stop`
+- 4) You can now shutdown the triplestore with `workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s share -c stop`
 
-When the triplestore will be restart to compute other association there should be no roll forward.
+When the triplestore is restarted to compute other associations, there should be no roll forward.
 
 
 ##### 3.3.1 - Compute PubChem compounds - MeSH associations
