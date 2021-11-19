@@ -487,6 +487,15 @@ Some example of commands that can be used to compute each analysis are shown bel
 
 For more details on the computation processes see *computation.md* in docs.
 
+**To disable checkpointing during requets, use:**
+
+```bash
+docker exec -it $CONTAINER_NAME bash
+isql-v -U dba -P FORUM
+checkpoint_interval(-1);
+```
+
+
 ##### 3.3.1 - Compute PubChem compounds - MeSH associations
 
 ```bash
