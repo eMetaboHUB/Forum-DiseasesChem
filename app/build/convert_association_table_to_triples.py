@@ -15,6 +15,7 @@ parser.add_argument("--config", help="path to the configuration file")
 parser.add_argument("--c2mconfig", help="path to the configuration of the compound2MeSH analysis (requesting_virtuoso)")
 parser.add_argument("--c2mname", help="name of the raw ressource used in computation processes (eg. CID_MESH)")
 parser.add_argument("--input", help="path to the input result table")
+parser.add_argument("--version", help="Analysis version")
 parser.add_argument("--out", help="path to output directory")
 args = parser.parse_args()
 
@@ -34,7 +35,7 @@ except configparser.Error as e:
 input_table_path = args.input
 path_to_dumps = args.out
 
-version = config['METADATA'].get('version')
+version = args.version
 chunk_size = config['PARSER'].getint('chunk_size')
 column_parsed = config['PARSER'].get('column')
 threshold = config['PARSER'].getfloat('threshold')

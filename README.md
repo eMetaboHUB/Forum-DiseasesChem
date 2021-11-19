@@ -494,6 +494,7 @@ docker exec -it $CONTAINER_NAME bash
 isql-v -U dba -P FORUM
 checkpoint_interval(-1);
 ```
+To run a manual checkpoint, use `checkpoint;` instead of `checkpoint_interval(-1);`
 
 
 ##### 3.3.1 - Compute PubChem compounds - MeSH associations
