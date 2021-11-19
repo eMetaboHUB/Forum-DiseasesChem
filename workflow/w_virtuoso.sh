@@ -82,7 +82,8 @@ services:
             VIRT_Parameters_AsyncQueueMaxThreads: 1
             VIRT_Parameters_ThreadsPerQuery: 1
             VIRT_Parameters_AdjustVectorSize: 1
-            VIRT_Parameters_MaxQueryMem: 8G
+            VIRT_Parameters_MaxQueryMem: 2G
+            VIRT_Parameters_CheckpointInterval: -1
             DBA_PASSWORD: "${PASSWORD}"
             SPARQL_UPDATE: "${ALLOW_UDPATE}"
             DEFAULT_GRAPH: "${GRAPH}"
