@@ -81,10 +81,10 @@ services:
             VIRT_Parameters_ResourcesCleanupInterval: 1
             VIRT_Parameters_AsyncQueueMaxThreads: 1
             VIRT_Parameters_ThreadsPerQuery: 1
+            VIRT_Parameters_VectorSize: 100000
+            VIRT_Parameters_MaxVectorSize: 3000000
             VIRT_Parameters_AdjustVectorSize: 1
             VIRT_Parameters_MaxQueryMem: 2G
-            VIRT_Parameters_DefaultIsolation: 2
-            VIRT_Parameters_UnremapQuota: 0
             DBA_PASSWORD: "${PASSWORD}"
             SPARQL_UPDATE: "${ALLOW_UDPATE}"
             DEFAULT_GRAPH: "${GRAPH}"

@@ -560,7 +560,7 @@ eg.
 
 eg.
 ```bash
-./workflow/w_computation.sh -v 2021 -m app/computation/config/MESH_MESH/release-2020/config.ini -t config/release-2021/computation/MESH_MESH/config.ini -u MESH_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
+./workflow/w_computation.sh -v 2021 -m config/release-2021/computation/MESH_MESH/config.ini -t config/release-2021/enrichment_analysis/config_MESH_MESH.ini -u MESH_MESH -d /workdir/out -s /workdir/share-virtuoso -l /workdir/logs-app
 ```
 
 Rq: The computation of relations between MeSH descriptors is a particular case, for which the sparql request imposes supplementary filters. Thus, we only compute associations for MeSH descriptors that belong in a sub set of MeSH Trees that do not represent chemicals, as this would be redundant with the CID-MESH analysis, or Organisms, as only few entities are correctly represented in our KG. The list of MeSH tree codes is *C|A|G|F|I|J|D20|D23|D26|D27*. Secondly, we also look for relations that do not involved a parent-child relation (in both ways) between the requested MeSH and the MeSH found.
