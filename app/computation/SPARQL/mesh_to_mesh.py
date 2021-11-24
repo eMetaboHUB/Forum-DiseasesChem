@@ -36,9 +36,9 @@ where
                     }
                     ?endp obo:IAO_0000136 ?pmid .
                     ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber) ?tn .
                     ?mesh_ini a meshv:TopicalDescriptor .
                     ?mesh_ini meshv:active 1 .
-                    ?mesh_ini (meshv:treeNumber/meshv:parentTreeNumber*) ?tn .
                     ?mesh meshv:treeNumber ?tn .
                     
                 }
