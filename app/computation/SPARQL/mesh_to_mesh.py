@@ -96,38 +96,38 @@ where
                                     }
                                     ?endp obo:IAO_0000136 ?pmid .
                                     ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
+                                    ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber) ?tn .
                                     ?mesh_ini a meshv:TopicalDescriptor .
                                     ?mesh_ini meshv:active 1 .
-                                    ?mesh_ini (meshv:treeNumber/meshv:parentTreeNumber*) ?tn .
                                     ?mesh meshv:treeNumber ?tn .
                                 }
                             }
                             ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini_2 .
+                            ?mesh_ini_2 (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber) ?tn_all .
                             ?mesh_ini_2 a meshv:TopicalDescriptor .
                             ?mesh_ini_2 meshv:active 1 .
-                            ?mesh_ini_2 (meshv:treeNumber/meshv:parentTreeNumber*) ?tn_all .
                             FILTER(REGEX(?tn_all,\"(C|A|G|F|I|J|D20|D23|D26|D27)\")) .
                             ?mesh_all meshv:treeNumber ?tn_all .
                             ?mesh_all a meshv:TopicalDescriptor .
                             ?mesh_all meshv:active 1 .
-
                         }
                         group by ?mesh ?mesh_all
                     }
+
                     FILTER
                         ( 
                             NOT EXISTS
                             { 
-                                ?mesh_all meshv:treeNumber/meshv:parentTreeNumber* ?tn .
-                                ?mesh meshv:treeNumber ?tn .
+                                ?mesh_all (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber) ?t1 .
+                                ?mesh meshv:treeNumber ?t1 .
                             } 
                             && 
                             NOT EXISTS
                             {
-                                ?mesh meshv:treeNumber/meshv:parentTreeNumber* ?tn_annot .
-                                ?mesh_all meshv:treeNumber ?tn_annot .
+                                ?mesh (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber)  ?t2 .
+                                ?mesh_all meshv:treeNumber ?t2 .
                             }
-                        )
+                    )
                 }
             }
             bind(uri(concat(\"https://forum.semantic-metabolomics.org/mesh2mesh/\", ?MESH1, \"_\", ?MESH2)) as ?id)
