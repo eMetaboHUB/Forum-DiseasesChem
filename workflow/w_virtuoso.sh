@@ -84,7 +84,7 @@ services:
             VIRT_Parameters_VectorSize: 100000
             VIRT_Parameters_MaxVectorSize: 3000000
             VIRT_Parameters_AdjustVectorSize: 1
-            VIRT_Parameters_MaxQueryMem: 2G
+            VIRT_Parameters_MaxQueryMem: 8G
             DBA_PASSWORD: "${PASSWORD}"
             SPARQL_UPDATE: "${ALLOW_UDPATE}"
             DEFAULT_GRAPH: "${GRAPH}"

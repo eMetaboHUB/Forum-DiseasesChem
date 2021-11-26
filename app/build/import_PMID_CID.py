@@ -175,7 +175,7 @@ else:
 
         print(str(len(all_pmids)) + " pmids were found !")
         if run_as_test:
-            all_pmids = [all_pmids[i] for i in range(0,5000)]
+            all_pmids = [all_pmids[i] for i in range(0,100000)]
         
         # Export all_pmids list as linking ids list in addtional path
         if not os.path.exists(version_add_f_path):
