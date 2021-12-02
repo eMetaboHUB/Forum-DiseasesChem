@@ -313,6 +313,13 @@ There are 3 types of contributors (source https://doi.org/10.1186/s13321-016-014
 python3 -u app/build/import_PMID_CID.py --config="/workdir/config/release-2021/import_PMID_CID.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
 ```
 
+As it is a long provess, you can use the following commands inside the detached container (forum_script) to output STDOUT in a log file.
+```bash
+echo "" > logs-app/global_log_PMID_CID.log
+python3 -u app/build/import_PMID_CID.py --config="/workdir/config/release-2021/import_PMID_CID.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app" 2>&1 | tee -a logs-app/global_log_PMID_CID.log &
+```
+
+
 ###### Config
 
 - [DEFAULT]
