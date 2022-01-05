@@ -243,20 +243,18 @@ def ftp_con(ftp):
 
 def download_single_file(file, con, out, log):
     r = None
-    f_out = open(out, "wb")
     try:
-        r = con.retrbinary('RETR '+ file, f_out.write)
+        with open(out, "wb") as f_out:
+            r = con.retrbinary('RETR '+ file, f_out.write)
     except ftplib.all_errors as ftplib_e:
         print("Errors while trying to access file " + file + " from " + con.host)
         print("Check logs at " + log)
         with open(log, "a") as f_log:
             f_log.write(str(ftplib_e) + "\n")
     if r != "226 Transfer complete":
-        print("Error: Transfer incomplete of " + file + " from ftp server : " + r)
-        print("Check logs at " + log)
+        print("Error: Transfer incomplete of " + file + " from ftp server.")
         with open(log, "a") as f_log:
-            f_log.write("Error: Transfer incomplete of " + file + " on ftp server : " + r + "\n")
-    f_out.close()
+            f_log.write("Error: Transfer incomplete of " + file + " on ftp server.")
     with open(log, "a") as f_log:
         f_log.write(file + " downloaded\n")
 
