@@ -305,9 +305,9 @@ This script produced two subset:
 > cito:isCitedAsDataSourceBy CIDY .
 
 There are 3 types of contributors (source https://doi.org/10.1186/s13321-016-0142-6): 
-- concept:Journal_Publishers: Links are provided to PubMed by publishers.
-- source:ID11939: Computationally generated links to PubMed articles that have a common MeSH annotation.
-- concept: NIH_Substance_Repository: Links generated from cross-references provided to PubChem by data contributors.
+- pccompound_pubmed_publisher: Links are provided to PubMed by publishers.
+- pccompound_pubmed_mesh: Computationally generated links to PubMed articles that have a common MeSH annotation.
+- pccompound_pubmed: Links generated from cross-references provided to PubChem by data contributors (eg. IBM Almaden Research Center).
 
 ```bash
 python3 -u app/build/import_PMID_CID.py --config="/workdir/config/release-2021/import_PMID_CID.ini" --out="/workdir/share-virtuoso" --log="/workdir/logs-app"
