@@ -39,7 +39,7 @@ The strength of an association is estimated from the frequency of compound menti
 
 We also report the Odds ratio to gauge the relative effect size, as well as the raw number of papers mentioning both the compound and the biomedical topic.
 
-We identify weak associations by computing a confidence interval on the co-occurence proportion. For identified weak associations, you can get more details by hovering the (i) icon to display a measure of their weakness, which represent the minimum number of supporting articles withdraw that would make the association fall below our inclusion criteria. See our preprint for more details.
+We identify weak associations by computing a confidence interval on the co-occurrence proportion. For identified weak associations, you can get more details by hovering the (i) icon to display a measure of their weakness, which represent the minimum number of supporting articles withdraw that would make the association fall below our inclusion criteria. See our preprint for more details.
 
 The results provide associations with most domains of the MeSH thesaurus. The MeSH root allows to easily filter out by top-level categories:
 
@@ -413,8 +413,9 @@ Once the initial data of the triplestore have been created, an initial session o
 
 You may need to disable "Strict checking of void variables" in the SPARQL query editor when you use transitivity in queries.
 
+#### 3.1 Virtuoso Triple store
 
-#### 3.1 - Initialyze the Virtuoso session
+##### 3.1.1 - Initialyze the Virtuoso session
 
 
 **Warning:** The management script of the triplestore Virtuoso, *w_virtuoso.sh*, must be run directly **on the host**, without using the forum docker (forum/processes). Indeed, while starting the forum/processes container, the option *--network="host"* will allows that the container will use the host’s networking.
@@ -450,6 +451,21 @@ Several checks can be used to ensure that the loading was done correctly:
 1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Globally, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
 
 Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. In the *test* directory, we prepare a list of SPARQL queries that test the main properties and paths use during the process. Be sure that each of these queries return results. A good start could also be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, use only the first 100 elements by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for the tests.
+
+
+##### 3.1.2 Monitoring
+
+The FORUM triplestore is built from both triples created and collected from web services (eg. PMID_CID, CHEMONT) and aggregated from different external resources (eg. PubChem). In this way, inconsistency is the data can comes from different issues. Some advices are provided to detect and quantity potential errors or lack in the data: 
+
+- **Check the void (and mainly the master void)**: The void files summarize useful metadata about the created graphs. A comparison of the main properties *void:distinctSubjects* and  *void:triples* of the graph between the old and the new release can provide a rough estimator of the changes. Basically, we expect that each year the total number of subjects and triples should increase. If it's not the case, corrections may have been brought by the providers but when a large amount of subjects/triples are drop, it is often the sign of an issue in the data recuperation process or from the providers themselves.
+
+- **Check the properties**: To check that the schema of the data doesn't have change between two versions, you should check that all the used properties for SPARQL requests (eg. fabio:hasSubjectTerm) are still instantiated to the individuals. A comparison of the total number of subjects associated to each property can also allow to detection potential errors or missing properties in the data.
+
+- **Manual check of a sample of associations:** Sometimes, a loss of data can be compensated by a greater gain and therefore this loss cannot be detected by comparing the void files. It is so advised to compare the results obtained between the both version for a sample of Chemical - MeSH pairs, by checking the amount of literature available for each, and their co-occurrences. For instance between PFOA (CID 9554) et Fetal development (MeSH D047109).
+
+
+
+
 
 #### 3.2 - Set configuration files: 
 
