@@ -31,6 +31,8 @@ PREFIX chemont: <http://purl.obolibrary.org/obo/CHEMONTID_>
 
 # PUBCHEM - MESH / MESH - PUBCHEM
 
+#TODO MAJ A PARTIR DES DERNIERE REQUESTS !
+
 R = """
 SELECT distinct (strafter(STR(?pmid),\"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?PMID)
 
