@@ -104,4 +104,4 @@ echo " - Convert significant relations to triples"
 
 IN_T=$OUT_W
 
-python3 -u app/Analyzes/Enrichment_to_graph/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --c2mconfig=$CONFIG_COMPOUND2MESH --c2mname=$RESSOURCE_NAME --input=$IN_T --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG
+python3 -u app/build/convert_association_table_to_triples.py --config=$CONFIG_COMPOUND2MESH_TRIPLES --c2mconfig=$CONFIG_COMPOUND2MESH --c2mname=$RESSOURCE_NAME --input=$IN_T --version=$VERSION --out=$RESOURCES_DIR 2>&1 | tee -a $LOG

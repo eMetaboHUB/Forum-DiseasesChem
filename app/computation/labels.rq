@@ -60,3 +60,16 @@ where
     ?specie a SBMLrdf:Species ;
         SBMLrdf:name ?label
 }
+
+
+# FOR MESH SCR :
+
+
+select distinct (strafter(STR(?SCR_Disease), "http://id.nlm.nih.gov/mesh/") as ?SCR) (str(?label) as ?MESH_LABEL)
+FROM <MESH_GRAPH>
+where 
+{
+    ?SCR_Disease a meshv:SCR_Disease .
+    ?SCR_Disease meshv:active 1 .
+    ?SCR_Disease rdfs:label ?label
+}
