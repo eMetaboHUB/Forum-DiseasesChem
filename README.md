@@ -327,8 +327,8 @@ python3 -u app/build/import_PMID_CID.py --config="/workdir/config/release-2021/i
   - log_file = the name of the log file
 [ELINK]
   - version = the version. If this version already exists (a valid void.ttl file found at *share/PMID_CID/{version}/void.ttl), the computation will be skiped and only the upload file will be produced.
-  - run_as_test = (True/False) indicating if the Elink processes have to be run as test (only the first 5000 pmids) or full
-  - pack_size = the number of identifiers that will be send in the Elink request. For CID - PMID, 5000 is recommended. (please refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html)
+  - run_as_test = (True/False) indicating if the Elink processes have to be run as test (only the first 100000 pmids) or full
+  - pack_size = the number of identifiers that will be send in the Elink request. For CID - PMID, 100000 is recommended. (please refer to https://eutils.ncbi.nlm.nih.gov/entrez/query/static/entrezlinks.html)
   - api_key = an apiKey provided by a NCBI account
   - timeout =  the period (in seconds) after which a request will be canceled if too long. For CID - PMID, 600 is recommended.
   - max_triples_by_files = the maximum number of associations exported in a file. For CID - PMID, 5000000 is recommended.
@@ -446,14 +446,13 @@ bash workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s share -c start upload.sh
 ```
 
 
-Several checks can be used to ensure that the loading was done correctly:
-
-1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Globally, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
-
-Several requests will be sent against the Virtuoso endpoint during the process, you can check that the central requests are working well. In the *test* directory, we prepare a list of SPARQL queries that test the main properties and paths use during the process. Be sure that each of these queries return results. A good start could also be to check requests used in the *X_Y* part of the process (Cf. configuration files), such as: *count_distinct_pmids_by_CID_MESH*, *count_distinct_pmids_by_ChEBI_MESH*, *count_distinct_pmids_by_ChemOnt_MESH*. In doing so, use only the first 100 elements by setting *limit* and *offset* parameters to 100 and 0 for instance. The first '%s' refers to the graphs that should be used in the request (the *FROM* part of the sparql request) but this can be removed for the tests.
 
 
 ##### 3.1.2 Monitoring
+
+Several checks can be used to ensure that the loading was done correctly:
+
+1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Basically, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
 
 The FORUM triplestore is built from both triples created and collected from web services (eg. PMID_CID, CHEMONT) and aggregated from different external resources (eg. PubChem). In this way, inconsistency is the data can comes from different issues. Some advices are provided to detect and quantity potential errors or lack in the data: 
 
@@ -461,16 +460,14 @@ The FORUM triplestore is built from both triples created and collected from web 
 
 - **Check the properties**: To check that the schema of the data doesn't have change between two versions, you should check that all the used properties for SPARQL requests (eg. fabio:hasSubjectTerm) are still instantiated to the individuals. A comparison of the total number of subjects associated to each property can also allow to detection potential errors or missing properties in the data.
 
-- **Manual check of a sample of associations:** Sometimes, a loss of data can be compensated by a greater gain and therefore this loss cannot be detected by comparing the void files. It is so advised to compare the results obtained between the both version for a sample of Chemical - MeSH pairs, by checking the amount of literature available for each, and their co-occurrences. For instance between PFOA (CID 9554) et Fetal development (MeSH D047109).
-
-
+- **Manual check of a sample of associations:** Sometimes, a loss of data can be compensated by a greater gain and therefore this loss cannot be detected by comparing the void files. It is so advised to compare the results obtained between the both version for a sample of Chemical - MeSH pairs, by checking the amount of literature available for each, and their co-occurrences. For instance between PFOA (CID 9554) et Fetal development (MeSH D047109). All the request that are used in the building process to count the number of articles associated to a compound, a chemical class, a MeSH descriptor and their co-mentions are available in *app/computation/SPARQL*.
 
 
 
 #### 3.2 - Set configuration files: 
 
 For each analysis, there are two main configuration files: 
-- The first refer to parameters required during the requesting process. See README in the *computation* sub-directory for option details.
+- The first refer to parameters required during the requesting process. See README in the *docs/computation* sub-directory for option details.
 - The second refer to parameters required in the conversion process of association results to RDF triples. See README in the *Analyzes/Enrichment_to_graph* sub-directory for option details.
 
 #### 3.3 - Computation

@@ -2,32 +2,34 @@
 
 use requesting_virtuoso.py
 
-To compute enrichment tests and post-analyses on associations between different modalities of a variable X (ex: PubChem compounds) and another variable Y (ex: MeSH Descriptors), a contingency table must be build for each available combinations between modalities of X and Y. For example if X represent the variable *PubChem compounds*, modalities of X are the set of PubChem identifiers (CID) store in the RDF store. In the same way, if Y represent *MeSH Descriptors*, modalities of Y should be the set of available MeSH Descirptors in the current MeSH thesaurus.
-To build a contingency table for a given combination of modalities between X and Y, named *x* and *y*, 4 counts are needed. These counts represent a number of individuals which have properties associated to modalities of *x* and/or *y*. In the previous example, PMID (PubMed publications) should be used as individuals as they are linked to PubChem compound by a property *cito:discusses* and linked to MeSH by the property *fabio:hasSubjectTerm* in the RDF store.
+To compute enrichment tests and post-analyses on associations between different modalities of a variable X (ex: PubChem compounds) and another variable Y (ex: MeSH Descriptors), a contingency table must be build for each available combinations between modalities of X and Y. For example if X represent the variable *PubChem compounds*, modalities of X are the set of PubChem identifiers (CID) store in the RDF store. In the same way, if Y represent *MeSH Descriptors*, modalities of Y should be the set of available MeSH Descriptors in the current MeSH thesaurus.
+
+To build a contingency table for a given combination of modalities between X and Y, named *x* and *y*, 4 counts are needed. These counts represent a number of publications that are associated to modalities of *x* and/or *y*. In FORUM, PMID (PubMed publications) are linked to PubChem compound by the predicate *cito:discusses* and to MeSH descritors by the predicate *fabio:hasSubjectTerm* in the RDF store.
+
 So, the 4 needed counts to build the contingency table are :
-- The total number of individuals (pmids) having the *x* modality
-- The total number of individuals (pmids) having the *y* modality
-- The total number of individuals (pmids) having **both** the *x* and the *y* modality
-- The total number of individuals (pmids)
+- The total number of PMIDs having the *x* modality
+- The total number of PMIDs having the *y* modality
+- The total number of PMIDs having **both** the *x* and the *y* modality
+- The total number of PMIDs
 
 These 4 counts must be determined for each available combinations of *x* and *y* using SPARQL queries. To do so, in the configuration file 4 sections are provided to set parameters.
 
-- The total number of individuals (pmids) having the *x* modality: **[X] section**
+- The total number of PMIDs having the *x* modality: **[X] section**
   - The query return a csv file like: *modalility_x, total_counts_for_modality_x*. Ex: 'SELECT ?CID ?COUNT WHERE { ... }'
-- The total number of individuals (pmids) having the *y* modality: **[Y] section**
+- The total number of PMIDs having the *y* modality: **[Y] section**
   - The query return a csv file like: *modalility_y, total_counts_for_modality_y*. Ex: 'SELECT ?MESH ?COUNT WHERE { ... }'
-- The total number of individuals (pmids) having **both** the *x* and the *y* modality: **[X_Y] section**
+- The total number of PMIDs having **both** the *x* and the *y* modality: **[X_Y] section**
   - The query return a csv file like: *modality_x, modality_y, total_counts_for_coocurences_between_x_and_y*. Ex: 'SELECT ?CID ?MESH ?COUNT WHERE { ... }'. The order (*modality_x, modality_y*) is important as when building the final table, columns will be considered using the *X* variable for the first, and the *Y* variable for the second.
-- The total number of individuals (pmids): **[U] section**
+- The total number of PMIDs: **[U] section**
 
-A *count request* just return the total number of individuals (the 4 ones described above). E.g. 'SELECT ?CID  ?COUNT WHERE { ... }'
-So, for each section *Request_name* contains the name of the variable in a *sparql_query.py* file, containing the string of the request count individuals. But as this request may be really time and memory consuming, it's advised to run this query in parallel. To do so, the structure of the sparql query provided in the *sparql_query.py* file is adapted to the parallelization. A first internal nested *SELECT* is used to order modalities of the Variable and use a combination of *LIMIT* and *OFFSET* clauses to divide the set of modalities in smaller sets with a size of *limit_pack_ids* for each request.
+A *count request* just returns the total number of individuals (the 4 ones described above). E.g. 'SELECT ?CID  ?COUNT WHERE { ... }'
+So, for each section *Request_name* contains the name of the variable in a *sparql_query.py* file, containing the string of the request to count individuals. But as this request may be really time and memory consuming, it's advised to run it in parallel. To do so, the structure of the sparql query provided in the *sparql_query.py* file is adapted to the parallelization. A first internal nested *SELECT* is used to order modalities of the Variable and use a combination of *LIMIT* and *OFFSET* clauses to divide the set of modalities in smaller sets with a size of *limit_pack_ids* for each request.
 
 Then, each request is sent in parallel with a specific sub-set. For exeample if the request is sent with the *OFFSET a*, it computes the request for the *OFFSET a* 'th modality to the *OFFSET a + limit_pack_ids* 'th modality. The external *LIMIT* and *OFFSET* clauses are used to manage the pagination of outputted results by Virtuoso. Virtuoso max outputted rows is 2^20, so if for a particular sub-set there are more results, the request need to be re-send, incrementing the last offset from the maximal number of outputted lines (*limit_selected_ids*)
 
 But in order to prepare the list of all offsets with a size of *limit_pack_ids*, that must be sent, the total number of modalities of the variable must be determined. So, for each variable a request counting the total number of modalities must be provided. Like the others request, it must be set in a variable in the *sparql_queries.py* file. The name of this variable is then specified in th configuration file at the *Size_Request_name* parameter.
 
-For the co-occurences query, one of the both variable should be used as a grouping variable, from which coocurences will be computed for each pack of modalities. For example, if X is used as the grouping variable, the nested SELECT in the associated SPARQL query must sort X's modalities and used *LIMIT* and *OFFSET* clauses to divided to total number of modalities of X in smaller groups. So, the counting request used for this request should be the same as the one provided in [X] section
+For the co-occurences query ([X_Y]), one of the both variable should be used as a grouping variable, from which coocurences will be computed for each pack of modalities. For example, if X is used as the grouping variable, the nested SELECT in the associated SPARQL query must sort X's modalities and used *LIMIT* and *OFFSET* clauses to divided to total number of modalities of X in smaller groups. So, the counting request used for this request should be the same as the one provided in [X] section
 
 A more detailed description of the configuration file is provided below.
 

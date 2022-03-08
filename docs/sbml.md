@@ -141,21 +141,26 @@ Some Inter-resource equivalences are provided with URIs that are not directly an
 
 For example a specie in the SBMl can be annotated with the URIs: *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>*. None Inter-resource equivalences are explicitly provided in graphs using this uri, but, being the synonym of *<http://purl.obolibrary.org/obo/CHEBI_16424>*, which is the uri used in the MetaNetX database, all annotations associated to this uri can be linked to *<https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16424>* and thus, extend annotations in the SBML.
 
-To determine all new identifiers that can be inferred from the existing ones in the SBML using Intra/Inter equivalences, we can use :
+To have access to all the identifiers, use: 
+```SQL
+DEFINE input:inference 'schema-inference-rules'
+DEFINE input:same-as "yes"
+
+select distinct ?specie ?ext_ref 
+where {
+		?specie a SBMLrdf:Species ;
+			(bqbiol:is|bqbiol:is/skos:closeMatch) ?ext_ref .
+}
+```
+
+To determine just the new identifiers that can be inferred from the existing ones in the SBML using Intra/Inter equivalences, we can use :
 
 ```SQL
 DEFINE input:inference 'schema-inference-rules'
 DEFINE input:same-as "yes"
-prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
-prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
-prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
-prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
-prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
-prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-select ?specie ?otherRef . 
+
+select distinct ?specie ?otherRef 
 where {
 		?specie a SBMLrdf:Species ;
 			bqbiol:is ?ref .
@@ -179,22 +184,14 @@ Using external resources, such as MetaNetX, PubChem and ChEBI, we can extract In
 
 For all SBML species, using external identifiers provided by the *bqbiol:is* and those that we can infer from Intra/Inter equivalences using *skos:closeMatch*, in all therefore equivalent to the property path *bqbiol:is|bqbiol:is/skos:closeMatch*, we can use a SPARQL query to retrieve Inchi and SMILES annotations
 
+Replace "[model_URI]" with the actual namespace of the model (eg. https://forum.semantic-metabolomics.org/SBML/Human1/1.7#)
+
 * For InchI
 ```SQL
 DEFINE input:inference 'schema-inference-rules'
 DEFINE input:same-as "yes"
-prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
-prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
-prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
-prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
-prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
-prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-prefix mnx: <https://rdf.metanetx.org/schema/>
-prefix sio: <http://semanticscience.org/resource/>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT distinct (strafter(STR(?specie), "model_URI") as ?SPECIE) ?selected_inchi
+SELECT distinct (strafter(STR(?specie), "[model_URI]") as ?SPECIE) ?selected_inchi
 where {
   ?specie a SBMLrdf:Species ;
     SBMLrdf:name ?spe_name ;
@@ -217,18 +214,8 @@ BIND(str(?inchi) as ?selected_inchi)
 ```SQL
 DEFINE input:inference 'schema-inference-rules'
 DEFINE input:same-as "yes"
-prefix SBMLrdf: <http://identifiers.org/biomodels.vocabulary#>
-prefix bqbiol: <http://biomodels.net/biology-qualifiers#>
-prefix mnxCHEM: <https://rdf.metanetx.org/chem/>
-prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_>
-prefix model: <http:doi.org/10.1126/scisignal.aaz1482#>
-prefix cid:   <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
-prefix mnx: <https://rdf.metanetx.org/schema/>
-prefix sio: <http://semanticscience.org/resource/>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix skos: <http://www.w3.org/2004/02/skos/core#>
 
-SELECT distinct (strafter(STR(?specie), "model_URI") as ?SPECIE) ?selected_smiles
+SELECT distinct (strafter(STR(?specie), "[model_URI]") as ?SPECIE) ?selected_smiles
 where {
   ?specie a SBMLrdf:Species ;
     SBMLrdf:name ?spe_name ;

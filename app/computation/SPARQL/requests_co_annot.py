@@ -4,7 +4,6 @@ prefix = """
 
 PubChem = """
     select (strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\") as ?MESH) ?label ?count
-    %s
     where
     {
         {
@@ -13,12 +12,13 @@ PubChem = """
             {
                 {
                     select ?pmid
-                    where{
+                    where
+                    {
                         %s cito:isDiscussedBy ?pmid .
                         ?pmid (fabio:hasSubjectTerm|fabio:hasSubjectTerm/meshv:hasDescriptor) ?mesh_ini .
                         ?mesh_ini a meshv:TopicalDescriptor .
                         ?mesh_ini meshv:active 1 .
-                        ?mesh_ini (meshv:treeNumber/meshv:parentTreeNumber*) ?tn .
+                        ?mesh_ini (meshv:treeNumber|meshv:treeNumber/meshv:parentTreeNumber) ?tn .
                         %s meshv:treeNumber ?tn .
                     }
                 }
