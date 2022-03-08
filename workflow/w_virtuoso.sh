@@ -6,21 +6,24 @@
 # USAGE (2) : ${0} stop                   # stop virtuoso                  
 # USAGE (3) : ${0} clean                  # remove docker directory
 
+# By default we use only load essential data: MeSH, PubChem_Reference, PubChem_Compound, PMID_CID, PMID_CID_endpoints
 
-while getopts d:s: flag;
+while getopts d:s:c: flag;
 	do
 	    case "${flag}" in
-	    d) DOCKER_DIR=${OPTARG};;
+	        d) DOCKER_DIR=${OPTARG};;
             s) PATH_TO_SHARED_DIR_FROM_D=${OPTARG};;
+            c) CMD=${OPTARG};;
 	    esac
 	done
 
-echo $DOCKER_DIR
-echo $PATH_TO_SHARED_DIR_FROM_D
+if [ "$CMD" != "start" ] && [ "$CMD" != "stop" ] && [ "$CMD" != "clean" ]; then
+    echo "-c (command) must be 'start' or 'stop' or 'clean'"
+    exit 1
+fi
 
-CMD=${@:$OPTIND:1}
-
-echo $CMD
+shift $(($OPTIND - 1))
+uploads="$@"
 
 COMPOSE_PROJECT_NAME="forum-KG"
 LISTEN_PORT="9980"
@@ -46,7 +49,6 @@ function waitStarted() {
 
 function virtuosoControler() {
     echo " -- Virtuoso controler"
-    echo " --"
 
     echo " -- Generating docker-compose"
     COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
@@ -79,6 +81,8 @@ services:
             VIRT_Parameters_ResourcesCleanupInterval: 1
             VIRT_Parameters_AsyncQueueMaxThreads: 1
             VIRT_Parameters_ThreadsPerQuery: 1
+            VIRT_Parameters_VectorSize: 100000
+            VIRT_Parameters_MaxVectorSize: 3000000
             VIRT_Parameters_AdjustVectorSize: 1
             VIRT_Parameters_MaxQueryMem: 8G
             DBA_PASSWORD: "${PASSWORD}"
@@ -103,6 +107,11 @@ EOF
                 ${COMPOSE_CMD} up -d
                 waitStarted
             else
+                if [ "${uploads[0]}" = "" ]; then
+                    echo "No upload files to load. Please, specificy a list of upload files."
+                    echo "Exit"
+                    exit 1
+                fi
                 echo " -- Generating new compose instance."             
                 echo "---------------------------------" 
 
@@ -112,34 +121,13 @@ EOF
                 ${COMPOSE_CMD} up -d
                 waitStarted
                 echo " -- Container started."
-                echo " -- Load vocabulary."
-		            docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload.sh
-                echo " -- Load SBML."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/SBML_upload_file.sh
-                echo " -- Load PubChem Mapping."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_PubChem_upload_file.sh
-                echo " -- Load MetaNetX Mapping."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/Id_mapping_MetaNetX_upload_file.sh
-                echo " -- Load MetaNetX."
-                    docker exec \
-                        ${CONTAINER_NAME} \
-                        isql-v 1111 dba "${PASSWORD}" ./dumps/upload_MetaNetX.sh
-                # echo " -- Load data."
-                #     docker exec \
-                #         ${CONTAINER_NAME} \
-                #         isql-v 1111 dba "${PASSWORD}" ./dumps/pre_upload.sh
-                # echo " -- Load ClassyFire."
-                #     docker exec \
-                #         ${CONTAINER_NAME} \
-                #         isql-v 1111 dba "${PASSWORD}" ./dumps/upload_ClassyFire.sh
+                
+                for f in ${uploads[@]}; do
+                echo "Load $f: docker exec ${CONTAINER_NAME} isql-v 1111 dba '${PASSWORD}' ./dumps/$f"
+                docker exec \
+                    ${CONTAINER_NAME} \
+                    isql-v 1111 dba "${PASSWORD}" ./dumps/$f
+                done
             fi
         ;;
         stop)
