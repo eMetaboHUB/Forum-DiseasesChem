@@ -413,7 +413,7 @@ Once the initial data of the triplestore have been created, an initial session o
 
 You may need to disable "Strict checking of void variables" in the SPARQL query editor when you use transitivity in queries.
 
-#### 3.1 Virtuoso Triple store
+#### 3.1 - Virtuoso Triple store
 
 ##### 3.1.1 - Initialyze the Virtuoso session
 
@@ -446,21 +446,6 @@ bash workflow/w_virtuoso.sh -d /path/to/virtuoso/dir -s share -c start upload.sh
 ```
 
 
-
-
-##### 3.1.2 Monitoring
-
-Several checks can be used to ensure that the loading was done correctly:
-
-1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Basically, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
-
-The FORUM triplestore is built from both triples created and collected from web services (eg. PMID_CID, CHEMONT) and aggregated from different external resources (eg. PubChem). In this way, inconsistency is the data can comes from different issues. Some advices are provided to detect and quantity potential errors or lack in the data: 
-
-- **Check the void (and mainly the master void)**: The void files summarize useful metadata about the created graphs. A comparison of the main properties *void:distinctSubjects* and  *void:triples* of the graph between the old and the new release can provide a rough estimator of the changes. Basically, we expect that each year the total number of subjects and triples should increase. If it's not the case, corrections may have been brought by the providers but when a large amount of subjects/triples are drop, it is often the sign of an issue in the data recuperation process or from the providers themselves.
-
-- **Check the properties**: To check that the schema of the data doesn't have change between two versions, you should check that all the used properties for SPARQL requests (eg. fabio:hasSubjectTerm) are still instantiated to the individuals. A comparison of the total number of subjects associated to each property can also allow to detection potential errors or missing properties in the data.
-
-- **Manual check of a sample of associations:** Sometimes, a loss of data can be compensated by a greater gain and therefore this loss cannot be detected by comparing the void files. It is so advised to compare the results obtained between the both version for a sample of Chemical - MeSH pairs, by checking the amount of literature available for each, and their co-occurrences. For instance between PFOA (CID 9554) et Fetal development (MeSH D047109). All the request that are used in the building process to count the number of articles associated to a compound, a chemical class, a MeSH descriptor and their co-mentions are available in *app/computation/SPARQL*.
 
 
 
@@ -619,8 +604,39 @@ New directory *EnrichmentAnalysis* should have been created at the end of the pr
 
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory
 
-#### 3.5 MeSH, Chemont, ChEBI and CID labels
+
+##### 4 - Create the master Void
+
+Use create_master_void.py
+
+```bash
+python3 -u app/build/create_master_void.py --config="/workdir/config/release-2021/master_void.ini" --out="/workdir/share-virtuoso"
+```
+###### Config file
+
+- [RELEASE]
+  - version = release date
+  - ftp = ftp adress (ftp.semantic-metabolomics.org:)
+  - graph = all the graph URIs that must be included into the FORVM dataset for the new release.
+
+### 5 - Monitoring
+
+Several checks can be used to ensure that the loading was done correctly:
+
+1) At the end of each loading file, Virtuoso execute the command *select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;*. Basically, it asks Virtuoso to return graphs for which there was an error during rdf loading. Check that this request doesn't return any results ([Virtuoso Bulk Loading RDF](http://vos.openlinksw.com/owiki/wiki/VOS/VirtBulkRDFLoader#Checking%20bulk%20load%20status))
+
+The FORUM triplestore is built from both triples created and collected from web services (eg. PMID_CID, CHEMONT) and aggregated from different external resources (eg. PubChem). In this way, inconsistency is the data can comes from different issues. Some advices are provided to detect and quantity potential errors or lack in the data: 
+
+- **Check the void (and mainly the master void)**: The void files summarize useful metadata about the created graphs. A comparison of the main properties *void:distinctSubjects* and  *void:triples* of the graph between the old and the new release can provide a rough estimator of the changes. Basically, we expect that each year the total number of subjects and triples should increase. If it's not the case, corrections may have been brought by the providers but when a large amount of subjects/triples are drop, it is often the sign of an issue in the data recuperation process or from the providers themselves.
+
+- **Check the properties**: To check that the schema of the data doesn't have change between two versions, you should check that all the used properties for SPARQL requests (eg. fabio:hasSubjectTerm) are still instantiated to the individuals. A comparison of the total number of subjects associated to each property can also allow to detection potential errors or missing properties in the data.
+
+- **Manual check of a sample of associations:** Sometimes, a loss of data can be compensated by a greater gain and therefore this loss cannot be detected by comparing the void files. It is so advised to compare the results obtained between the both version for a sample of Chemical - MeSH pairs, by checking the amount of literature available for each, and their co-occurrences. For instance between PFOA (CID 9554) et Fetal development (MeSH D047109). All the request that are used in the building process to count the number of articles associated to a compound, a chemical class, a MeSH descriptor and their co-mentions are available in *app/computation/SPARQL*.
+
+
+
+### 6 - MeSH, Chemont, ChEBI and CID labels
 
 Identifiers are not always convenient to explore results and therefore, labels of MeSH descriptors, Chemont and ChEBI classes, or PubChem compounds can be more useful.
-To retrieve labels of MeSH descriptors, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
-Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify, but those can be retrieved using the [pubchem identifier exchange](https://pubchemdocs.ncbi.nlm.nih.gov/identifier-exchange-service). Label files are also provided on the sftp server (See on web-portal).
+To retrieve labels of MeSH descriptors and SCR, Chemont and ChEBI classes, you can use the SPARQL endpoint by sending requests as indicated in the labels.rq file.
+Unfortunately, this can't be done for PubChem compounds as labels are not part of PubChem RDF data, only the IUPAC name being specify, but those can be retrieved using the [pubchem identifier exchange](https://pubchemdocs.ncbi.nlm.nih.gov/identifier-exchange-service). Extract all the PubChem identifiers for which their is literature (and so potentially associations) and upload it in the service to get labels. Label files are also provided on the sftp server (See on web-portal).
