@@ -1,6 +1,6 @@
 # FORVM release checklist 
 
-## Update vocabularies
+### 1 -  Update vocabularies
 
 * Ontologies that could be updated: chebi, MeSH, cheminf
 * Ontologies that are stable (but do a check anyway): cito, dcterms, fabio, skos, chemont 
@@ -8,7 +8,7 @@
 All the vocabularies must be placed in the same directory.
 > Create an archive with the new vocabulary directory and upload it on the ftp at : ftp.semantic-metabolomics.org:/dumps/*release_date*/
 
-### FORVM triplestore
+### 2 - FORVM triplestore
 
 See:
 
@@ -24,12 +24,11 @@ Check that the path to the *share.tar.gz* file in the ftp directory correspond t
 
 > Update the master void.ttl
 
-### Update the triplestore (Cf. Olivier)
+### 3 - Update the triplestore
 
 See 5 - Monitoring for sanity checks
 
-
-### FORVM raw results
+### 4 - FORVM raw results
 
 > Update all the *r_fisher_q_w.csv* **and** the *metadata.txt* files in their corresponding release directory in the ftp. Eg. for CID_MESH, upload the *r_fisher_q_w.csv* and  *metadata.txt* in ftp.semantic-metabolomics.org:/CID_MESH/*release\_date*/
 
@@ -39,9 +38,7 @@ Check that for each association file (*r_fisher_q_w.csv*) the path in ftp direct
 
 > Upload also the label directory on the ftp
 
-### Update the database (Cf. Florence)
-
-#### Prepare data for the upload in the database:
+### 5 - Prepare data for the upload in the database:
 
 For all raw result files (*r_fisher_q_w.csv*) of each resource (CHEBI_MESH, CHEMONT_MESH, CID_MESH, MESH_MESH, CID_SCR_Disease, MESH_SCR_Disease):
     
