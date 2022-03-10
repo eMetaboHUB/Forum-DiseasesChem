@@ -20,7 +20,7 @@ See:
 
 > Upload the share.tar.gz next to the vocabulary directory at ftp.semantic-metabolomics.org:/dumps/*release_date*/
 
-Check that the path to the *share.tar.gz* file in the ftp directory correspond to what is specified in the *void:dataDump* property for the FORVM dataset URI: <https://forum.semantic-metabolomics.org/void> 
+Check that the path to the *share.tar.gz* file in the ftp directory correspond to what is specified in the *void:dataDump* property for the FORVM dataset URI: <https://forum.semantic-metabolomics.org/void> in the master void.
 
 > Update the master void.ttl
 
@@ -45,7 +45,7 @@ Check that for each association file (*r_fisher_q_w.csv*) the path in ftp direct
 
 For all raw result files (*r_fisher_q_w.csv*) of each resource (CHEBI_MESH, CHEMONT_MESH, CID_MESH, MESH_MESH, CID_SCR_Disease, MESH_SCR_Disease):
     
-> Filter by selecting significant relations (q.value <= 1e-6) The threshold could be re-evaluated in the number of associations drastically increase
+> Filter by selecting significant relations (q.value <= 1e-6) The threshold could be re-evaluated if the number of associations drastically increase
 
 > Remove the columns *TOTAL_PMID* and *p.value*
 

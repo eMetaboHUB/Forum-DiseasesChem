@@ -605,7 +605,7 @@ New directory *EnrichmentAnalysis* should have been created at the end of the pr
 In the data directory, you can also retrieved all processed results, such as the final results table: *r_fisher_q_w.csv* in each related directory
 
 
-##### 4 - Create the master Void
+### 4 - Create the master Void
 
 Use create_master_void.py
 
