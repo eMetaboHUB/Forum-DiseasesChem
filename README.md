@@ -1,7 +1,7 @@
 # FORUM Knowledge graph Database
 
 [<img width="200" height="200" src="FORUM_logo2.png">](https://github.com/eMetaboHUB/FORUM-MetDiseaseDatabase) FORUM is an open knowledge network aiming at supporting metabolomics results interpretation in biomedical sciences and automated reasoning.
-Containing more than 8 billion statements, it federates data from several life-science resources such as PubMed, ChEBI and PubMed.
+Containing more than 8 billion statements, it federates data from several life-science resources such as PubMed, ChEBI and PubChem.
 Leveraging the bridges in this linked dataset, we automatically extract associations between compound and biomedical concepts, using literature metadata enrichment.
 Find more about the method in our preprint here: [BioXiv](https://www.biorxiv.org/content/10.1101/2021.02.12.430944v1)
 
