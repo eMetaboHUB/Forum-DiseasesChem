@@ -1,0 +1,196 @@
+#!/bin/bash
+
+# MODIF OF 2023 02 15
+# - add logs command
+# - link virtuoso with an external directory (like workdir/share-virtuoso/) to upload
+
+# USAGE (1) : ${0} start                  # start virtuoso and load a list of scripts
+# USAGE (2) : ${0} stop                   # stop virtuoso                  
+# USAGE (3) : ${0} clean                  # remove docker directory
+# USAGE (4) : ${0} logs                   # logs
+# USAGE (5) : ${0} help                   # help
+
+# By default we use only load essential data: MeSH, PubChem_Reference, PubChem_Compound, PMID_CID, PMID_CID_endpoints
+
+while getopts d:s:c: flag;
+	do
+	    case "${flag}" in
+	        d) DOCKER_DIR=${OPTARG};;
+                s) PATH_TO_SHARED_DIR_FROM_D=${OPTARG};;
+                c) CMD=${OPTARG};;
+	    esac
+	done
+
+if [ "$CMD" != "start" ] && [ "$CMD" != "stop" ] && [ "$CMD" != "clean" ] && [ "$CMD" != "logs" ] && [ "$CMD" != "help" ] ; then
+    echo "-c (command) must be 'start' or 'stop' or 'clean'"
+    exit 1
+fi
+ 
+[[ "$DOCKER_DIR" != /* ]] && echo "DOCKER_DIR=$DOCKER_DIR should be an absolute path." && exit 1
+[ ! -d "$DOCKER_DIR" ] && echo "Directory DOCKER_DIR=$DOCKER_DIR DOES NOT exists." && exit 1
+[ ! -d "$PATH_TO_SHARED_DIR_FROM_D" ] && echo "Directory PATH_TO_SHARED_DIR_FROM_D=$PATH_TO_SHARED_DIR_FROM_D DOES NOT exists." && exit 1
+
+shift $(($OPTIND - 1))
+uploads="$@"
+
+COMPOSE_PROJECT_NAME="forum-KG"
+LISTEN_PORT="9980"
+PASSWORD="FORUM"
+GRAPH="http://default#"
+ALLOW_UDPATE="false"
+
+
+Help()
+{
+   # Display Help
+   echo "Build a docker environment of virtuoso and load a list of script."
+   echo
+   echo "Syntax: w_virtuoso_v2 [-d|s|c] <uploadVirtuosoScript1> <uploadVirtuosoScript2>... "
+   echo "options:"
+   echo "-d     directory of virtuoso. should be created befor running this script"
+   echo "-s     directory to share within docker virtuoso. this directory should contain the list of script lo load"
+   echo "-c     command"
+   echo "      start : start virtuoso and load a list of scripts the first time."
+   echo "      stop : stop virtuoso."
+   echo "      clean : clean and remove env."
+   echo "      logs : eq to docker-compose logs."
+   echo "      help : print this message."
+   echo
+}
+
+
+
+function waitStarted() {
+    set +e
+    RES=1
+    echo -n "Wait for start "
+    until [ $RES -eq 0 ]; do
+        echo -n "."
+        sleep 1
+        # As we check logs every 1 sec (sleep 1), we only check logs for the last 2 sec (--since 2s) to avoid grapping a "Server Online message" from a previous start
+        docker logs --since 2s ${CONTAINER_NAME} 2>&1 | grep "Server online at 1111" > /dev/null
+        RES=$?
+    done
+    echo ""
+    set -e
+}
+
+function virtuosoControler() {
+    echo " -- Virtuoso controler"
+
+    echo " -- Generating docker-compose"
+    COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
+    COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
+    CONTAINER_NAME="${COMPOSE_PROJECT_NAME}_virtuoso_${LISTEN_PORT}"
+    NETWORK_NAME="virtuoso_${LISTEN_PORT}_net"
+    OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"
+    RESOURCES_DIR=$(realpath ${PATH_TO_SHARED_DIR_FROM_D})
+    DATA="${DOCKER_DIR}/data/virtuoso"
+    cat << EOF | tee ${COMPOSE_FILE} > /dev/null
+version: '3.3'
+services:
+    virtuoso:
+        image: tenforce/virtuoso:7.2.5
+        container_name: ${CONTAINER_NAME}
+        environment:
+            VIRT_Parameters_NumberOfBuffers: 5450000   # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_MaxDirtyBuffers: 4000000    # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_MaxCheckpointRemap: 680000
+            VIRT_Parameters_TN_MAX_memory: 2000000000
+            VIRT_SPARQL_ResultSetMaxRows: 10000000000
+            VIRT_SPARQL_MaxDataSourceSize: 10000000000
+            VIRT_Flags_TN_MAX_memory: 2000000000
+            VIRT_Parameters_StopCompilerWhenXOverRunTime: 1
+            VIRT_SPARQL_MaxQueryCostEstimationTime: 0       # query time estimation
+            VIRT_SPARQL_MaxQueryExecutionTime: 50000          # 5 min
+            VIRT_Parameters_MaxMemPoolSize: 200000000
+            VIRT_HTTPServer_EnableRequestTrap: 0
+            VIRT_Parameters_ThreadCleanupInterval: 1
+            VIRT_Parameters_ResourcesCleanupInterval: 1
+            VIRT_Parameters_AsyncQueueMaxThreads: 1
+            VIRT_Parameters_ThreadsPerQuery: 1
+            VIRT_Parameters_VectorSize: 100000
+            VIRT_Parameters_MaxVectorSize: 3000000
+            VIRT_Parameters_AdjustVectorSize: 1
+            VIRT_Parameters_MaxQueryMem: 8G
+            DBA_PASSWORD: "${PASSWORD}"
+            SPARQL_UPDATE: "${ALLOW_UDPATE}"
+            DEFAULT_GRAPH: "${GRAPH}"
+        volumes:
+           - ${RESOURCES_DIR}:/usr/local/virtuoso-opensource/var/lib/virtuoso/db/dumps
+           - ${DATA}:/data
+        ports:
+           - ${LISTEN_PORT}:8890
+        networks:
+           - ${NETWORK_NAME}
+
+networks:
+    ${NETWORK_NAME}:
+EOF
+    case $CMD in
+        start)
+            if [ -d ${DATA} ]; then
+                echo " -- Already generated."
+                echo " -- Start Container"
+                ${COMPOSE_CMD} up -d
+                waitStarted
+            else
+                #if [ "${uploads[0]}" = "" ]; then
+                #    echo "No upload files to load. Please, specificy a list of upload files."
+                #    echo "Exit"
+                #    exit 1
+                #fi
+                echo " -- Generating new compose instance."             
+                echo "---------------------------------" 
+
+                echo " -- Pull Images"
+                ${COMPOSE_CMD} pull
+                echo " -- Start Container"
+                ${COMPOSE_CMD} up -d
+                waitStarted
+                echo " -- Container started."
+                
+                for f in ${uploads[@]}; do
+                echo "Load $f: docker exec ${CONTAINER_NAME} isql-v 1111 dba '${PASSWORD}' ./dumps/$f"
+                docker exec \
+                    ${CONTAINER_NAME} \
+                    isql-v 1111 dba "${PASSWORD}" ./dumps/$f
+                done
+                
+                echo "---------------------------------" 
+                echo " -- DONE ${uploads}    --"             
+                echo "---------------------------------" 
+            fi
+        ;;
+        stop)
+            ${COMPOSE_CMD} stop
+        ;;
+        logs)
+            ${COMPOSE_CMD} logs
+        ;;
+        clean)
+            if [ -d ${DATA} ]; then
+		${COMPOSE_CMD} down
+                set +e
+                docker run --rm \
+                    --mount type=bind,source="${DOCKER_DIR}",target=/cache \
+                    tenforce/virtuoso \
+                    bash -c "rm -r /cache/data"
+                set -e
+            else
+                echo " -- Instance not present. Skipping cleaning."
+            fi
+        ;;
+        "help")
+            Help
+        ;;
+        *)
+            rm ${COMPOSE_FILE}
+            echo "Error: unsupported command $CMD"
+            exit 1
+        ;;
+    esac
+    exit 0
+}
+
+virtuosoControler
