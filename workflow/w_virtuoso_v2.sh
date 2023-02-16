@@ -33,7 +33,7 @@ fi
 shift $(($OPTIND - 1))
 uploads="$@"
 
-COMPOSE_PROJECT_NAME="forum-KG"
+COMPOSE_PROJECT_NAME="forum-knoledge-graph"
 LISTEN_PORT="9980"
 PASSWORD="FORUM"
 GRAPH="http://default#"
@@ -78,19 +78,19 @@ function waitStarted() {
 function virtuosoControler() {
     echo " -- Virtuoso controler"
 
-    echo " -- Generating docker-compose"
+    echo " -- Generating docker-compose yml file"
     COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
-    COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
+    COMPOSE_CMD="docker compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
     CONTAINER_NAME="${COMPOSE_PROJECT_NAME}_virtuoso_${LISTEN_PORT}"
     NETWORK_NAME="virtuoso_${LISTEN_PORT}_net"
     OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"
     RESOURCES_DIR=$(realpath ${PATH_TO_SHARED_DIR_FROM_D})
     DATA="${DOCKER_DIR}/data/virtuoso"
     cat << EOF | tee ${COMPOSE_FILE} > /dev/null
-version: '3.3'
+version: '3.7'
 services:
     virtuoso:
-        image: tenforce/virtuoso:7.2.5
+        image: tenforce/virtuoso
         container_name: ${CONTAINER_NAME}
         environment:
             VIRT_Parameters_NumberOfBuffers: 5450000   # See virtuoso/README.md to adapt value of this line
