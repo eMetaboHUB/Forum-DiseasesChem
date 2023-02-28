@@ -30,7 +30,7 @@ rule mesh_vocabulary:
 
 rule cito_vocabulary:
     input:
-        HTTP.remote("http://purl.org/spar/cito.ttl")
+        HTTP.remote("https://sparontologies.github.io/cito/current/cito.ttl")
     retries: 3
     output:
         "{vocabularydir}/cito.ttl"

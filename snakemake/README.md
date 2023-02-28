@@ -34,5 +34,5 @@ snakemake --dry-run --verbose
 
 ## run
 ```bash
-snakemake --cores 2
+snakemake --cores 2 --latency-wait 2000
 ```
