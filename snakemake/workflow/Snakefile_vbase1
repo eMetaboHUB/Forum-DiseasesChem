@@ -1,0 +1,40 @@
+## snakemake --config BASE_FORUM="." --config SHARE_VIRTUOSO="share"
+
+from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
+HTTP = HTTPRemoteProvider()
+
+## General config
+share_virtuoso="share"
+vocabularydir="share/vocabulary"
+
+## Vocabulary file 
+
+archives_ext_gz={
+  "chebi.obo": "https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo.gz",
+  "vocabulary_1.0.0.ttl": "https://nlmpubs.nlm.nih.gov/projects/mesh/rdf/2021/vocabulary_1.0.0.ttl"
+}
+
+## Rules
+
+rule all:
+    input:
+        ["{vocabularydir}/{vocabulary}".format(vocabulary=vocabulary,vocabularydir=vocabularydir) for vocabulary in archives_ext_gz.keys()]
+
+rule wget_gz:
+    input:
+        HTTP.remote(
+            expand("{url}".format(url=url) 
+            for url in archives_ext_gz.values()
+             #for url in filter(lambda x:x.endswith((".gz")), archives_ext_gz.values())
+             )
+            )
+    output:
+        "{vocabularydir}/{archive}"
+
+
+#    conda:
+#        "envs/tools.yaml"
+#    shell:
+#        "wget -nc -O - {input} | gunzip > {output}"
+
+

@@ -1,0 +1,36 @@
+## snakemake --config BASE_FORUM="." --config SHARE_VIRTUOSO="share"
+
+from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
+HTTP = HTTPRemoteProvider()
+
+configfile: "config.yaml"
+
+## Rules
+
+rule all:
+    input:
+        expand("{vocabularydir}/{vocabulary}", 
+                vocabulary=config["vocabularies"],
+                vocabularydir=config["vocabularydir"],
+                )
+
+#def fun(wildcards)
+print(config["vocabularies"].values())
+
+#urls = [ url for i in config["vocabularies"] ] 
+
+#print(urls)
+
+rule wget_gz:    
+    input:
+        HTTP.remote(
+            expand("{url}",url=config["vocabularies"][wildcards.archive] )
+            )
+    output:
+        "{vocabularydir}/{archive}"
+    conda:
+        "envs/tools.yaml"
+    shell:
+        "wget -nc -O - {input} | gunzip > {output}"
+
+
