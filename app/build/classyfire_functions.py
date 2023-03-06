@@ -145,7 +145,7 @@ def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out)
         with gzip.open(inchikey_f_input, "rb") as f:
             g_inchikey.parse(f, format = "turtle")
         # Get cid - inchikey associations
-        cids_inchikeys = list(g_inchikey.subject_objects(rdflib.URIRef("http://semanticscience.org/resource/is-attribute-of")))
+        cids_inchikeys = list(g_inchikey.subject_objects(rdflib.URIRef("http://semanticscience.org/resource/SIO_000011")))
         inchikeys = [cid_inchikey[0].toPython().split("http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/")[1] for cid_inchikey in cids_inchikeys]
         cids = [cid_inchikey[1].toPython().split("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")[1] for cid_inchikey in cids_inchikeys]
         with open(path_out, "a") as out:
