@@ -26,13 +26,15 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
     """
     print("Treating df " + str(df_index))
     for index, row in df.iterrows():
-        classif = get_entity_from_ClassyFire(row['CID'], row['INCHIKEY'], path_out)
+        CID=row['CID'].strip()
+        INCHIKEY=row['INCHIKEY'].strip()
+        classif = get_entity_from_ClassyFire(CID, INCHIKEY, path_out)
         if not classif:
             continue
-        chemont_ids = parse_entities(row['CID'], classif, path_out)
+        chemont_ids = parse_entities(CID, classif, path_out)
         if not chemont_ids:
             continue
-        add_triples(row['CID'], chemont_ids, g_direct_parent, g_alternative_parent)
+        add_triples(CID, chemont_ids, g_direct_parent, g_alternative_parent)
     print("Serialyze graphs")
     g_direct_parent.serialize(destination = os.path.join(path_direct_p, "classyfire_direct_parent_" + str(df_index + 1) + ".ttl"), format='turtle')
     g_alternative_parent.serialize(destination = os.path.join(path_alternative_p, "classyfire_alternative_parent_" + str(df_index + 1) + ".ttl"), format='turtle')
@@ -48,7 +50,7 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
 
 def get_entity_from_ClassyFire(CID, InchiKey, path_out):
     """
-    This function is used to send a query to  classyfire.wishartlab.com/entities/INCHIKEY.json to retrieve classiication result for a compound, given his InchiKey.
+    This function is used to send a query to  classyfire.wishartlab.com/entities/INCHIKEY.json to retrieve classification result for a compound, given his InchiKey.
     This function return the classification is json format or False if there was an error. Logs and ids for which the request failed are reported in classyFire.log and classyFire_error_ids.log
     - CID: PubChem compound identifier (use for logs)
     - InchiKey: input inchikey
@@ -70,7 +72,7 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
         return False
     # Check if there was an error while sending request: 
     except requests.exceptions.RequestException as e:
-        print("Error while trying to retrieve classication for CID: " + CID + ", Check logs.")
+        print("Error while trying to retrieve classification for CID: " + CID + ", Check logs.")
         with open(os.path.join(path_out, "classyFire.log"), "a") as f_log:
                 f_log.write("CID " + CID + " - HTTP response status codes: ")
                 f_log.write(str(e) + "\n")
