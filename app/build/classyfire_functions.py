@@ -63,7 +63,6 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out,http):
     signal.alarm(60)
     time.sleep(1)
     try:
-        print(InchiKey)
         r = http.request("GET",'http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey), headers = {"Content-Type": "application/json"})
         print(InchiKey,":",r.status)
     # Check timeout: 
