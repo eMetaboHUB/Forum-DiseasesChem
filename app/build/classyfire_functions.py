@@ -11,6 +11,8 @@ import datetime
 import gzip
 import csv
 import os
+from urllib3.util import Retry
+from urllib3 import PoolManager
 
 # Prepare TimeoutExceptions
 class TimeOutException(Exception):
@@ -25,10 +27,12 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
     This function return a table of 4 values: nb. triples in direct_parent graph file, nb. subjects in direct_parent graph file, nb. triples in Alternative_parent graph file, nb. subjects in Alternative_parent graph file  
     """
     print("Treating df " + str(df_index))
+    retries = Retry(total=10,backoff_factor=0.1,connect=5, read=2, redirect=5, status_forcelist=[429, 500, 502, 503, 504])
+    http = PoolManager(retries=retries,timeout=30)
     for index, row in df.iterrows():
         CID=row['CID'].strip()
         INCHIKEY=row['INCHIKEY'].strip()
-        classif = get_entity_from_ClassyFire(CID, INCHIKEY, path_out)
+        classif = get_entity_from_ClassyFire(CID, INCHIKEY, path_out,http)
         if not classif:
             continue
         chemont_ids = parse_entities(CID, classif, path_out)
@@ -48,7 +52,7 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
         sys.exit(3)
     return [len(g_direct_parent), len(set([str(s) for s in g_direct_parent.subjects()])), len(g_alternative_parent), len(set([str(s) for s in g_alternative_parent.subjects()]))]
 
-def get_entity_from_ClassyFire(CID, InchiKey, path_out):
+def get_entity_from_ClassyFire(CID, InchiKey, path_out,http):
     """
     This function is used to send a query to  classyfire.wishartlab.com/entities/INCHIKEY.json to retrieve classification result for a compound, given his InchiKey.
     This function return the classification is json format or False if there was an error. Logs and ids for which the request failed are reported in classyFire.log and classyFire_error_ids.log
@@ -59,8 +63,9 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
     signal.alarm(60)
     time.sleep(1)
     try:
-        r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey), headers = {"Content-Type": "application/json"})
-        r.raise_for_status()
+        print(InchiKey)
+        r = http.request("GET",'http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey), headers = {"Content-Type": "application/json"})
+        print(InchiKey,":",r.status)
     # Check timeout: 
     except TimeOutException:
         print("Request timeout was reached (60s)!")
@@ -81,7 +86,7 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
         signal.alarm(0)
         return False
     # Test if the element is classified
-    classif = json.loads(r.text)
+    classif = json.loads(r.data)
     if len(classif) == 0:
         with open(os.path.join(path_out, "ids_no_classify.log"), "a") as no_classif_log:
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
