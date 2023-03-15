@@ -1,0 +1,90 @@
+## snakemake --config BASE_FORUM="." --config SHARE_VIRTUOSO="share"
+
+from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
+HTTP = HTTPRemoteProvider()
+
+configfile: "config.yaml"
+
+## Rules
+
+rule all:
+    input:
+        [ expand("{vocabularydir}/{vocabulary}", 
+                vocabulary=vocabulary_in,
+                vocabularydir=config["vocabularydir"],
+                ) for vocabulary_in in config["vocabularies"] ] 
+
+rule chebi_vocabulary:    
+    input:
+        HTTP.remote("https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo.gz")
+    retries: 3
+    output:
+        "{vocabularydir}/chebi_lite.obo"
+
+rule mesh_vocabulary:
+    input:
+        HTTP.remote("https://nlmpubs.nlm.nih.gov/projects/mesh/rdf/2021/vocabulary_1.0.0.ttl")
+    retries: 3
+    output:
+        "{vocabularydir}/vocabulary_1.0.0.ttl"
+
+rule cito_vocabulary:
+    input:
+        HTTP.remote("https://sparontologies.github.io/cito/current/cito.ttl")
+    retries: 3
+    output:
+        "{vocabularydir}/cito.ttl"
+
+rule fabio_vocabulary:
+    input:
+        HTTP.remote("http://purl.org/spar/fabio.ttl")
+    retries: 3
+    output:
+        "{vocabularydir}/fabio.ttl"
+
+rule dublin_core_terms_vocabulary:
+    input:
+        HTTP.remote("https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.nt")
+    retries: 3
+    output:
+        "{vocabularydir}/dublin_core_terms.nt"
+
+rule cheminf_vocabulary:
+    input:
+        HTTP.remote("http://purl.obolibrary.org/obo/cheminf.owl")
+    retries: 3
+    output:
+        "{vocabularydir}/cheminf.owl"
+
+rule skos_vocabulary:
+    input:
+        HTTP.remote("https://www.w3.org/2009/08/skos-reference/skos.rdf")
+    retries: 3
+    output:
+        "{vocabularydir}/skos.rdf"
+
+rule ChemOnt_vocabulary:
+    input:
+        HTTP.remote("http://classyfire.wishartlab.com/system/downloads/1_0/chemont/ChemOnt_2_1.obo.zip")
+    retries: 3
+    output:
+        "{vocabularydir}/ChemOnt_2_1.obo"
+
+# obo need to be transform to rdf
+# download robo : conversion tool
+rule robor_jar:
+    input:
+        HTTP.remote("https://github.com/ontodev/robot/releases/download/v1.9.2/robot.jar")
+    retries: 3
+    output:
+        "tools/robot.jar"
+
+rule obo_to_ttl:
+    input:
+        tool="tools/robot.jar", obofile="{some}.obo"
+    output:
+        "{some}.ttl"
+    conda:
+        "envs/java.yaml"
+    shell:
+        "java -jar {input.tool} convert -i {input.obofile} --format ttl -o {output}"

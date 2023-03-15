@@ -11,6 +11,8 @@ import datetime
 import gzip
 import csv
 import os
+from urllib3.util import Retry
+from urllib3 import PoolManager
 
 # Prepare TimeoutExceptions
 class TimeOutException(Exception):
@@ -25,14 +27,18 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
     This function return a table of 4 values: nb. triples in direct_parent graph file, nb. subjects in direct_parent graph file, nb. triples in Alternative_parent graph file, nb. subjects in Alternative_parent graph file  
     """
     print("Treating df " + str(df_index))
+    retries = Retry(total=10,backoff_factor=0.1,connect=5, read=2, redirect=5, status_forcelist=[429, 500, 502, 503, 504])
+    http = PoolManager(retries=retries,timeout=30)
     for index, row in df.iterrows():
-        classif = get_entity_from_ClassyFire(row['CID'], row['INCHIKEY'], path_out)
+        CID=row['CID'].strip()
+        INCHIKEY=row['INCHIKEY'].strip()
+        classif = get_entity_from_ClassyFire(CID, INCHIKEY, path_out,http)
         if not classif:
             continue
-        chemont_ids = parse_entities(row['CID'], classif, path_out)
+        chemont_ids = parse_entities(CID, classif, path_out)
         if not chemont_ids:
             continue
-        add_triples(row['CID'], chemont_ids, g_direct_parent, g_alternative_parent)
+        add_triples(CID, chemont_ids, g_direct_parent, g_alternative_parent)
     print("Serialyze graphs")
     g_direct_parent.serialize(destination = os.path.join(path_direct_p, "classyfire_direct_parent_" + str(df_index + 1) + ".ttl"), format='turtle')
     g_alternative_parent.serialize(destination = os.path.join(path_alternative_p, "classyfire_alternative_parent_" + str(df_index + 1) + ".ttl"), format='turtle')
@@ -46,9 +52,9 @@ def classify_df(df_index, df, g_direct_parent, g_alternative_parent, path_direct
         sys.exit(3)
     return [len(g_direct_parent), len(set([str(s) for s in g_direct_parent.subjects()])), len(g_alternative_parent), len(set([str(s) for s in g_alternative_parent.subjects()]))]
 
-def get_entity_from_ClassyFire(CID, InchiKey, path_out):
+def get_entity_from_ClassyFire(CID, InchiKey, path_out,http):
     """
-    This function is used to send a query to  classyfire.wishartlab.com/entities/INCHIKEY.json to retrieve classiication result for a compound, given his InchiKey.
+    This function is used to send a query to  classyfire.wishartlab.com/entities/INCHIKEY.json to retrieve classification result for a compound, given his InchiKey.
     This function return the classification is json format or False if there was an error. Logs and ids for which the request failed are reported in classyFire.log and classyFire_error_ids.log
     - CID: PubChem compound identifier (use for logs)
     - InchiKey: input inchikey
@@ -57,8 +63,8 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
     signal.alarm(60)
     time.sleep(1)
     try:
-        r = requests.get('http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey), headers = {"Content-Type": "application/json"})
-        r.raise_for_status()
+        r = http.request("GET",'http://classyfire.wishartlab.com/entities/%s.json' % (InchiKey), headers = {"Content-Type": "application/json"})
+        print(InchiKey,":",r.status)
     # Check timeout: 
     except TimeOutException:
         print("Request timeout was reached (60s)!")
@@ -70,7 +76,7 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
         return False
     # Check if there was an error while sending request: 
     except requests.exceptions.RequestException as e:
-        print("Error while trying to retrieve classication for CID: " + CID + ", Check logs.")
+        print("Error while trying to retrieve classification for CID: " + CID + ", Check logs.")
         with open(os.path.join(path_out, "classyFire.log"), "a") as f_log:
                 f_log.write("CID " + CID + " - HTTP response status codes: ")
                 f_log.write(str(e) + "\n")
@@ -79,7 +85,7 @@ def get_entity_from_ClassyFire(CID, InchiKey, path_out):
         signal.alarm(0)
         return False
     # Test if the element is classified
-    classif = json.loads(r.text)
+    classif = json.loads(r.data)
     if len(classif) == 0:
         with open(os.path.join(path_out, "ids_no_classify.log"), "a") as no_classif_log:
                 no_classif_log.write(CID + "\t" + InchiKey + "\n")
@@ -145,7 +151,7 @@ def extract_CID_InchiKey(pmids_cids_graph_list, inchikeys_graph_list,  path_out)
         with gzip.open(inchikey_f_input, "rb") as f:
             g_inchikey.parse(f, format = "turtle")
         # Get cid - inchikey associations
-        cids_inchikeys = list(g_inchikey.subject_objects(rdflib.URIRef("http://semanticscience.org/resource/is-attribute-of")))
+        cids_inchikeys = list(g_inchikey.subject_objects(rdflib.URIRef("http://semanticscience.org/resource/SIO_000011")))
         inchikeys = [cid_inchikey[0].toPython().split("http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/")[1] for cid_inchikey in cids_inchikeys]
         cids = [cid_inchikey[1].toPython().split("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID")[1] for cid_inchikey in cids_inchikeys]
         with open(path_out, "a") as out:

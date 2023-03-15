@@ -1,0 +1,14 @@
+
+# General config
+
+vocabularydir: share/vocabulary
+
+vocabularies: [ 
+  "chebi_lite.obo" , 
+  "vocabulary_1.0.0.ttl" , 
+  "cito.ttl" , 
+  "fabio.ttl" , 
+  "dublin_core_terms.nt", 
+  "cheminf.owl" , 
+  "skos.rdf" ,
+  "ChemOnt_2_1.ttl" ]
