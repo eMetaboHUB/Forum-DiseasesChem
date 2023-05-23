@@ -107,7 +107,6 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
     # Create MeSH version
     ressource_version = Database_ressource_version(ressource = "MeSHRDF", version = mesh_latest)
     ressource_version.version_graph.namespace_manager = g_metadata.namespace_manager
-
     # Add source info
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
     ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = void_MeSH_uri)
@@ -117,21 +116,22 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
         if p != VOID['dataDump']:
             ressource_version.version_graph.add((s, p, o))
-    
-    # Read MeSH graph to complete metadata
-    mesh_graph = rdflib.Graph()
-    mesh_graph.parse(mesh_out_path, format = "nt")
-    print("Ok")
-    
-    # Complete source triples with number of subjects, triples and date of modification
-    ressource_version.version_graph.add((void_MeSH_uri, VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
-    ressource_version.version_graph.add((void_MeSH_uri, VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
-    ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
 
+    if 'TESTDEV' in os.environ and os.environ['TESTDEV']:
+        ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
+    else:
+        # Read MeSH graph to complete metadata
+        mesh_graph = rdflib.Graph()
+        mesh_graph.parse(mesh_out_path, format = "nt")
+        print("Ok")
+        # Complete source triples with number of subjects, triples and date of modification
+        ressource_version.version_graph.add((void_MeSH_uri, VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
+        ressource_version.version_graph.add((void_MeSH_uri, VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
+        ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
+       
     # Clear metadata graph
     g_metadata = None
     mesh_graph = None
-    
     # On écrit le graph de la ressource
     ressource_version.version_graph.serialize(os.path.join(out_path, "void.ttl"), format = 'turtle')
     print("\n\n")
@@ -242,6 +242,16 @@ def ftp_con(ftp):
     return ftp
 
 def download_single_file(file, con, out, log):
+    if 'TESTDEV' in os.environ and os.environ['TESTDEV'] and os.path.isfile(out) and os.path.getsize(out)>0:
+        # check size
+        print("")
+        print("**********************[TESTDEV]******************************************")
+        print(out + " exist in local directory with size :" + str(os.path.getsize(out)))
+        print("**********************[TESTDEV]******************************************")
+        print("")
+        return
+
+
     r = None
     try:
         with open(out, "wb") as f_out:
