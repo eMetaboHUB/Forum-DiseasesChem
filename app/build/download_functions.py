@@ -116,10 +116,10 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
         # L'attribut creation dans le void correspond à la date de création originale du fichier soir courant 2014, noous souhaitant que la date de création de notre ressource correspondent à la date de modification du fichier
         if p != VOID['dataDump']:
             ressource_version.version_graph.add((s, p, o))
+    
+    ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
 
-    if 'TESTDEV' in os.environ and os.environ['TESTDEV']:
-        ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
-    else:
+    if not ('TESTDEV' in os.environ):
         # Read MeSH graph to complete metadata
         mesh_graph = rdflib.Graph()
         mesh_graph.parse(mesh_out_path, format = "nt")
@@ -127,7 +127,6 @@ def download_MeSH(out_dir, mesh_latest, ftp, void_path, mesh_path, out_log, dir_
         # Complete source triples with number of subjects, triples and date of modification
         ressource_version.version_graph.add((void_MeSH_uri, VOID["triples"], rdflib.Literal(len(mesh_graph), datatype = XSD.long)))
         ressource_version.version_graph.add((void_MeSH_uri, VOID["distinctSubjects"], rdflib.Literal( len(set([str(s) for s in mesh_graph.subjects()])), datatype = XSD.long)))
-        ressource_version.version_graph.add((void_MeSH_uri, DCTERMS["modified"], rdflib.Literal(mesh_latest, datatype = XSD.date)))
        
     # Clear metadata graph
     g_metadata = None
@@ -145,14 +144,16 @@ def download_MetaNetX(version_path, log, version, url):
     
     # Download MeSH RDF
     print("Download MetaNetX version " + version + " ... ", end = '')
-    try:
-        subprocess.run("wget -P " + version_path + " " + url, shell = True, check = True, stderr = subprocess.PIPE)
-    except subprocess.CalledProcessError as e:
-        print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
-        print(e)
-        with open(log, "ab") as f_log:
-            f_log.write(e.stderr)
-        sys.exit(3)
+    outfile=os.path.join(version_path, os.path.basename(url))
+    if not ('TESTDEV' in os.environ and os.path.isfile(outfile) and os.path.getsize(outfile)>0):
+        try:
+            subprocess.run("wget -P " + version_path + " " + url, shell = True, check = True, stderr = subprocess.PIPE)
+        except subprocess.CalledProcessError as e:
+            print("Error during trying to download MetaNetX metanetx.ttl.gz file version " + version + ", check dl_metanetx.log")
+            print(e)
+            with open(log, "ab") as f_log:
+                f_log.write(e.stderr)
+            sys.exit(3)
     print("Ok")
     
     print("Create new MetaNetX resource: ")
@@ -162,23 +163,25 @@ def download_MetaNetX(version_path, log, version, url):
     uri_metanetx = rdflib.URIRef("https://www.metanetx.org")
     ressource_version.add_version_attribute(predicate = RDF["type"], object = VOID.Dataset)
     ressource_version.add_version_attribute(predicate = DCTERMS["source"], object = uri_metanetx)
-
-    # Read MetaNetX graph
-    print("Parse MetaNetX graph to extract metadata ... ", end = '')
-    f = os.path.basename(url)
-    g_MetaNetX = rdflib.Graph()
-    with gzip.open(os.path.join(version_path, f), "rb") as f_MetaNetX:
-        g_MetaNetX.parse(f_MetaNetX, format="turtle")
-    print("Ok")
-
-    # Extract metadata from MetaNetX graph
-    print("Extract metadata ... ", end = '')
     ressource_version.version_graph.add((uri_metanetx, RDF["type"],  VOID["Dataset"]))
     ressource_version.version_graph.add((uri_metanetx, DCTERMS["description"], rdflib.Literal("MetaNetX is a repository of genome-scale metabolic networks (GSMNs) and biochemical pathways from a number of major resources imported into a common namespace of chemical compounds, reactions, cellular compartments (namely MNXref) and proteins.")))
     ressource_version.version_graph.add((uri_metanetx, DCTERMS["title"], rdflib.Literal("MetaNetX v." + version)))
     ressource_version.version_graph.add((uri_metanetx, VOID["dataDump"], rdflib.URIRef(url)))
-    ressource_version.version_graph.add((uri_metanetx, VOID["triples"], rdflib.Literal(len(g_MetaNetX), datatype=XSD.long )))
-    ressource_version.version_graph.add((uri_metanetx, VOID["distinctSubjects"], rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()])))))
+
+    if not ('TESTDEV' in os.environ):
+        # Read MetaNetX graph
+        print("Parse MetaNetX graph to extract metadata ... ", end = '')
+        f = os.path.basename(url)
+        g_MetaNetX = rdflib.Graph()
+        with gzip.open(os.path.join(version_path, f), "rb") as f_MetaNetX:
+            g_MetaNetX.parse(f_MetaNetX, format="turtle")
+        print("Ok")
+
+        # Extract metadata from MetaNetX graph
+        print("Extract metadata ... ", end = '')
+        ressource_version.version_graph.add((uri_metanetx, VOID["triples"], rdflib.Literal(len(g_MetaNetX), datatype=XSD.long )))
+        ressource_version.version_graph.add((uri_metanetx, VOID["distinctSubjects"], rdflib.Literal(len(set([str(s) for s in g_MetaNetX.subjects()])))))
+
     ressource_version.version_graph.serialize(os.path.join(version_path, "void.ttl"), format = 'turtle')
     print("Ok")
     # Clear memory
@@ -242,7 +245,7 @@ def ftp_con(ftp):
     return ftp
 
 def download_single_file(file, con, out, log):
-    if 'TESTDEV' in os.environ and os.environ['TESTDEV'] and os.path.isfile(out) and os.path.getsize(out)>0:
+    if 'TESTDEV' in os.environ and os.path.isfile(out) and os.path.getsize(out)>0:
         # check size
         print("")
         print("**********************[TESTDEV]******************************************")
