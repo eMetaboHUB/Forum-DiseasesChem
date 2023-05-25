@@ -262,6 +262,16 @@ def download_single_file(file, con, out, log):
         f_log.write(file + " downloaded\n")
 
 def download_dir(dir, con, out_dir, log):
+    
+    if 'TESTDEV' in os.environ and os.path.isdir(out_dir) and os.path.getsize(out_dir)>0:
+        # check size
+        print("")
+        print("**********************[TESTDEV]******************************************")
+        print(out_dir + " exist in local with size :" + str(os.path.getsize(out_dir)))
+        print("**********************[TESTDEV]******************************************")
+        print("")
+        return
+    
     try:
         con.cwd(dir)
         filenames = con.nlst()
