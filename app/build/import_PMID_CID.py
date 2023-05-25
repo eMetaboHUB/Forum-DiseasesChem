@@ -160,9 +160,9 @@ else:
         print("Starting output file from index: " + str(pmid_cid.file_index))
 
     else:
-        path_list = glob.glob(os.path.join(args.out, reference_path, "*_type*.ttl.gz"))
+        path_list = glob.glob(os.path.join(args.out, reference_path, "*type*.ttl.gz"))
         if len(path_list) == 0:
-            print("No *_type*.ttl.gz files from PubChem Reference was found at " + os.path.join(args.out, reference_path))
+            print("No *type*.ttl.gz files from PubChem Reference was found at " + os.path.join(args.out, reference_path))
             print("Impossible to determine pmids set, exit.")
             sys.exit(3)
         g = rdflib.ConjunctiveGraph()
