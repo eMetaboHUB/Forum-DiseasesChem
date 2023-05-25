@@ -245,16 +245,6 @@ def ftp_con(ftp):
     return ftp
 
 def download_single_file(file, con, out, log):
-    if 'TESTDEV' in os.environ and os.path.isfile(out) and os.path.getsize(out)>0:
-        # check size
-        print("")
-        print("**********************[TESTDEV]******************************************")
-        print(out + " exist in local directory with size :" + str(os.path.getsize(out)))
-        print("**********************[TESTDEV]******************************************")
-        print("")
-        return
-
-
     r = None
     try:
         with open(out, "wb") as f_out:
