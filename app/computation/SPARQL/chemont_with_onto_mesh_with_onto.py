@@ -209,7 +209,7 @@ where
         where
         {
             {
-                select (concat(strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
+                select (concat(strafter(STR(?chemont),\"http://purl.obolibrary.org/obo/\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/\") as ?str_pmid)
                 where 
                 {
                     {

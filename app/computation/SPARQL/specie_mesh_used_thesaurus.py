@@ -199,7 +199,7 @@ where
         where
         {
             {
-                select (concat(strafter(STR(?specie),\"http:doi.org/10.1126/scisignal.aaz1482#\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID\") as ?str_pmid)
+                select (concat(strafter(STR(?specie),\"http:doi.org/10.1126/scisignal.aaz1482#\"), \"_\", strafter(STR(?mesh),\"http://id.nlm.nih.gov/mesh/\")) as ?id) (strafter(str(?pmid), \"http://rdf.ncbi.nlm.nih.gov/pubchem/reference/\") as ?str_pmid)
                 where {
                     {
                         select ?specie 
