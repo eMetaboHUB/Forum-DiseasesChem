@@ -18,6 +18,14 @@ if not os.path.exists(args.config):
     print("Config file : " + args.config + " does not exist")
     sys.exit(3)
 
+
+if not args.log :
+    args.log="."
+
+if not args.out :
+    args.out="."
+
+
 try:    
     config = configparser.ConfigParser()
     config.read(args.config)
@@ -50,7 +58,13 @@ n_processes = config["CHEMONT"].getint("n_processes")
 path_to_PMID_CID = config["PMID_CID"].get("path")
 path_to_inchikey = config["INCHIKEY"].get("path")
 
+
+if not os.path.exists(args.log):
+    print("Log dir : " + args.log + " does not exist", file=sys.stderr)
+    sys.exit(3)
+
 log_dir = os.path.join(args.log, chemont_log_dir)
+
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
