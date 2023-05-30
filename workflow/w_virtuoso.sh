@@ -25,7 +25,7 @@ fi
 shift $(($OPTIND - 1))
 uploads="$@"
 
-COMPOSE_PROJECT_NAME="forum_inrae_KG"
+COMPOSE_PROJECT_NAME="forum"
 LISTEN_PORT="9980"
 PASSWORD="FORUM"
 GRAPH="http://default#"
