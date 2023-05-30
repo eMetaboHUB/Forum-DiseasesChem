@@ -47,9 +47,68 @@ function waitStarted() {
     set -e
 }
 
+function memInGb() {
+    grep MemTotal /proc/meminfo | awk '{print $2}' | xargs -I {} echo "scale=4; {}/1024^2" | bc
+}
+
+# doc : https://docs.openlinksw.com/virtuoso/rdfperfgeneral/ 
+
+function getNumberOfBuffer() {
+    memInGb=$(memInGb)
+    
+    case 1 in
+        $(echo "$memInGb < 2" | bc -l)) echo "getNumberOfBuffer - not enough memory - MemTotal(/proc/meminfo) : $memInGb"; exit 1;;
+        $(echo "$memInGb < 4" | bc -l)) echo "170000";;
+        $(echo "$memInGb < 8" | bc -l)) echo "340000";;
+        $(echo "$memInGb < 16" | bc -l)) echo "680000";;
+        $(echo "$memInGb < 32" | bc -l)) echo "1360000";;
+        $(echo "$memInGb < 48" | bc -l)) echo "2720000";;
+        $(echo "$memInGb < 64" | bc -l)) echo "4000000";;
+                                      *) echo "5450000";;
+    esac
+}
+
+function getMaxDirtyBuffers() {
+    memInGb=$(memInGb)
+    
+    case 1 in
+        $(echo "$memInGb < 2" | bc -l)) echo "getMaxDirtyBuffers - not enough memory - MemTotal(/proc/meminfo) : $memInGb"; exit 1;;
+        $(echo "$memInGb < 4" | bc -l)) echo "130000";;
+        $(echo "$memInGb < 8" | bc -l)) echo "250000";;
+        $(echo "$memInGb < 16" | bc -l)) echo "500000";;
+        $(echo "$memInGb < 32" | bc -l)) echo "1000000";;
+        $(echo "$memInGb < 48" | bc -l)) echo "2000000";;
+        $(echo "$memInGb < 64" | bc -l)) echo "3000000";;
+                                      *) echo "4000000";;
+    esac
+}
+
+function getMaxQueryMem() {
+    memInGb=$(memInGb)
+    
+    case 1 in
+        $(echo "$memInGb < 2" | bc -l)) echo "getMaxDirtyBuffers - not enough memory - MemTotal(/proc/meminfo) : $memInGb"; exit 1;;
+        $(echo "$memInGb < 4" | bc -l)) echo "2";;
+        $(echo "$memInGb < 16" | bc -l)) echo "4";;
+        $(echo "$memInGb < 48" | bc -l)) echo "6";;
+                                      *) echo "8";;
+    esac
+}
+
 function virtuosoControler() {
     echo " -- Virtuoso controler"
+    
+    memInGb=$(memInGb)
+    vgetNumberOfBuffer=$(getNumberOfBuffer)
+    vgetMaxDirtyBuffers=$(getMaxDirtyBuffers)
+    vMaxQueryMem=$(getMaxQueryMem)
 
+    echo " ********************************************************************************"
+    echo "       Total Memory in Gb = $memInGb"
+    echo "       vgetNumberOfBuffer = $vgetNumberOfBuffer    "
+    echo "       vgetMaxDirtyBuffers = $vgetMaxDirtyBuffers  "
+    echo "       vMaxQueryMem = $vMaxQueryMem "
+    echo " ********************************************************************************"
     echo " -- Generating docker-compose"
     COMPOSE_FILE="${DOCKER_DIR}/docker-compose-${LISTEN_PORT}.yml"
     COMPOSE_CMD="docker-compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
@@ -65,8 +124,8 @@ services:
         image: tenforce/virtuoso
         container_name: ${CONTAINER_NAME}
         environment:
-            VIRT_Parameters_NumberOfBuffers: 5450000   # See virtuoso/README.md to adapt value of this line
-            VIRT_Parameters_MaxDirtyBuffers: 4000000    # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_NumberOfBuffers: ${vgetNumberOfBuffer}   # See virtuoso/README.md to adapt value of this line
+            VIRT_Parameters_MaxDirtyBuffers: ${vgetMaxDirtyBuffers}    # See virtuoso/README.md to adapt value of this line
             VIRT_Parameters_MaxCheckpointRemap: 680000
             VIRT_Parameters_TN_MAX_memory: 2000000000
             VIRT_SPARQL_ResultSetMaxRows: 10000000000
@@ -84,7 +143,7 @@ services:
             VIRT_Parameters_VectorSize: 100000
             VIRT_Parameters_MaxVectorSize: 3000000
             VIRT_Parameters_AdjustVectorSize: 1
-            VIRT_Parameters_MaxQueryMem: 8G
+            VIRT_Parameters_MaxQueryMem: ${vMaxQueryMem}
             DBA_PASSWORD: "${PASSWORD}"
             SPARQL_UPDATE: "${ALLOW_UDPATE}"
             DEFAULT_GRAPH: "${GRAPH}"
