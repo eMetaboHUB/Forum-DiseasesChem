@@ -115,7 +115,7 @@ function virtuosoControler() {
     CONTAINER_NAME="${COMPOSE_PROJECT_NAME}_virtuoso_${LISTEN_PORT}"
     NETWORK_NAME="virtuoso_${LISTEN_PORT}_net"
     OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"
-    RESOURCES_DIR="${DOCKER_DIR}/${PATH_TO_SHARED_DIR_FROM_D}"
+    RESOURCES_DIR="${PATH_TO_SHARED_DIR_FROM_D}"
     DATA="${DOCKER_DIR}/data/virtuoso"
     cat << EOF | tee ${COMPOSE_FILE} > /dev/null
 version: '3.3'
