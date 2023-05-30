@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # necessite ./share/updload.sh
 
 # USAGE (1) : ${0} start                  # start virtuoso and load data with script ./share/updload.sh
