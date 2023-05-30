@@ -85,7 +85,7 @@ class Id_mapping:
             current_graph.bind("owl", OWL)
             print("Create intra uris equivalences ... ", end = '')
             for id in intra_ids:
-                intra_uris = [rdflib.URIRef(prefix + id) for prefix in self.ressource_uris[r_name]]
+                intra_uris = [rdflib.URIRef(prefix + id.strip()) for prefix in self.ressource_uris[r_name]]
                 for current_uri, next_uri in zip(intra_uris, intra_uris[1:]):
                     current_graph.add((current_uri, OWL['sameAs'], next_uri))
             print("Ok\nExport graph for resource " + r_name + " ... ", end = '')
