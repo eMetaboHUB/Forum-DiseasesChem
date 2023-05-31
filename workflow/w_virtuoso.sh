@@ -184,7 +184,12 @@ EOF
                 ${COMPOSE_CMD} up -d
                 waitStarted
                 echo " -- Container started."
-                
+                echo " ** pwd **"
+                pwd
+                echo " ** ls **"
+                ls -ail
+                echo " ** ls ./dumps/ **"
+                ls -ail ./dumps/
                 for f in ${uploads[@]}; do
                 echo "Load $f: docker exec ${CONTAINER_NAME} isql-v 1111 dba '${PASSWORD}' ./dumps/$f"
                 docker exec \
