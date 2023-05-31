@@ -222,7 +222,7 @@ EOF
             if [ -d ${DATA} ]; then
                 docker exec \
                     ${CONTAINER_NAME} \
-                    isql-v 1111 dba "${PASSWORD}" checkpoint_interval(-1);
+                    isql-v 1111 dba "${PASSWORD}" "checkpoint_interval(-1);"
             else
                 echo " -- Instance not present."
                 exit 1
