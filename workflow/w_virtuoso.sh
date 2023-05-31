@@ -103,12 +103,6 @@ function virtuosoControler() {
     vgetMaxDirtyBuffers=$(getMaxDirtyBuffers)
     vMaxQueryMem=$(getMaxQueryMem)
 
-    echo " ********************************************************************************"
-    echo "       Total Memory in Gb = $memInGb"
-    echo "       vgetNumberOfBuffer = $vgetNumberOfBuffer    "
-    echo "       vgetMaxDirtyBuffers = $vgetMaxDirtyBuffers  "
-    echo "       vMaxQueryMem = $vMaxQueryMem "
-    echo " ********************************************************************************"
     echo " -- Generating docker-compose"
     COMPOSE_FILE="${DOCKER_DIR}/docker-compose.yml"
     COMPOSE_CMD="docker compose -p ${COMPOSE_PROJECT_NAME} -f ${COMPOSE_FILE}" # Ici Olivier faisait sudo -n docker-compose
@@ -117,6 +111,16 @@ function virtuosoControler() {
     OUT_NETWORK_NAME="${COMPOSE_PROJECT_NAME}_${NETWORK_NAME}"
     RESOURCES_DIR="${PATH_TO_SHARED_DIR_FROM_D}"
     DATA="${DOCKER_DIR}/data/virtuoso"
+
+    echo " ********************************************************************************"
+    echo "       Total Memory in Gb = $memInGb               "
+    echo "       vgetNumberOfBuffer = $vgetNumberOfBuffer    "
+    echo "       vgetMaxDirtyBuffers = $vgetMaxDirtyBuffers  "
+    echo "       vMaxQueryMem = $vMaxQueryMem                "
+    echo "       RESOURCES_DIR = $RESOURCES_DIR              "
+    echo "       COMPOSE CMD = $COMPOSE_CMD                  "
+    echo " ********************************************************************************"
+
     cat << EOF | tee ${COMPOSE_FILE} > /dev/null
 version: '3.3'
 services:
