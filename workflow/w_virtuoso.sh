@@ -5,6 +5,7 @@ set -e
 # USAGE (1) : ${0} start                  # start virtuoso and load data with script ./share/updload.sh
 # USAGE (2) : ${0} stop                   # stop virtuoso                  
 # USAGE (3) : ${0} clean                  # remove docker directory
+# USAGE (4) : ${0} fix                    # disable checkpoint/virtuoso
 
 # By default we use only load essential data: MeSH, PubChem_Reference, PubChem_Compound, PMID_CID, PMID_CID_endpoints
 
@@ -17,8 +18,8 @@ while getopts d:s:c: flag;
 	    esac
 	done
 
-if [ "$CMD" != "start" ] && [ "$CMD" != "stop" ] && [ "$CMD" != "clean" ]; then
-    echo "-c (command) must be 'start' or 'stop' or 'clean'"
+if [ "$CMD" != "start" ] && [ "$CMD" != "stop" ] && [ "$CMD" != "clean" ] && [ "$CMD" != "fix" ]; then
+    echo "-c (command) must be 'start' or 'stop' or 'clean' or 'fix'"
     exit 1
 fi
 
@@ -188,10 +189,10 @@ EOF
                 docker exec \
                     ${CONTAINER_NAME} \
                     pwd
-                echo " ** ls **"
+                echo " ** ls ./dumps/ **"
                 docker exec \
                     ${CONTAINER_NAME} \
-                    ls -ail .
+                    ls -ail ./dumps/
                 
                 for f in ${uploads[@]}; do
                 echo "Load $f: docker exec ${CONTAINER_NAME} isql-v 1111 dba '${PASSWORD}' ./dumps/$f"
@@ -215,6 +216,16 @@ EOF
                 set -e
             else
                 echo " -- Instance not present. Skipping cleaning."
+            fi
+        ;;
+        fix)
+            if [ -d ${DATA} ]; then
+                docker exec \
+                    ${CONTAINER_NAME} \
+                    isql-v 1111 dba "${PASSWORD}" checkpoint_interval(-1);
+            else
+                echo " -- Instance not present."
+                exit 1
             fi
         ;;
         *)
