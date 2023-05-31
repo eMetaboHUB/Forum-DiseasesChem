@@ -185,11 +185,14 @@ EOF
                 waitStarted
                 echo " -- Container started."
                 echo " ** pwd **"
-                pwd
+                docker exec \
+                    ${CONTAINER_NAME} \
+                    pwd
                 echo " ** ls **"
-                ls -ail
-                echo " ** ls ./dumps/ **"
-                ls -ail ./dumps/
+                docker exec \
+                    ${CONTAINER_NAME} \
+                    ls -ail .
+                
                 for f in ${uploads[@]}; do
                 echo "Load $f: docker exec ${CONTAINER_NAME} isql-v 1111 dba '${PASSWORD}' ./dumps/$f"
                 docker exec \
