@@ -79,7 +79,8 @@ else:
                                         version = pmid_cid_version, 
                                         dbfrom = "pubmed",
                                         db = "pccompound",
-                                        ns_linking_id = ("reference", "PMID"),
+                                        #ns_linking_id = ("reference", "PMID"),
+                                        ns_linking_id = ("reference", ""), # fix ofilangi 10-2023 - PMID References are no longer prefixed by PMID
                                         ns_linked_id = ("compound", "CID"),
                                         ns_endpoint = ("endpoint", ""),
                                         primary_predicate = ("cito", "discusses"),
