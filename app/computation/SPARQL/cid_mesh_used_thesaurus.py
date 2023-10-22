@@ -97,6 +97,8 @@ limit %d
 offset %d
 """
 
+# FIX OFILANGI 10-2023 fabio:Article
+
 count_all_individuals = """
 select ?COUNT
 %s
@@ -110,7 +112,8 @@ where
                 select ?pmid 
                 where
                 {
-                    ?pmid a fabio:Article
+                    ?pmid <http://prismstandard.org/namespaces/basic/3.0/contentType> ?typec .
+                    ?typec bif:contains "'Journal Article'" .
                 }
                 limit %d
                 offset %d
@@ -240,11 +243,14 @@ where
 }
 """
 
+# FIX OFILANGI 10-2023 fabio:Article not available => <http://prismstandard.org/namespaces/basic/3.0/contentType> "Journal Article" 
+
 count_all_pmids = """
 select count(?pmid) 
 %s
 where
 {
-    ?pmid a fabio:Article
+    ?pmid <http://prismstandard.org/namespaces/basic/3.0/contentType> ?typec .
+    ?typec bif:contains "'Journal Article'" .
 }
 """
