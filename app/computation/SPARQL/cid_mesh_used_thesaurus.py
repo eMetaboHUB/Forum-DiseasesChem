@@ -113,7 +113,6 @@ where
                 where
                 {
                     ?pmid <http://prismstandard.org/namespaces/basic/3.0/contentType> ?typec .
-                    filter(contains(?typec,"Journal Article")) .
                 }
                 limit %d
                 offset %d
@@ -244,13 +243,12 @@ where
 """
 
 # FIX OFILANGI 10-2023 fabio:Article not available => <http://prismstandard.org/namespaces/basic/3.0/contentType> "Journal Article" 
-
+# 11-12-2023 REMOVE THE FILTER
 count_all_pmids = """
 select count(?pmid) 
 %s
 where
 {
     ?pmid <http://prismstandard.org/namespaces/basic/3.0/contentType> ?typec .
-    filter(contains(?typec,"Journal Article")) .
 }
 """
