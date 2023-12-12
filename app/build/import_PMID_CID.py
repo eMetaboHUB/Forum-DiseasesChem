@@ -1,4 +1,5 @@
 import argparse, configparser, os, glob, sys, json, rdflib, eutils, gzip
+import pandas as pd
 sys.path.insert(1, 'app/')
 from Elink_ressource_creator import Elink_ressource_creator
 from Database_ressource_version import Database_ressource_version
@@ -50,6 +51,7 @@ max_triples_by_files = config['ELINK'].getint('max_triples_by_files')
 ref_uri_prefix = config['ELINK'].get("reference_uri_prefix")
 compound_path = config['ELINK'].get("compound_path")
 reference_path = config['ELINK'].get("reference_path")
+pubchem_ref_id_mapping = config['ELINK'].get("pubchem_ref_id_mapping")
 
 # Check is this PMID resource already exists:
 pmid_cid_uri_version = check_void(os.path.join(args.out, "PMID_CID", pmid_cid_version, "void.ttl"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PMID_CID"))
@@ -66,8 +68,18 @@ else:
     reference_uri = check_void(os.path.join(args.out, reference_path, "void.ttl"), rdflib.URIRef("https://forum.semantic-metabolomics.org/PubChem/reference"))
 
     if (not compound_uri) or (not reference_uri):
-        print("Paths to resource PubChem reference and/or PubChem compound are not valid, no void.ttl found. A valid PubChem Reference resource is needed to extract the set of all pmids and a valid PubChem Compound resource is needed to annotate the LinkSet.")
+        print("Paths to resource PubChem reference and/or PubChem compound are not valid, no void.ttl found.")
         sys.exit(3)
+
+    try:
+        ids_map = pd.read_csv(pubchem_ref_id_mapping, sep="\t", header=None, dtype=object)
+    except pd.errors.ParserError as except_parsing_error:
+        print("file at {path} has incorrect format: {err}".format(path=pubchem_ref_id_mapping, err=str(except_parsing_error)))
+        sys.exit(1)
+
+    except FileNotFoundError:
+        print("File not found at {path}".format(path=pubchem_ref_id_mapping))
+        sys.exit(1)
 
     all_pmids = None
     # Building requests
@@ -79,6 +91,7 @@ else:
                                         version = pmid_cid_version, 
                                         dbfrom = "pubmed",
                                         db = "pccompound",
+                                        ids_map=dict(zip(ids_map.iloc[:,1].tolist(), ids_map.iloc[:,0].tolist())),
                                         #ns_linking_id = ("reference", "PMID"),
                                         ns_linking_id = ("reference", ""), # fix ofilangi 10-2023 - PMID References are no longer prefixed by PMID
                                         ns_linked_id = ("compound", "CID"),
@@ -161,18 +174,8 @@ else:
         print("Starting output file from index: " + str(pmid_cid.file_index))
 
     else:
-        path_list = glob.glob(os.path.join(args.out, reference_path, "*type*.ttl.gz"))
-        if len(path_list) == 0:
-            print("No *type*.ttl.gz files from PubChem Reference was found at " + os.path.join(args.out, reference_path))
-            print("Impossible to determine pmids set, exit.")
-            sys.exit(3)
-        g = rdflib.ConjunctiveGraph()
-        for path in path_list:
-            print("Read " + os.path.join(args.out, reference_path, path) + " to extract PMIDs list.")
-            with gzip.open(path, 'rb') as f_ref_type:
-                g.parse(f_ref_type, format = "turtle")
         
-        all_pmids = [str(pmid).split(ref_uri_prefix)[1] for pmid in g.subjects()]
+        all_pmids = list(pmid_cid.ids_map.keys())
 
         print(str(len(all_pmids)) + " pmids were found !")
         if run_as_test:

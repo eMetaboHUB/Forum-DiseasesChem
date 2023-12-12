@@ -6,6 +6,7 @@ import os
 import requests
 import signal
 import subprocess
+from collections import defaultdict
 sys.path.insert(1, 'app/')
 from rdflib.namespace import XSD, DCTERMS, RDFS, VOID, RDF
 from datetime import date
@@ -23,6 +24,7 @@ class Elink_ressource_creator:
     """This class represent an ensembl of Pccompound objects:
     - dbfrom: The NCBI Entrez database for linking ids
     - db: The NCBI Entrez database for linked ids
+    - id_map: A map between the actual PubMed identifier (PMID) and the internal PubChem URI (identifiers) for PubMed references.
     - namespaces: a dict containing namespace names as keys and associated rdflib.Namespace() objects as values
     - ressource_version: Database_ressource_version objects representing a new version of the association between linking_ids and linked ids association
     - ressource_version_endpoint: Database_ressource_version objects representing a new version of the additionnal information about associations between linking_ids and linked ids association
@@ -42,9 +44,10 @@ class Elink_ressource_creator:
     - n_subjects_g_linked_id_endpoint: the number of subjects in the g_linked_id_endpoint graph
     - n_triples_g_linked_id_endpoint: the total number of triples in the g_linked_id_endpoint graph 
     """
-    def __init__(self, ressource_name, version, dbfrom, db, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout):       
+    def __init__(self, ressource_name, version, dbfrom, db, ids_map, ns_linking_id, ns_linked_id, ns_endpoint, primary_predicate, secondary_predicate, namespaces, timeout):       
         self.dbfrom = dbfrom
         self.db = db
+        self.ids_map = ids_map
         self.file_index = 1
         self.namespaces = namespaces
         self.ressource_version = Database_ressource_version(ressource = ressource_name, version = version)
@@ -141,7 +144,8 @@ class Elink_ressource_creator:
         """
         # Add all triples to graph
         for linked_id in linked_id_list:
-            self.g_linked_id.add((self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id], self.namespaces[self.primary_predicate[0]][self.primary_predicate[1]], self.namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
+            # fix mdelmas (12/12/2023): now we use the PubChem internal id for the reference, with the map ids_map.
+            self.g_linked_id.add((self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + self.ids_map[linking_id]], self.namespaces[self.primary_predicate[0]][self.primary_predicate[1]], self.namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
     
     def fill_ids_link_endpoint_graph(self, linking_id, linked_id_list, link_name_list):
         """This function create a rdflib graph containing all the cid - pmid endpoints associations.
@@ -151,9 +155,9 @@ class Elink_ressource_creator:
         """
         for linked_id_index in range(0, len(linked_id_list)):
             linked_id = linked_id_list[linked_id_index]
-            subject = self.ns_linking_id[1] + linking_id + "_" + self.ns_linked_id[1] + linked_id
+            subject = self.ns_linking_id[1] + self.ids_map[linking_id] + "_" + self.ns_linked_id[1] + linked_id
             # Add to graph
-            self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["obo"]['IAO_0000136'], self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + linking_id]))
+            self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["obo"]['IAO_0000136'], self.namespaces[self.ns_linking_id[0]][self.ns_linking_id[1] + self.ids_map[linking_id]]))
             self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces[self.secondary_predicate[0]][self.secondary_predicate[1]], self.namespaces[self.ns_linked_id[0]][self.ns_linked_id[1] + linked_id]))
             for link_name in link_name_list[linked_id_index]:
                 self.g_linked_id_endpoint.add((self.namespaces[self.ns_endpoint[0]][self.ns_endpoint[1] + subject], self.namespaces["dcterms"]['contributor'], rdflib.Literal(link_name)))
@@ -166,7 +170,14 @@ class Elink_ressource_creator:
     def get_all_linking_ids(self):
         """this function allows to extract of all linking ids, the subjects of the g_linked_id graph"""
         all_linking_ids = set([str(s).split(self.namespaces[self.ns_linking_id[0]] + self.ns_linking_id[1])[1] for s in self.g_linked_id.subjects()])
-        return all_linking_ids
+        invert_map = defaultdict(list)
+        for pmid, pc_id in self.ids_map.items():
+            invert_map[pc_id].append(pmid)
+        re_converted_all_linked_ids = []
+        for pc_id in all_linking_ids:
+            for pmid in invert_map[pc_id]:
+                re_converted_all_linked_ids.append(pmid)
+        return re_converted_all_linked_ids
     
     def get_all_linked_id_endpoints(self):
         """this function allows to extract the union of all linked_enpoint ids, the subjects of the g_linked_id_endpoint"""
