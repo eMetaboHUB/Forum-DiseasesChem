@@ -23,7 +23,7 @@ def uncompressed(outputName: String, infile: String): Unit = {
 
 
 @main
-def main(outfile : String, pc_reference_identifier_files : Seq[String]) : Unit = {
+def main(outfile : String, pc_reference_identifier_files : String*) : Unit = {
 
 
     if (new File(outfile).exists()) {
