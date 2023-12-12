@@ -59,8 +59,8 @@ def main(outfile : String, pc_reference_identifier_files : String*) : Unit = {
                 .prefix("dcterms","http://purl.org/dc/terms/")
                 .something("pmid")
                  .isSubjectOf(URI("dcterms:identifier"),"identifier")
-                 .filter.contains("pubmed.ncbi.nlm.nih")
-                  .filter.not.contains("PMC")
+                 //.filter.contains("pubmed.ncbi.nlm.nih")
+                 // .filter.not.contains("PMC")
                 .select(Seq("pmid","identifier"))
                 .commit()
                 .raw, 100.minutes)
@@ -68,6 +68,8 @@ def main(outfile : String, pc_reference_identifier_files : String*) : Unit = {
               
               r("results")("bindings")
               .arr
+              .filter( res => res("identifier")("value").str.contains("pubmed.ncbi.nlm.nih"))
+              .filter( res => ! res("identifier")("value").str.contains("PMC"))
               .map(res => 
                 (
                   res("pmid")("value").str.split("/").last,
