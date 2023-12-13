@@ -7,7 +7,7 @@ var zlib = require('node:zlib');
 function quad_print(error, quad, prefixes) {
   if (quad) { 
     if (quad.object.value.includes("pubmed.ncbi.nlm.nih.gov") && !(quad.object.value.includes("PMC")))
-              console.log(quad.subject.value.split("/").pop(),"\t",quad.object.value.split("/").pop());
+              console.log(quad.subject.value.split("/").pop().trim(),"\t",quad.object.value.split("/").pop().trim());
   }
 }
 

@@ -86,12 +86,15 @@ else:
     query_builder = eutils.QueryService(cache = False,
                                     default_args ={'retmax': 10000000, 'retmode': 'xml', 'usehistory': 'n'},
                                     api_key = apiKey, email = "service.pfem@inrae.fr")
+    
+    v1 = [item.strip() for item in ids_map.iloc[:, 1].tolist()]
+    v2 = [item.strip() for item in ids_map.iloc[:, 0].tolist()]
     # Build Elink ressource creator: 
     pmid_cid = Elink_ressource_creator(ressource_name = "PMID_CID", 
                                         version = pmid_cid_version, 
                                         dbfrom = "pubmed",
                                         db = "pccompound",
-                                        ids_map=dict(zip(ids_map.iloc[:,1].tolist(), ids_map.iloc[:,0].tolist())),
+                                        ids_map=dict(zip(v1, v2)),
                                         #ns_linking_id = ("reference", "PMID"),
                                         ns_linking_id = ("reference", ""), # fix ofilangi 10-2023 - PMID References are no longer prefixed by PMID
                                         ns_linked_id = ("compound", "CID"),
