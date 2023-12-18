@@ -108,6 +108,7 @@ where
                 where
                 {
                     ?pmid <http://prismstandard.org/namespaces/basic/3.0/contentType> ?typec .
+                    filter(contains(?typec,"Journal Article")) .
                 }
                 limit %d
                 offset %d
@@ -277,5 +278,6 @@ select count(?pmid)
 where
 {
     ?pmid <http://prismstandard.org/namespaces/basic/3.0/contentType> ?typec .
+    filter(contains(?typec,"Journal Article")) .
 }
 """
