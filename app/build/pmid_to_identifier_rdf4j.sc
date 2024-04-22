@@ -51,25 +51,41 @@ def main(outfile : String,pc_reference_identifier_files : String*) : Unit = {
         val format: RDFFormat = RDFFormat.TURTLE
 
         try {
+
           val res: GraphQueryResult = QueryResults.parseGraphBackground(is, baseURI, format,null)
           try {
             while (res.hasNext()) {
-              val st: Statement = res.next()
-             
-              val objUri = st.getObject().toString()
-              if (objUri.contains("pubmed.ncbi.nlm.nih.gov") && !objUri.contains("PMC")) {
-                val sub = st.getSubject().toString().split("/").last.trim
-                val obj = objUri.split("/").last.trim
-                fileWriter.write(sub+"\t"+obj+"\n")
-              }
+              try {
+               // println("Hop")
+                val st: Statement = res.next()
+              
+                val objUri = st.getObject().toString()
+              //  println(objUri)
+                if (objUri.contains("pubmed.ncbi.nlm.nih.gov") && !objUri.contains("PMC")) {
+                  val sub = st.getSubject().toString().split("/").last.trim
+                  val obj = objUri.split("/").last.trim
+                  fileWriter.write(sub+"\t"+obj+"\n")
+                }
+                //println("fin Hop")
+               } catch {
+              case e: Exception =>
+              // Gérer l'erreur irrécupérable ici
+          }
              
             }
+          } catch {
+            case e: Exception =>
+              // Gérer l'erreur irrécupérable ici
+             System.err.println("1:"+e.getMessage())
+             System.exit(-1)
           } finally {
             res.close()
           }
         } catch {
           case e: Exception =>
             // Gérer l'erreur irrécupérable ici
+             System.err.println("1:"+e.getMessage())
+             System.exit(-1)
         } finally {
           is.close()
         }
