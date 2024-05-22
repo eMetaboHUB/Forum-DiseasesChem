@@ -34,10 +34,13 @@ def download_pubChem(dir, request_ressource, pubchem_latest, ftp, void_path, out
     print("Ok")
 
     # Download data
-    con = ftp_con(ftp)
-    download_dir(dir, con, version_path, log)
-    con.quit()
-
+    try:
+        con = ftp_con(ftp)
+        download_dir(dir, con, version_path, log)
+        con.quit()
+    except EOFError as e:
+        print(e)
+        
     # Create PubChem resource version
     print("Build Pubchem " + request_ressource + " new ressource version ... ", end = '')
     ressource_version = Database_ressource_version(ressource = "PubChem/" + request_ressource, version = pubchem_latest)
