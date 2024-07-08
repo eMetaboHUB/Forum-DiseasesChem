@@ -9,4 +9,10 @@ Association construction of compound CID (PubChem) with ChemOnt ontology identif
 amm buildChemontForum.sc <virtuoso-directory> <forum-release> <directory/pc_descr_canSMILES_value_*.gz>
 ```
 
+### Tests
+
+```bash
+amm buildChemontForum.sc virtuoso release_name $(find resources -name *canSMILES_value_00000*.ttl*)
+```
+
 - **Classyfire_file.jar** (version) - [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html)

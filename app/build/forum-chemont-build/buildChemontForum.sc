@@ -80,6 +80,24 @@ def main(outputDir: String,relaseForum: String,pc_descr_canSMILES_value_files: o
       }
     }
 
+    def upload_Chemont_sh(): Unit = {
+      
+      val pWriter = new PrintWriter(new File(s"$outputDir/upload_Chemont.sh"))
+ 
+      pWriter.write(
+        s"""delete from DB.DBA.load_list ;
+ld_dir_all ('./dumps/ClassyFire/direct-parent/$relaseForum/', '*.ttl.gz', 'https://forum.semantic-metabolomics.org/ClassyFire/direct-parent/$relaseForum');
+ld_dir_all ('./dumps/ClassyFire/direct-parent/$relaseForum/', 'void.ttl', 'https://forum.semantic-metabolomics.org/ClassyFire/direct-parent/$relaseForum');
+ld_dir_all ('./dumps/ClassyFire/alternative-parents/$relaseForum/', '*.ttl.gz', 'https://forum.semantic-metabolomics.org/ClassyFire/alternative-parents/$relaseForum');
+ld_dir_all ('./dumps/ClassyFire/alternative-parents/$relaseForum/', 'void.ttl', 'https://forum.semantic-metabolomics.org/ClassyFire/alternative-parents/$relaseForum');
+select * from DB.DBA.load_list;
+rdf_loader_run();
+checkpoint;
+select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
+""")
+      pWriter.close
+    }
+
     def void(dirParent: String,
              countSubject: Int,
              countTriple: Int,
@@ -272,6 +290,8 @@ def main(outputDir: String,relaseForum: String,pc_descr_canSMILES_value_files: o
               "The provided classes correspond to the Alternative Parents, representing classes " +
               "describing the molecule but which not have an ancestor–descendant relationship with each " +
               "other or with the Direct Parent")
+          
+          upload_Chemont_sh()
           is.close()
         }
     }
