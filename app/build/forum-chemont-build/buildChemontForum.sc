@@ -1,6 +1,7 @@
 // Ammonite 2.5.2, scala 2.13
 // JAVA_OPTS="-Xmx16g -Xms16g" amm ....
 
+
 //import $ivy.`org.scala-lang.modules::scala-parallel-collections:1.0.4`
 import $ivy.`org.eclipse.rdf4j:rdf4j-storage:4.3.12`
 import $cp.`ext-lib/Classyfire_file.jar`
@@ -13,6 +14,7 @@ import org.eclipse.rdf4j.query._
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 
 //import scala.collection.parallel.CollectionConverters._
+//import java.util.concurrent.locks.ReentrantLock
 
 import java.io._
 import java.nio.file.{Files, Path, Paths}
@@ -34,7 +36,9 @@ import java.util.zip.{GZIPInputStream, GZIPOutputStream};
 @main 
 def main(outputDir: String,relaseForum: String,pc_descr_canSMILES_value_files: os.Path*) = {
 
-    System.setProperty("scala.concurrent.forkjoin.ForkJoinPool.common.parallelism", "1")
+    
+    //System.setProperty("scala.concurrent.forkjoin.ForkJoinPool.common.parallelism", "2")
+    //val lock = new ReentrantLock()
 
     val compound_prefix_name: String = "compound"
     val compound_prefix: String = "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"
@@ -144,7 +148,7 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
 
     val allCounts = pc_descr_canSMILES_value_files
     .toList
-  //  .par
+   // .par
     .map {
       case filePathP: os.Path =>
         val filePath = filePathP.toString
@@ -211,8 +215,12 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
                     // ---------------------------------
                     // Classyfire API
                     // ---------------------------------
-                    chemicalClassifier.classify(smiles)
-
+                    //lock.lock() 
+                    //try {
+                      chemicalClassifier.classify(smiles)
+                    //} finally {
+                    //  lock.unlock()
+                    //}
                     // ---------------------------------
                     // DIRECT PARENT MANAGEMENT
                     // ---------------------------------
