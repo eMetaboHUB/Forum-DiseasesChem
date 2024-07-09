@@ -1,6 +1,7 @@
 // Ammonite 2.5.2, scala 2.13
 // JAVA_OPTS="-Xmx16g -Xms16g" amm ....
 
+//import $ivy.`org.scala-lang.modules::scala-parallel-collections:1.0.4`
 import $ivy.`org.eclipse.rdf4j:rdf4j-storage:4.3.12`
 import $cp.`ext-lib/Classyfire_file.jar`
 
@@ -10,6 +11,8 @@ import org.eclipse.rdf4j.model.vocabulary.{DCTERMS, RDF, RDFS, VOID, XSD}
 import org.eclipse.rdf4j.model.{Statement, ValueFactory}
 import org.eclipse.rdf4j.query._
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
+
+//import scala.collection.parallel.CollectionConverters._
 
 import java.io._
 import java.nio.file.{Files, Path, Paths}
@@ -31,6 +34,8 @@ import java.util.zip.{GZIPInputStream, GZIPOutputStream};
 @main 
 def main(outputDir: String,relaseForum: String,pc_descr_canSMILES_value_files: os.Path*) = {
 
+    System.setProperty("scala.concurrent.forkjoin.ForkJoinPool.common.parallelism", "1")
+
     val compound_prefix_name: String = "compound"
     val compound_prefix: String = "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"
 
@@ -40,11 +45,6 @@ def main(outputDir: String,relaseForum: String,pc_descr_canSMILES_value_files: o
     //NOTE OFI : FORUM v1 us -> http://purl.obolibrary.org/obo/CHEMONTID_
 
     val vf: ValueFactory = SimpleValueFactory.getInstance()
-
-    var countSubjectDirectParent = 0
-    var countTripleDirectParent = 0
-    var countSubjectAltParent = 0
-    var countTripleAltParent = 0
 
     def uncompressed(infile: String): InputStream = {
       new GZIPInputStream(new FileInputStream(new File(infile)))
@@ -142,7 +142,10 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
     createDirectoriesRecursively(Paths.get(dirDirParent))
     createDirectoriesRecursively(Paths.get(dirAltParent))
 
-    pc_descr_canSMILES_value_files.foreach {
+    val allCounts = pc_descr_canSMILES_value_files
+    .toList
+  //  .par
+    .map {
       case filePathP: os.Path =>
         val filePath = filePathP.toString
         println(s"---  $filePath --- ")
@@ -154,10 +157,14 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
           new FileInputStream(filePath)
         }
         val numb = extractNUMBER(filePath) match {
-          case Some(n) => n
+          case Some(n) => n.toInt.toString
           case None => (10000 + scala.util.Random.nextInt(10001)).toString
         }
 
+        var countSubjectDirectParent : Int = 0
+        var countTripleDirectParent : Int = 0
+        var countSubjectAltParent : Int = 0
+        var countTripleAltParent  : Int = 0
 
         val output_dp = s"$dirDirParent/classyfire_direct_parent_$numb.ttl"
         val output_adp = s"$dirAltParent/classyfire_alternative_parent_$numb.ttl"
@@ -189,6 +196,7 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
 
         try {
           val res: GraphQueryResult = QueryResults.parseGraphBackground(is, baseURI, format, null)
+          
           println(s"baseURI:$baseURI")
           try {
             while (res.hasNext) {
@@ -196,6 +204,7 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
                 val st: Statement = res.next()
                 extractCID(st.getSubject.stringValue()) match {
                   case Some(cid) =>
+                    countSubjectDirectParent = countSubjectDirectParent + 1
                     val smiles = st.getObject.stringValue()
                     println(s"$cid,$smiles")
 
@@ -210,8 +219,6 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
                     val dp = chemicalClassifier.taxonomic_classification.direct_parent
                       .split("\t")
                       .map(className => chemicalClassifier.ontology.node_hash.get(className).id)
-
-                    countSubjectDirectParent += 1
 
                     dp.foreach(
                       chemontId => {
@@ -239,7 +246,8 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
                         countTripleAltParent += 1
                       })
 
-                  case None => println("Aucun identifiant CID trouvé")
+                  case None => 
+                    println("Aucun identifiant CID trouvé")
                 }
 
               } catch {
@@ -274,26 +282,33 @@ select * from DB.DBA.LOAD_LIST where ll_error IS NOT NULL;
             System.err.println("1:" + e.getMessage)
             System.exit(-1)
         } finally {
-          void(dirDirParent,
-            countSubjectDirectParent,
-            countTripleDirectParent,
-            "ChemOnt Classification - Direct parent",
-            "This subset contains RDF triples providing links between " +
-              "PubChem compounds and their class according to ChemOnt ontology from ClassyFire. " +
-              "The provided class correspond to the Direct Parent, representing the dominant class in the molecule")
-          void(dirAltParent,
-            countSubjectAltParent,
-            countTripleAltParent,
-            "ChemOnt Classification - Alternative parents",
-            "This subset contains RDF triples providing links between PubChem " +
-              "compounds and their classes according to ChemOnt ontology from ClassyFire. " +
-              "The provided classes correspond to the Alternative Parents, representing classes " +
-              "describing the molecule but which not have an ancestor–descendant relationship with each " +
-              "other or with the Direct Parent")
-          
-          upload_Chemont_sh()
           is.close()
         }
+    (countSubjectDirectParent,countTripleDirectParent,countSubjectAltParent,countTripleAltParent)
     }
+
+  val countSubjectDirectParent = allCounts.map(_._1).sum
+  val countTripleDirectParent = allCounts.map(_._2).sum
+  val countSubjectAltParent = allCounts.map(_._3).sum
+  val countTripleAltParent = allCounts.map(_._4).sum
+   
+  void(dirDirParent,
+        countSubjectDirectParent,
+        countTripleDirectParent,
+        "ChemOnt Classification - Direct parent",
+        "This subset contains RDF triples providing links between " +
+          "PubChem compounds and their class according to ChemOnt ontology from ClassyFire. " +
+          "The provided class correspond to the Direct Parent, representing the dominant class in the molecule")
+    void(dirAltParent,
+      countSubjectAltParent,
+      countTripleAltParent,
+      "ChemOnt Classification - Alternative parents",
+      "This subset contains RDF triples providing links between PubChem " +
+        "compounds and their classes according to ChemOnt ontology from ClassyFire. " +
+        "The provided classes correspond to the Alternative Parents, representing classes " +
+        "describing the molecule but which not have an ancestor–descendant relationship with each " +
+        "other or with the Direct Parent")
+    
+    upload_Chemont_sh()
   }
 //}
